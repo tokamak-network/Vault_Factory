@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../common/AccessibleCommon.sol";
+import "hardhat/console.sol";
 
 contract typeCVault is AccessibleCommon {
     using SafeERC20 for IERC20;
@@ -26,7 +27,10 @@ contract typeCVault is AccessibleCommon {
 
     uint256 public nowClaimRound = 0;      
 
-    uint256 public totalClaimsAmount;          
+    uint256 public totalClaimsAmount;
+
+    uint256[] public claimTimes;
+    uint256[] public claimAmounts;          
 
     event Claimed(
         address indexed caller,
@@ -59,21 +63,28 @@ contract typeCVault is AccessibleCommon {
     }
 
     ///@dev initialization function
-    ///@param _totalAllocatedAmount total allocated amount  
-    ///@param _totalClaims total available claim count  
-    ///@param _startTime start time             
-    ///@param _periodTimesPerClaim period time per claim
+    ///@param _totalAllocatedAmount total allocated amount           
+    ///@param _claimCounts total claim Counts
+    ///@param _claimTimes each claimTime
+    ///@param _claimAmounts each claimAmount
     function initialize(
         uint256 _totalAllocatedAmount,
-        uint256 _totalClaims,
-        uint256 _startTime,
-        uint256 _periodTimesPerClaim
+        uint256 _claimCounts,
+        uint256[] calldata _claimTimes,
+        uint256[] calldata _claimAmounts
     ) external onlyOwner {
         require(settingCheck == false, "already setting");
         totalAllocatedAmount = _totalAllocatedAmount;
-        totalClaimCounts = _totalClaims;
-        startTime = _startTime;
-        claimPeriodTimes = _periodTimesPerClaim;
+        totalClaimCounts = _claimCounts;
+        uint256 i = 0;
+        for(i = 0; i < _claimCounts; i++) {
+            claimTimes.push(_claimTimes[i]);
+            // claimTimes[i] = _claimTimes[i];
+            console.log("claimTimes[i] : '%s', _claimTimes[i] : '%s'", claimTimes[i], _claimTimes[i]);
+            claimAmounts.push(_claimAmounts[i]);
+            // claimAmounts[i] = _claimAmounts[i];
+            console.log("claimAmounts[i] : '%s', _claimAmounts[i] : '%s'", claimTimes[i], _claimTimes[i]);
+        }
     }
 
     function changeToken(address _token) external onlyOwner {
@@ -85,67 +96,42 @@ contract typeCVault is AccessibleCommon {
         settingCheck = true;
     }
 
-    function firstClaimSetting(uint256 _amount, uint256 _time)
-        public
-        onlyOwner
-        nonZero(_amount)
-        nonZero(_time)
-    {
-        require(settingCheck == false, "already setting");
-        diffClaimCheck = true;
-        firstClaimAmount = _amount;
-        firstClaimTime = _time;
-    }
-
     function currentRound() public view returns (uint256 round) {
-        if(diffClaimCheck) {
-            if (block.timestamp < firstClaimTime) {
+        uint256 i = 0;
+        for(i = 0; i < totalClaimCounts; i++) {
+            if(block.timestamp < claimTimes[0]){
                 round = 0;
-            } else if(block.timestamp < startTime) {
-                round = 1;
-            } else {
-                round = (block.timestamp - startTime) / claimPeriodTimes;
-                round = round + 2;
-            }
-        } else {
-            if (block.timestamp < startTime) {
-                round = 0;
-            } else {
-                round = (block.timestamp - startTime) / claimPeriodTimes;
-                round++;
+            } else if(block.timestamp < claimTimes[i] && i != 0) {
+                round = i;
+            } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
+                round = totalClaimCounts;
             }
         }
     }
 
     function calcalClaimAmount(uint256 _round) public view returns (uint256 amount) {
-        uint256 remainAmount;
-        if(diffClaimCheck && _round == 1) {
-            amount = firstClaimAmount;
-        } else if(diffClaimCheck){
-            remainAmount = totalAllocatedAmount - firstClaimAmount;
-            amount = remainAmount/(totalClaimCounts-1);
-        } else {
-            remainAmount = totalAllocatedAmount;
-            amount = remainAmount/totalClaimCounts;
+        uint256 expectedClaimAmount;
+        for(uint256 i = 0; i < _round; i++) {
+           expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
         }
+        if(_round == 1 ) {
+            amount = claimAmounts[0];
+        } else if(totalClaimCounts == _round) {
+            amount = totalAllocatedAmount - totalClaimsAmount;
+        } else {
+            amount = expectedClaimAmount - totalClaimsAmount;
+        }        
     }
 
     function claim(address _account)
         external
         onlyOwner
     {
-        uint256 count = 0;
-        uint256 time;
-
-        if(diffClaimCheck){
-            time = firstClaimTime;
-        } else {
-            time = startTime;
-        }
-        require(block.timestamp > time, "Vault: not started yet");
+        require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
 
         uint256 curRound = currentRound();
+
         uint256 amount = calcalClaimAmount(curRound);
 
         require(curRound != nowClaimRound,"Vault: already get this round");
