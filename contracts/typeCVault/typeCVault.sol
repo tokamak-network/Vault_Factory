@@ -79,11 +79,9 @@ contract typeCVault is AccessibleCommon {
         uint256 i = 0;
         for(i = 0; i < _claimCounts; i++) {
             claimTimes.push(_claimTimes[i]);
-            // claimTimes[i] = _claimTimes[i];
-            console.log("claimTimes[i] : '%s', _claimTimes[i] : '%s'", claimTimes[i], _claimTimes[i]);
+            console.log("claimTimes['%s'] : '%s', _claimTimes[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
             claimAmounts.push(_claimAmounts[i]);
-            // claimAmounts[i] = _claimAmounts[i];
-            console.log("claimAmounts[i] : '%s', _claimAmounts[i] : '%s'", claimTimes[i], _claimTimes[i]);
+            console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
         }
     }
 
@@ -97,12 +95,11 @@ contract typeCVault is AccessibleCommon {
     }
 
     function currentRound() public view returns (uint256 round) {
-        uint256 i = 0;
-        for(i = 0; i < totalClaimCounts; i++) {
+        for(uint256 i = totalClaimCounts; i > 0; i--) {
             if(block.timestamp < claimTimes[0]){
                 round = 0;
-            } else if(block.timestamp < claimTimes[i] && i != 0) {
-                round = i;
+            } else if(block.timestamp < claimTimes[i-1] && i != 0) {
+                round = i-1;
             } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
                 round = totalClaimCounts;
             }
@@ -134,20 +131,7 @@ contract typeCVault is AccessibleCommon {
 
         uint256 amount = calcalClaimAmount(curRound);
 
-        require(curRound != nowClaimRound,"Vault: already get this round");
-
-        if(curRound != 1 && diffClaimCheck && totalClaimsAmount < firstClaimAmount) {
-            count = curRound - nowClaimRound;
-            amount = (amount * (count-1)) + firstClaimAmount;
-        } else if (curRound >= totalClaimCounts) {
-            amount = totalAllocatedAmount - totalClaimsAmount;
-        } else {
-            count = curRound - nowClaimRound;
-            amount = (amount * count);
-        }
-
         require(token.balanceOf(address(this)) >= amount,"Vault: dont have token");
-
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
         token.safeTransfer(_account, amount);

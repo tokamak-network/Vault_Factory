@@ -186,37 +186,11 @@ describe("typeCVault", () => {
                 expect(Number(tx)).to.equal(tx4);
             })
 
-            it("claim for round3", async () => {
-                let tx = await mockToken.balanceOf(account2.address)
-                let claim1A = Number(claim1)
-                let claim2A = Number(claim2)
-                let tx2 = claim1A+claim2A
-                expect(Number(tx)).to.equal(tx2);
-    
-                await ethers.provider.send('evm_setNextBlockTimestamp', [claim3Time+10]);
-                await ethers.provider.send('evm_mine');
-
-                let round = await typeCVaultContract.currentRound()
-                expect(round).to.equal(3);
-                
-                await typeCVaultContract.connect(vaultOwner).claim(
-                    account2.address
-                );
-
-                let claimAfter = await mockToken.balanceOf(account2.address)
-                let claim3A = Number(claim3)
-                let claimAfterAmount = claim1A+claim2A+claim3A
-    
-                expect(Number(claimAfter)).to.equal(claimAfterAmount);
-            })
-            
-
             it("claim for round4", async () => {
                 let tx = await mockToken.balanceOf(account2.address)
                 let claim1A = Number(claim1)
                 let claim2A = Number(claim2)
-                let claim3A = Number(claim3)
-                let tx2 = claim1A+claim2A+claim3A
+                let tx2 = claim1A+claim2A
                 expect(Number(tx)).to.equal(tx2);
     
                 await ethers.provider.send('evm_setNextBlockTimestamp', [claim4Time]);
@@ -230,36 +204,11 @@ describe("typeCVault", () => {
                 );
 
                 let claimAfter = await mockToken.balanceOf(account2.address)
+                let claim3A = Number(claim3)
                 let claim4A = Number(claim4)
                 let claimAfterAmount = claim1A+claim2A+claim3A+claim4A
     
                 expect(Number(claimAfter)).to.equal(claimAfterAmount);
-            })
-
-            it("claim for round5", async () => {
-                let tx = await mockToken.balanceOf(account2.address)
-                let claim1A = Number(claim1)
-                let claim2A = Number(claim2)
-                let claim3A = Number(claim3)
-                let claim4A = Number(claim4)
-                let claimAfterAmount = claim1A+claim2A+claim3A+claim4A
-                expect(Number(tx)).to.equal(claimAfterAmount);
-    
-                await ethers.provider.send('evm_setNextBlockTimestamp', [claim5Time+10]);
-                await ethers.provider.send('evm_mine');
-
-                let round = await typeCVaultContract.currentRound()
-                expect(round).to.equal(6);
-                
-                await typeCVaultContract.connect(vaultOwner).claim(
-                    account2.address
-                );
-
-                let claimAfter = await mockToken.balanceOf(account2.address)
-                let claim5A = Number(claim5)
-                let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A
-    
-                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
             })
 
             it("claim for round6", async () => {
