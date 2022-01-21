@@ -23,51 +23,52 @@ describe("typeCVault", () => {
     let account2 : any;
     let account3 : any; 
     let account4 : any;
+    let account5 : any;
     let tokenOwner : any;
     let vaultOwner : any;
     let token, mockToken : any;
     let prov;
 
-    let totalAmount2 = 5000000      //5,000,000
+    let totalAmount2 = 32000000      //32,000,000
     const totalAmount = BigNumber.from(totalAmount2).mul(BigNumber.from(BASE_TEN).pow(decimals))
     let typeCVaultContract : any;
 
-    let claim1Amount = 1000000      //1,000,000
-    let claim2Amount = 300000       //300,000
+    let claim1Amount = 1000000      //1,000,000     //1,000,000
+    let claim2Amount = 300000       //300,000       //1,300,000
     let claim3Amount = 700000       //700,000
-    let claim4Amount = 1000000      //1,000,000
+    let claim4Amount = 1000000      //1,000,000     //4,000,000
     let claim5Amount = 500000       //500,000
     let claim6Amount = 1500000      //1,500,000     //5,000,000
     let claim7Amount = 1000000      //1,000,000
     let claim8Amount = 1000000      //1,000,000
-    let claim9Amount = 1000000      //1,000,000
-    let claim10Amount = 1000000      //1,000,000
-    let claim11Amount = 1000000      //1,000,000
+    let claim9Amount = 1000000      //1,000,000     //8,000,000
+    let claim10Amount = 500000      //500,000       
+    let claim11Amount = 1000000      //1,000,000    
     let claim12Amount = 1000000      //1,000,000
     let claim13Amount = 1000000      //1,000,000
     let claim14Amount = 1000000      //1,000,000
-    let claim15Amount = 1000000      //1,000,000
+    let claim15Amount = 1000000      //1,000,000    
     let claim16Amount = 1000000      //1,000,000
-    let claim17Amount = 1000000      //1,000,000
-    let claim18Amount = 1000000      //1,000,000
+    let claim17Amount = 500000       //500,000      //15,000,000
+    let claim18Amount = 1000000      //1,000,000    //16,000,000    //8,000,000
     let claim19Amount = 1000000      //1,000,000
-    let claim20Amount = 1000000      //1,000,000
+    let claim20Amount = 1000000      //1,000,000          
     let claim21Amount = 1000000      //1,000,000
-    let claim22Amount = 1000000      //1,000,000
-    let claim23Amount = 1000000      //1,000,000
-    let claim24Amount = 1000000      //1,000,000
+    let claim22Amount = 1000000      //1,000,000    //20,000,000    //4,000,000
+    let claim23Amount = 500000       //500,000      
+    let claim24Amount = 1000000      //1,000,000    //21,500,000  
     let claim25Amount = 1000000      //1,000,000
     let claim26Amount = 1000000      //1,000,000
     let claim27Amount = 1000000      //1,000,000
-    let claim28Amount = 1000000      //1,000,000
+    let claim28Amount = 500000       //500,000      //25,000,000    //5,000,000
     let claim29Amount = 1000000      //1,000,000
-    let claim30Amount = 1000000      //1,000,000
+    let claim30Amount = 500000       //500,000
     let claim31Amount = 1000000      //1,000,000
     let claim32Amount = 1000000      //1,000,000
-    let claim33Amount = 1000000      //1,000,000
+    let claim33Amount = 500000       //500,000      //29,000,000
     let claim34Amount = 1000000      //1,000,000
     let claim35Amount = 1000000      //1,000,000
-    let claim36Amount = 1000000      //1,000,000    //35,000,000
+    let claim36Amount = 1000000      //1,000,000    //32,000,000
     
     const claim1 = BigNumber.from(claim1Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
     const claim2 = BigNumber.from(claim2Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
@@ -91,6 +92,7 @@ describe("typeCVault", () => {
     const claim20 = BigNumber.from(claim20Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
     const claim21 = BigNumber.from(claim21Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
     const claim22 = BigNumber.from(claim22Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
+
     const claim23 = BigNumber.from(claim23Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
     const claim24 = BigNumber.from(claim24Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
     const claim25 = BigNumber.from(claim25Amount).mul(BigNumber.from(BASE_TEN).pow(decimals))
@@ -143,7 +145,6 @@ describe("typeCVault", () => {
     let claim35Time : any;
     let claim36Time : any;
 
-
     let totalClaim = 36
 
     let periodTimesPerClaim = 60 * 5; // 5 mins
@@ -154,7 +155,7 @@ describe("typeCVault", () => {
     let provider : any;
 
     before(async () => {
-        [ tokenOwner, vaultOwner, account1, account2, account3, account4 ] = await ethers.getSigners();
+        [ tokenOwner, vaultOwner, account1, account2, account3, account4, account5 ] = await ethers.getSigners();
         token = await ethers.getContractFactory("ERC20Mock");
         prov = ethers.getDefaultProvider();
 
@@ -243,7 +244,7 @@ describe("typeCVault", () => {
                     totalAmount,
                     totalClaim,
                     [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time,claim7Time,claim8Time,claim9Time,claim10Time,claim11Time,claim12Time,claim13Time,claim14Time,claim15Time,claim16Time,claim17Time,claim18Time,claim19Time,claim20Time,claim21Time,claim22Time,claim23Time,claim24Time,claim25Time,claim26Time,claim27Time,claim28Time,claim29Time,claim30Time,claim31Time,claim32Time,claim33Time,claim34Time,claim35Time,claim36Time],
-                    [claim1,claim2,claim3,claim4,claim5,claim6,claim7,claim8,claim9,claim10,claim11,claim12,claim13,claim14,claim15,claim16,claim17,claim18,claim19,claim20,claim21,claim22,claim23,claim24,claim24,claim25,claim26,claim27,claim28,claim29,claim30,claim31,claim32,claim33,claim34,claim35,claim36]
+                    [claim1,claim2,claim3,claim4,claim5,claim6,claim7,claim8,claim9,claim10,claim11,claim12,claim13,claim14,claim15,claim16,claim17,claim18,claim19,claim20,claim21,claim22,claim23,claim24,claim25,claim26,claim27,claim28,claim29,claim30,claim31,claim32,claim33,claim34,claim35,claim36]
                 );
 
                 expect(await typeCVaultContract.totalAllocatedAmount()).to.equal(totalAmount);
@@ -304,11 +305,11 @@ describe("typeCVault", () => {
                 );
 
                 let tx = await mockToken.balanceOf(account2.address)
-                console.log(Number(tx))
+                // console.log(Number(tx))
                 let tx2 = Number(claim1)
                 let tx3 = Number(claim2)
                 let tx4 = tx2+tx3
-                console.log(tx4);
+                // console.log(tx4);
     
                 expect(Number(tx)).to.equal(tx4);
             })
@@ -364,6 +365,164 @@ describe("typeCVault", () => {
     
                 expect(Number(claimAfter)).to.equal(claimAfterAmount2);
             })
+
+            it("claim for round9", async () => {
+                let tx = await mockToken.balanceOf(account2.address)
+                let claimAfterAmount = Number(claim1)+Number(claim2)+Number(claim3)+Number(claim4)+Number(claim5)+Number(claim6)
+                expect(Number(tx)).to.equal(claimAfterAmount);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim9Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(9);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account2.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account2.address)
+                console.log(Number(claimAfter))
+                let claimAfterAmount2 = Number(claim1)+Number(claim2)+Number(claim3)+Number(claim4)+Number(claim5)+Number(claim6)+Number(claim7)+Number(claim8)+Number(claim9)
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+            })
+
+            it("claim for round11", async () => {
+                let tx = await mockToken.balanceOf(account1.address)
+                // let claimAfterAmount = Number(claim1)+Number(claim2)+Number(claim3)+Number(claim4)+Number(claim5)+Number(claim6)+Number(claim7)+Number(claim8)+Number(claim9)
+                expect(Number(tx)).to.equal(0);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim11Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(11);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account1.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account1.address)
+                let claimAfterAmount2 = Number(claim10)+Number(claim11)
+                // console.log("round :", round, ", Amount : ", claimAfterAmount2);
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+            })
+
+            it("claim for round15", async () => {
+                let tx = await mockToken.balanceOf(account1.address)
+                let claimAfterAmount = Number(claim10)+Number(claim11)
+                expect(Number(tx)).to.equal(claimAfterAmount);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim15Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(15);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account1.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account1.address)
+                let claimAfterAmount2 = Number(claim10)+Number(claim11)+Number(claim12)+Number(claim13)+Number(claim14)+Number(claim15)
+                // console.log("round :", round, ", Amount : ", claimAfterAmount2);
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+            })
+
+            it("claim for round18", async () => {
+                let tx = await mockToken.balanceOf(account1.address)
+                let claimAfterAmount = Number(claim10)+Number(claim11)+Number(claim12)+Number(claim13)+Number(claim14)+Number(claim15)
+                expect(Number(tx)).to.equal(claimAfterAmount);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim18Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(18);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account1.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account1.address)
+                let claimAfterAmount2 = Number(claim10)+Number(claim11)+Number(claim12)+Number(claim13)+Number(claim14)+Number(claim15)+Number(claim16)+Number(claim17)+Number(claim18)
+                console.log("user Amount :",Number(claimAfter));
+                // console.log("round :", round, ", Amount : ", claimAfterAmount2);
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+            })
+
+            it("claim for round22", async () => {
+                let tx = await mockToken.balanceOf(account3.address)
+                // let claimAfterAmount = Number(claim10)+Number(claim11)+Number(claim12)+Number(claim13)+Number(claim14)+Number(claim15)
+                expect(Number(tx)).to.equal(0);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim22Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(22);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account3.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account3.address)
+                console.log("user Amount :",Number(claimAfter));
+                let claimAfterAmount2 = Number(claim19)+Number(claim20)+Number(claim21)+Number(claim22)
+                // console.log("round :", round, ", Amount : ", claimAfterAmount2);
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+            })
+
+            it("claim for round28", async () => {
+                //23~28까지
+                let tx = await mockToken.balanceOf(account4.address)
+                // let claimAfterAmount = Number(claim19)+Number(claim20)+Number(claim21)+Number(claim22)
+                expect(Number(tx)).to.equal(0);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim28Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(28);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account4.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account4.address)
+                let claimAfterAmount2 = 5000000
+                let bigAfterAmount = BigNumber.from(claimAfterAmount2).mul(BigNumber.from(BASE_TEN).pow(decimals))
+    
+                expect(Number(claimAfter)).to.equal(Number(bigAfterAmount));
+            })
+
+            it("claim for round36", async () => {
+                //29~36까지
+                let tx = await mockToken.balanceOf(account5.address)
+                expect(Number(tx)).to.equal(0);
+
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim36Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVaultContract.currentRound()
+                expect(round).to.equal(36);
+                
+                await typeCVaultContract.connect(vaultOwner).claim(
+                    account5.address
+                );
+
+                let claimAfter = await mockToken.balanceOf(account5.address)
+                let claimAfterAmount2 = 7000000
+                let bigAfterAmount = BigNumber.from(claimAfterAmount2).mul(BigNumber.from(BASE_TEN).pow(decimals))
+    
+                expect(Number(claimAfter)).to.equal(Number(bigAfterAmount));
+            })
+            
         })
 
     })
