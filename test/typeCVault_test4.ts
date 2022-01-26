@@ -162,7 +162,7 @@ describe("typeCVault", () => {
         mockToken = await token.deploy("MockToken", "Mock");
 
         const typeCVault = await ethers.getContractFactory("typeCVault");
-        typeCVaultContract = await typeCVault.deploy("setVault",mockToken.address,vaultOwner.address);
+        typeCVaultContract = await typeCVault.connect(vaultOwner).deploy("setVault",mockToken.address);
         typeCVaultContract.connect(vaultOwner).deployed();
         
         provider = ethers.provider;

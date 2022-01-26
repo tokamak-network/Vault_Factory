@@ -10,10 +10,17 @@ import "../common/AccessibleCommon.sol";
 contract typeBVault is AccessibleCommon {
     using SafeERC20 for IERC20;
 
+    string public name;
+
     IERC20 public token;
 
-    constructor(address _token, address _admin) {
+    constructor(        
+        string memory _name,
+        address _token,
+        address _admin
+    ) {
         require(_token != address(0), "Vault: zero address");
+        name = _name;
         token = IERC20(_token);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, _admin);

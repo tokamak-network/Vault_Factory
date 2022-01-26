@@ -49,13 +49,12 @@ contract typeAVault is AccessibleCommon {
     ///@param _token Allocated token address
     constructor(
         string memory _name,
-        address _token,
-        address _owner
+        address _token
     ) {
         name = _name;
         token = IERC20(_token);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, _owner);
+        _setupRole(ADMIN_ROLE, msg.sender);
     }
 
     ///@dev initialization function
