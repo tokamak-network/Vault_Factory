@@ -14,7 +14,7 @@ contract VaultFactory is AccessRoleCommon, IVaultFactory {
     event CreatedPublicSaleProxy(address contractAddress, string name, string vaultType);
 
     modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), "PublicSaleProxyFactory: zero");
+        require(_addr != address(0), "VaultFactory: zero");
         _;
     }
     struct ContractInfo {
