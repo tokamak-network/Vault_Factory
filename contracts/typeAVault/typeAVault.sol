@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../common/AccessibleCommon.sol";
+import "../common/AccessiblePlusCommon.sol";
 
-contract typeAVault is AccessibleCommon {
+contract typeAVault is AccessiblePlusCommon {
     using SafeERC20 for IERC20;
 
     string public name;
@@ -13,7 +13,6 @@ contract typeAVault is AccessibleCommon {
     IERC20 public token;
 
     bool public diffClaimCheck;
-    bool public settingCheck;
 
     uint256 public firstClaimAmount = 0;
     uint256 public firstClaimTime;         
@@ -68,20 +67,11 @@ contract typeAVault is AccessibleCommon {
         uint256 _startTime,
         uint256 _periodTimesPerClaim
     ) external onlyOwner {
-        require(settingCheck == false, "already setting");
+        require(_totalAllocatedAmount == token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _totalClaims;
         startTime = _startTime;
         claimPeriodTimes = _periodTimesPerClaim;
-    }
-
-    function changeToken(address _token) external onlyOwner {
-        require(settingCheck == false, "already setting");
-        token = IERC20(_token);
-    }
-
-    function settingEnd() external onlyOwner {
-        settingCheck = true;
     }
 
     function firstClaimSetting(uint256 _amount, uint256 _time)
@@ -90,7 +80,6 @@ contract typeAVault is AccessibleCommon {
         nonZero(_amount)
         nonZero(_time)
     {
-        require(settingCheck == false, "already setting");
         diffClaimCheck = true;
         firstClaimAmount = _amount;
         firstClaimTime = _time;
@@ -131,7 +120,7 @@ contract typeAVault is AccessibleCommon {
 
     function claim(address _account)
         external
-        onlyOwner
+        onlyClaimer
     {
         uint256 count = 0;
         uint256 time;

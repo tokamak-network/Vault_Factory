@@ -5,11 +5,11 @@ import {typeAVault} from "./typeAVault/typeAVault.sol";
 import {typeBVault} from "./typeBVault/typeBVault.sol";
 import {typeCVault} from "./typeCVault/typeCVault.sol";
 import "./interfaces/IVaultFactory.sol";
-import "./common/AccessibleCommon.sol";
+import "./common/AccessiblePlusCommon.sol";
 import "hardhat/console.sol";
 
 /// @title A factory that creates a Vault
-contract VaultFactory is AccessRoleCommon, IVaultFactory { 
+contract VaultFactory is AccessiblePlusCommon, IVaultFactory { 
 
     event CreatedPublicSaleProxy(address contractAddress, string name, string vaultType);
 
@@ -73,7 +73,7 @@ contract VaultFactory is AccessRoleCommon, IVaultFactory {
             );
         }
 
-        typeA.grantRole(ADMIN_ROLE, _owner);
+        typeA.grantRole(CLAIMER_ROLE, _owner);
         typeA.revokeRole(ADMIN_ROLE, address(this));
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(typeA), _name, "A");

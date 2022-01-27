@@ -18,6 +18,14 @@ contract AccessiblePlusCommon is AccessibleCommon {
         );
         _;
     }
+    
+    modifier onlyClaimer() {
+        require(
+            isClaimer(msg.sender),
+            "AccessiblePlusCommon: Caller is not a claimer"
+        );
+        _;
+    }
 
     function isMinter(address account) public view virtual returns (bool) {
         return hasRole(MINTER_ROLE, account);
@@ -25,6 +33,10 @@ contract AccessiblePlusCommon is AccessibleCommon {
 
     function isBurner(address account) public view virtual returns (bool) {
         return hasRole(BURNER_ROLE, account);
+    }
+
+    function isClaimer(address account) public view virtual returns (bool) {
+        return hasRole(CLAIMER_ROLE, account);
     }
 
     function addMinter(address account) public virtual onlyOwner {
@@ -35,11 +47,19 @@ contract AccessiblePlusCommon is AccessibleCommon {
         grantRole(BURNER_ROLE, account);
     }
 
+    function addClaimer(address account) public virtual onlyOwner {
+        grantRole(CLAIMER_ROLE, account);
+    }
+
     function removeMinter(address account) public virtual onlyOwner {
         revokeRole(MINTER_ROLE, account);
     }
 
     function removeBurner(address account) public virtual onlyOwner {
         revokeRole(BURNER_ROLE, account);
+    }
+
+    function removeClaimer(address account) public virtual onlyOwner {
+        revokeRole(CLAIMER_ROLE, account);
     }
 }
