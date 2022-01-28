@@ -3,17 +3,18 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../common/AccessibleCommon.sol";
+import "../common/AccessiblePlusCommon.sol";
 import "hardhat/console.sol";
 
-contract typeCVault is AccessibleCommon {
+contract typeCVault is AccessiblePlusCommon {
     using SafeERC20 for IERC20;
 
     string public name;
 
     IERC20 public token;
 
-    bool public settingCheck;   
+    bool public settingCheck;
+    address public owner;   
 
     uint256 public totalAllocatedAmount;   
 
@@ -45,14 +46,17 @@ contract typeCVault is AccessibleCommon {
     ///@dev constructor
     ///@param _name Vault's name
     ///@param _token Allocated token address
+    ///@param _owner owner address
     constructor(
         string memory _name,
-        address _token
+        address _token,
+        address _owner
     ) {
         name = _name;
         token = IERC20(_token);
+        owner = _owner;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, msg.sender);
+        _setupRole(ADMIN_ROLE, owner);
     }
 
     ///@dev initialization function
@@ -66,7 +70,7 @@ contract typeCVault is AccessibleCommon {
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external onlyOwner {
-        require(settingCheck == false, "already setting");
+        require(_totalAllocatedAmount == token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
         uint256 i = 0;
@@ -76,15 +80,13 @@ contract typeCVault is AccessibleCommon {
             claimAmounts.push(_claimAmounts[i]);
             console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
         }
+
+        grantRole(CLAIMER_ROLE, owner);
+        revokeRole(ADMIN_ROLE, owner);
     }
 
     function changeToken(address _token) external onlyOwner {
-        require(settingCheck == false, "already setting");
         token = IERC20(_token);
-    }
-
-    function settingEnd() external onlyOwner {
-        settingCheck = true;
     }
 
     function currentRound() public view returns (uint256 round) {
@@ -115,7 +117,7 @@ contract typeCVault is AccessibleCommon {
 
     function claim(address _account)
         external
-        onlyOwner
+        onlyClaimer
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");

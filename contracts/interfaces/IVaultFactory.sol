@@ -7,17 +7,11 @@ interface IVaultFactory {
     /// @param _name name
     /// @param _token token Address
     /// @param _owner  owner Address
-    /// @param _setting  _setting[0] = totalAllocatedAmount, _setting[1] = totalClaimCounts, _setting[2] = startTime, _setting[3] = claimPeriodTimes
-    /// @param _firstSet _firstSet[0] = firstClaimAmount, _firstSet[1] = firstClaimTime
-    /// @param _check if check is true, need the firstClaimSetting
     /// @return created typeAvault contract address
     function createTypeA(
         string calldata _name,
         address _token,
-        address _owner,
-        uint256[4] calldata _setting,
-        uint256[2] calldata _firstSet,
-        bool _check
+        address _owner
     )
         external
         returns (address);

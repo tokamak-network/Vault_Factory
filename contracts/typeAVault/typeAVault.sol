@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../common/AccessiblePlusCommon.sol";
+import "../common/AccessibleCommon.sol";
 
-contract typeAVault is AccessiblePlusCommon {
+contract typeAVault is AccessibleCommon {
     using SafeERC20 for IERC20;
 
     string public name;
@@ -13,6 +13,8 @@ contract typeAVault is AccessiblePlusCommon {
     IERC20 public token;
 
     bool public diffClaimCheck;
+
+    address public owner;
 
     uint256 public firstClaimAmount = 0;
     uint256 public firstClaimTime;         
@@ -46,32 +48,36 @@ contract typeAVault is AccessiblePlusCommon {
     ///@dev constructor
     ///@param _name Vault's name
     ///@param _token Allocated token address
+    ///@param _owner owner address
     constructor(
         string memory _name,
-        address _token
+        address _token,
+        address _owner
     ) {
         name = _name;
         token = IERC20(_token);
+        owner = _owner;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, msg.sender);
+        _setupRole(ADMIN_ROLE, _owner);
     }
 
-    ///@dev initialization function
-    ///@param _totalAllocatedAmount total allocated amount  
-    ///@param _totalClaims total available claim count  
-    ///@param _startTime start time             
-    ///@param _periodTimesPerClaim period time per claim
     function initialize(
-        uint256 _totalAllocatedAmount,
-        uint256 _totalClaims,
-        uint256 _startTime,
-        uint256 _periodTimesPerClaim
+        uint256[4] calldata _basicSet,
+        uint256[2] calldata _firstSet,
+        bool _check
     ) external onlyOwner {
-        require(_totalAllocatedAmount == token.balanceOf(address(this)), "need to input the token");
-        totalAllocatedAmount = _totalAllocatedAmount;
-        totalClaimCounts = _totalClaims;
-        startTime = _startTime;
-        claimPeriodTimes = _periodTimesPerClaim;
+        require(_basicSet[0] == token.balanceOf(address(this)), "need to input the token");
+        totalAllocatedAmount = _basicSet[0];
+        totalClaimCounts = _basicSet[1];
+        startTime = _basicSet[2];
+        claimPeriodTimes = _basicSet[3];
+
+        if(_check == true) {
+            firstClaimSetting(_firstSet[0],_firstSet[1]);
+        }
+
+        grantRole(CLAIMER_ROLE, owner);
+        revokeRole(ADMIN_ROLE, owner);
     }
 
     function firstClaimSetting(uint256 _amount, uint256 _time)
@@ -120,7 +126,7 @@ contract typeAVault is AccessiblePlusCommon {
 
     function claim(address _account)
         external
-        onlyClaimer
+        onlyOwner
     {
         uint256 count = 0;
         uint256 time;
