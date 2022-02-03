@@ -3,9 +3,9 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../common/AccessibleCommon.sol";
+import "../common/AccessiblePlusCommon.sol";
 
-contract typeAVault is AccessibleCommon {
+contract typeAVault is AccessiblePlusCommon {
     using SafeERC20 for IERC20;
 
     string public name;
@@ -76,7 +76,8 @@ contract typeAVault is AccessibleCommon {
             firstClaimSetting(_firstSet[0],_firstSet[1]);
         }
 
-        grantRole(CLAIMER_ROLE, owner);
+        _setRoleAdmin(CLAIMER_ROLE, CLAIMER_ROLE);
+        _setupRole(CLAIMER_ROLE, owner);
         revokeRole(ADMIN_ROLE, owner);
     }
 
@@ -126,7 +127,7 @@ contract typeAVault is AccessibleCommon {
 
     function claim(address _account)
         external
-        onlyOwner
+        onlyClaimer
     {
         uint256 count = 0;
         uint256 time;

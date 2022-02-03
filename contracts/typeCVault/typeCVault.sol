@@ -81,7 +81,8 @@ contract typeCVault is AccessiblePlusCommon {
             console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
         }
 
-        grantRole(CLAIMER_ROLE, owner);
+        _setRoleAdmin(CLAIMER_ROLE, CLAIMER_ROLE);
+        _setupRole(CLAIMER_ROLE, owner);
         revokeRole(ADMIN_ROLE, owner);
     }
 

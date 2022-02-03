@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {typeBVault} from "./typeBVault/typeBVault.sol";
-import "./interfaces/IVaultFactory.sol";
+import "./interfaces/ITypeBVaultFactory.sol";
 import "./common/AccessibleCommon.sol";
 import "hardhat/console.sol";
 

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.4;
 
 import {typeAVault} from "./typeAVault/typeAVault.sol";
-import "./interfaces/IVaultFactory.sol";
+import "./interfaces/ITypeAVaultFactory.sol";
 import "./common/AccessibleCommon.sol";
 import "hardhat/console.sol";
 
 /// @title A factory that creates a Vault
 contract TypeAVaultFactory is AccessibleCommon { 
 
-    event CreatedTypeBVault(address contractAddress, string name);
+    event CreatedTypeAVault(address contractAddress, string name);
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "VaultFactory: zero");
@@ -50,7 +50,7 @@ contract TypeAVaultFactory is AccessibleCommon {
         createdContracts[totalCreatedContracts] = ContractInfo(address(typeA), _name);
         totalCreatedContracts++;
 
-        emit CreatedTypeBVault(address(typeA), _name);
+        emit CreatedTypeAVault(address(typeA), _name);
 
         return address(typeA);
     } 
