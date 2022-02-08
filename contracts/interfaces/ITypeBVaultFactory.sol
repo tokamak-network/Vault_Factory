@@ -16,22 +16,7 @@ interface ITypeBVaultFactory {
         external
         returns (address);
 
-    /// @dev Create a createTypeC
-    /// @param _name name
-    /// @param _addr addr[0] = tokenAddress, addr[1] = ownerAddress
-    /// @param _amount  amount[0] = total allocated amount, amount[1] = total claimCounts
-    /// @param _claimsTimes  claimtimes[]
-    /// @param _claimAmounts claimAmounts[]
-    /// @return created typeCvault contract address
-    function createTypeC(
-        string calldata _name,
-        address[2] calldata _addr,
-        uint256[2] calldata _amount,
-        uint256[] calldata _claimsTimes,
-        uint256[] calldata _claimAmounts
-    )
-        external
-        returns (address);
+
 
     /// @dev Last generated contract information
     function lastestCreated() external view returns (address contractAddress, string memory name);

@@ -4,8 +4,7 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../common/AccessibleCommon.sol";
-
-//import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract typeBVault is AccessibleCommon {
     using SafeERC20 for IERC20;
@@ -26,9 +25,9 @@ contract typeBVault is AccessibleCommon {
         _setupRole(ADMIN_ROLE, _admin);
     }
 
-    function claim(address to, uint256 amount) external onlyOwner {
-        require(token.balanceOf(address(this)) >= amount,"Vault: insufficent");
-        token.safeTransfer(to, amount);
+    function claim(address _to, uint256 _amount) external onlyOwner {
+        require(token.balanceOf(address(this)) >= _amount, "Vault: insufficent");
+        token.safeTransfer(_to, _amount);
     }
 
 }

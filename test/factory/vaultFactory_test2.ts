@@ -150,92 +150,211 @@ describe("VaultFactory", () => {
     });
 
     describe("typeC test", () => {
-        it("check name, mock ", async function() {
-            expect(await typeCVault.name()).to.equal("ABC");
-            expect(await typeCVault.token()).to.equal(erc20.address);
-        });
-
-        it("check the onlyOwner", async () => {
-            let curBlock = await ethers.provider.getBlock();
-            claim1Time = curBlock.timestamp + (60*5);
-            claim2Time = curBlock.timestamp + (60*8);
-            claim3Time = curBlock.timestamp + (60*15);
-            claim4Time = curBlock.timestamp + (60*20);
-            claim5Time = curBlock.timestamp + (60*23);
-            claim6Time = curBlock.timestamp + (60*30);
-
-            await expect(typeCVault.connect(person2).initialize(
-                totalAmount,
-                totalClaim,
-                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-                [claim1,claim2,claim3,claim4,claim5,claim6]
-            )).to.be.revertedWith("Accessible: Caller is not an admin");
-
-            await expect(typeCVault.connect(person2).claim(
-                person2.address
-            )).to.be.revertedWith("AccessiblePlusCommon: Caller is not a claimer");
+        describe("setting", () => {
+            it("check name, mock ", async function() {
+                expect(await typeCVault.name()).to.equal("ABC");
+                expect(await typeCVault.token()).to.equal(erc20.address);
+            });
+    
+            it("check the onlyOwner", async () => {
+                let curBlock = await ethers.provider.getBlock();
+                claim1Time = curBlock.timestamp + (60*5);
+                claim2Time = curBlock.timestamp + (60*8);
+                claim3Time = curBlock.timestamp + (60*15);
+                claim4Time = curBlock.timestamp + (60*20);
+                claim5Time = curBlock.timestamp + (60*23);
+                claim6Time = curBlock.timestamp + (60*30);
+    
+                await expect(typeCVault.connect(person2).initialize(
+                    totalAmount,
+                    totalClaim,
+                    [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                    [claim1,claim2,claim3,claim4,claim5,claim6]
+                )).to.be.revertedWith("Accessible: Caller is not an admin");
+    
+                await expect(typeCVault.connect(person2).claim(
+                    person2.address
+                )).to.be.revertedWith("AccessiblePlusCommon: Caller is not a claimer");
+            })
+    
+            it("check the initialize before input token", async ()  => {
+                let curBlock = await ethers.provider.getBlock();
+                claim1Time = curBlock.timestamp + (60*5);
+                claim2Time = curBlock.timestamp + (60*8);
+                claim3Time = curBlock.timestamp + (60*15);
+                claim4Time = curBlock.timestamp + (60*20);
+                claim5Time = curBlock.timestamp + (60*23);
+                claim6Time = curBlock.timestamp + (60*30);
+    
+                await expect(typeCVault.connect(person1).initialize(
+                    totalAmount,
+                    totalClaim,
+                    [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                    [claim1,claim2,claim3,claim4,claim5,claim6]
+                )).to.be.revertedWith("need to input the token");
+            })
+    
+            it("check the initialize after input token", async ()  => {
+                await erc20.connect(deployer).transfer(typeCVault.address,totalAmount)
+                let curBlock = await ethers.provider.getBlock();
+                claim1Time = curBlock.timestamp + (60*5);
+                claim2Time = curBlock.timestamp + (60*8);
+                claim3Time = curBlock.timestamp + (60*15);
+                claim4Time = curBlock.timestamp + (60*20);
+                claim5Time = curBlock.timestamp + (60*23);
+                claim6Time = curBlock.timestamp + (60*30);
+    
+                await typeCVault.connect(person1).initialize(
+                    totalAmount,
+                    totalClaim,
+                    [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                    [claim1,claim2,claim3,claim4,claim5,claim6]
+                );
+    
+                expect(await typeCVault.totalAllocatedAmount()).to.equal(totalAmount);
+                expect(await typeCVault.totalClaimCounts()).to.equal(totalClaim);
+    
+                let tx = await typeCVault.claimTimes(0);
+                expect(tx).to.equal(claim1Time)
+                
+                let tx2 = await typeCVault.claimAmounts(0);
+                expect(tx2).to.equal(claim1)
+    
+                let tx3 = await typeCVault.claimAmounts(2);
+                expect(tx3).to.equal(claim3)
+    
+                let tx4 = await typeCVault.claimAmounts(5);
+                expect(tx4).to.equal(claim6)
+            })
+    
+            it("not claimer claim test", async () => {
+                await expect(typeCVault.connect(person2).claim(
+                    person2.address
+                )).to.be.revertedWith("AccessiblePlusCommon: Caller is not a claimer");
+            })
+    
+            it("claimer claim test befroe startTime", async () => {
+                await expect(typeCVault.connect(person1).claim(
+                    person1.address
+                )).to.be.revertedWith("Vault: not started yet");
+            })
         })
+        describe("claim test", () => {
+            it("claim for round1", async () => {
+                expect(await erc20.balanceOf(person2.address)).to.equal(0);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
+                await ethers.provider.send('evm_mine');
 
-        it("check the initialize before input token", async ()  => {
-            let curBlock = await ethers.provider.getBlock();
-            claim1Time = curBlock.timestamp + (60*5);
-            claim2Time = curBlock.timestamp + (60*8);
-            claim3Time = curBlock.timestamp + (60*15);
-            claim4Time = curBlock.timestamp + (60*20);
-            claim5Time = curBlock.timestamp + (60*23);
-            claim6Time = curBlock.timestamp + (60*30);
+                let round = await typeCVault.currentRound()
+                expect(round).to.equal(1);
+                
+                await typeCVault.connect(person1).claim(
+                    person2.address
+                );
 
-            await expect(typeCVault.connect(person1).initialize(
-                totalAmount,
-                totalClaim,
-                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-                [claim1,claim2,claim3,claim4,claim5,claim6]
-            )).to.be.revertedWith("need to input the token");
-        })
+                let tx = await erc20.balanceOf(person2.address)
+                // console.log(Number(tx))
+                // console.log(claim1)
+                expect(await erc20.balanceOf(person2.address)).to.equal(claim1);
+            })
 
-        it("check the initialize after input token", async ()  => {
-            await erc20.connect(deployer).transfer(typeCVault.address,totalAmount)
-            let curBlock = await ethers.provider.getBlock();
-            claim1Time = curBlock.timestamp + (60*5);
-            claim2Time = curBlock.timestamp + (60*8);
-            claim3Time = curBlock.timestamp + (60*15);
-            claim4Time = curBlock.timestamp + (60*20);
-            claim5Time = curBlock.timestamp + (60*23);
-            claim6Time = curBlock.timestamp + (60*30);
+            it("claim for round2", async () => {
+                expect(await erc20.balanceOf(person2.address)).to.equal(claim1);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time]);
+                await ethers.provider.send('evm_mine');
 
-            await typeCVault.connect(person1).initialize(
-                totalAmount,
-                totalClaim,
-                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-                [claim1,claim2,claim3,claim4,claim5,claim6]
-            );
+                let round = await typeCVault.currentRound()
+                expect(round).to.equal(2);
+                
+                await typeCVault.connect(person1).claim(
+                    person2.address
+                );
 
-            expect(await typeCVault.totalAllocatedAmount()).to.equal(totalAmount);
-            expect(await typeCVault.totalClaimCounts()).to.equal(totalClaim);
+                let tx = await erc20.balanceOf(person2.address)
+                let tx2 = Number(claim1)
+                let tx3 = Number(claim2)
+                let tx4 = tx2+tx3
+    
+                expect(Number(tx)).to.equal(tx4);
+            })
 
-            let tx = await typeCVault.claimTimes(0);
-            expect(tx).to.equal(claim1Time)
-            
-            let tx2 = await typeCVault.claimAmounts(0);
-            expect(tx2).to.equal(claim1)
+            it("claim for round3", async () => {
+                let tx = await erc20.balanceOf(person2.address)
+                let claim1A = Number(claim1)
+                let claim2A = Number(claim2)
+                let tx2 = claim1A+claim2A
+                expect(Number(tx)).to.equal(tx2);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim3Time]);
+                await ethers.provider.send('evm_mine');
 
-            let tx3 = await typeCVault.claimAmounts(2);
-            expect(tx3).to.equal(claim3)
+                let round = await typeCVault.currentRound()
+                expect(round).to.equal(3);
+                
+                await typeCVault.connect(person1).claim(
+                    person2.address
+                );
 
-            let tx4 = await typeCVault.claimAmounts(5);
-            expect(tx4).to.equal(claim6)
-        })
+                let claimAfter = await erc20.balanceOf(person2.address)
+                let claim3A = Number(claim3)
+                let claimAfterAmount = claim1A+claim2A+claim3A
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount);
+            })
 
-        it("not claimer claim test", async () => {
-            await expect(typeCVault.connect(person2).claim(
-                person2.address
-            )).to.be.revertedWith("AccessiblePlusCommon: Caller is not a claimer");
-        })
+            it("claim for round4", async () => {
+                let tx = await erc20.balanceOf(person2.address)
+                let claim1A = Number(claim1)
+                let claim2A = Number(claim2)
+                let claim3A = Number(claim3)
+                let tx2 = claim1A+claim2A+claim3A
+                expect(Number(tx)).to.equal(tx2);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim4Time]);
+                await ethers.provider.send('evm_mine');
 
-        it("claimer claim test befroe startTime", async () => {
-            await expect(typeCVault.connect(person1).claim(
-                person1.address
-            )).to.be.revertedWith("Vault: not started yet");
+                let round = await typeCVault.currentRound()
+                expect(round).to.equal(4);
+                
+                await typeCVault.connect(person1).claim(
+                    person2.address
+                );
+
+                let claimAfter = await erc20.balanceOf(person2.address)
+                let claim4A = Number(claim4)
+                let claimAfterAmount = claim1A+claim2A+claim3A+claim4A
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount);
+            })
+
+            it("claim for round6", async () => {
+                let tx = await erc20.balanceOf(person2.address)
+                let claim1A = Number(claim1)
+                let claim2A = Number(claim2)
+                let claim3A = Number(claim3)
+                let claim4A = Number(claim4)
+                let claimAfterAmount = claim1A+claim2A+claim3A+claim4A
+                expect(Number(tx)).to.equal(claimAfterAmount);
+    
+                await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
+                await ethers.provider.send('evm_mine');
+
+                let round = await typeCVault.currentRound()
+                expect(round).to.equal(6);
+                
+                await typeCVault.connect(person1).claim(
+                    person2.address
+                );
+
+                let claimAfter = await erc20.balanceOf(person2.address)
+                let claim5A = Number(claim5)
+                let claim6A = Number(claim6)
+                let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
+    
+                expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+            })
         })
     })
 })
