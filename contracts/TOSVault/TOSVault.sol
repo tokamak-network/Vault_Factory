@@ -4,16 +4,18 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../common/AccessiblePlusCommon.sol";
+import "../interfaces/ILockTOSDividend.sol";
 
 contract TOSVault is AccessiblePlusCommon {
     using SafeERC20 for IERC20;
 
     string public name;
 
-    IERC20 public token;
+    address public token;
 
     bool public settingCheck;
-    address public owner;   
+    address public owner;
+
     address public dividiedPool;
 
     uint256 public totalAllocatedAmount;   
@@ -54,7 +56,7 @@ contract TOSVault is AccessiblePlusCommon {
         address _dividedPool
     ) {
         name = _name;
-        token = IERC20(_token);
+        token = _token;
         owner = _owner;
         dividiedPool = _dividedPool;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
@@ -72,7 +74,7 @@ contract TOSVault is AccessiblePlusCommon {
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external onlyOwner {
-        require(_totalAllocatedAmount == token.balanceOf(address(this)), "need to input the token");
+        require(_totalAllocatedAmount == IERC20(token).balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
         uint256 i = 0;
@@ -85,7 +87,7 @@ contract TOSVault is AccessiblePlusCommon {
     }
 
     function changeToken(address _token) external onlyOwner {
-        token = IERC20(_token);
+        token = _token;
     }
 
     function currentRound() public view returns (uint256 round) {
@@ -114,20 +116,22 @@ contract TOSVault is AccessiblePlusCommon {
         }        
     }
 
+    function approve() external {
+        IERC20(token).approve(dividiedPool,totalAllocatedAmount);
+    }
+
     function claim()
         external
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
-
         uint256 curRound = currentRound();
-
         uint256 amount = calcalClaimAmount(curRound);
 
-        require(token.balanceOf(address(this)) >= amount,"Vault: dont have token");
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
-        token.safeTransfer(dividiedPool, amount);
+        ILockTOSDividend(dividiedPool).distribute(token, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
     }
@@ -136,7 +140,7 @@ contract TOSVault is AccessiblePlusCommon {
         external    
         onlyOwner
     {
-        require(token.balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        token.safeTransfer(_account, _amount);
+        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
+        IERC20(token).safeTransfer(_account, _amount);
     }
 }

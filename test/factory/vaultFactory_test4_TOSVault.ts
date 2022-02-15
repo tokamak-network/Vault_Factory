@@ -1,5 +1,6 @@
 import { expect } from "chai";
 const { ethers, network } = require('hardhat')
+const LockTOSdivided_ABI = require('../../abis/LockTOSdivided_ABI.json');
 
 const {
     BigNumber,
@@ -29,6 +30,8 @@ describe("VaultFactory", () => {
     let person5 : any;
     let person6 : any;
     let erc20 : any;
+    let lockTOSdividedProxy = `0xA1E633C746DA99dceB42D65A59D3e4B5672a6bA1`;
+    let lockTOSContract : any;
 
     const BASE_TEN = 10
     const decimals = 18
@@ -107,14 +110,20 @@ describe("VaultFactory", () => {
         expect(await erc20.symbol()).to.be.equal(erc20Info.symbol);
     });
 
-    it("deploy dividedPool", async function() {
-        const VaultFactory = await ethers.getContractFactory("TypeAVaultFactory");
+    // it("deploy dividedPool", async function() {
+    //     const VaultFactory = await ethers.getContractFactory("TypeAVaultFactory");
     
-        dividedPool = await VaultFactory.connect(deployer).deploy();
+    //     dividedPool = await VaultFactory.connect(deployer).deploy();
     
-        let code = await deployer.provider.getCode(dividedPool.address);
-        expect(code).to.not.eq("0x");
-    });
+    //     let code = await deployer.provider.getCode(dividedPool.address);
+    //     expect(code).to.not.eq("0x");
+    // });
+
+    it("connect lockTOSContract", async () => {
+        dividedPool = new ethers.Contract( lockTOSdividedProxy, LockTOSdivided_ABI, ethers.provider );
+        console.log(dividedPool);
+        console.log("dividedPool.address : ", dividedPool.address);
+    })
 
     it("deploy TOSVaultFactory ", async function() {
         const VaultFactory = await ethers.getContractFactory("TOSVaultFactory");
@@ -149,11 +158,17 @@ describe("VaultFactory", () => {
         expect(await TOSVault.isAdmin(person1.address)).to.be.equal(true);
     });
 
+
     
     describe("TOSVault test", () => {
         it("check name, mock ", async function() {
             expect(await TOSVault.name()).to.equal("ABC");
             expect(await TOSVault.token()).to.equal(erc20.address);
+        });
+
+        it("check tos, dividedPool address", async () => {
+            console.log(await TOSVault.token()) 
+            console.log(await TOSVault.dividiedPool()) 
         });
         
         it("initialize check the onlyOwner", async () => {
@@ -225,6 +240,26 @@ describe("VaultFactory", () => {
 
         it("claim call before startTime", async () => {
             await expect(TOSVault.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
+        })
+
+        // it("anyone can call claim before approve", async () => {
+        //     await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
+        //     await ethers.provider.send('evm_mine');
+
+        //     let round = await TOSVault.currentRound()
+        //     expect(round).to.equal(1);
+    
+        //     await expect(TOSVault.connect(person1).claim()).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
+        // })
+
+        it("need the approve", async () => {
+            expect(await erc20.allowance(TOSVault.address,dividedPool.address)).to.equal(0);
+            let tx = await erc20.allowance(TOSVault.address,dividedPool.address)
+            // console.log("allowance1 :", tx)
+            await TOSVault.approve();      
+            let tx2 = await erc20.allowance(TOSVault.address,dividedPool.address)
+            // console.log("allowance2 :", tx2)      
+            expect(await erc20.allowance(TOSVault.address,dividedPool.address)).to.equal(totalAmount);
         })
 
         it("anyone can call claim", async () => {
