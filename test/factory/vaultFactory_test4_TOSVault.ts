@@ -38,6 +38,7 @@ describe("VaultFactory", () => {
     let TOSAddress = `0x73a54e5C054aA64C1AE7373C2B5474d8AFEa08bd`;
     let lockTOSContract : any;
     let tosContract : any;
+    let stakingAccount = "0xf0B595d10a92A5a9BC3fFeA7e79f5d266b6035Ea";
 
     const BASE_TEN = 10
     const decimals = 18
@@ -61,12 +62,16 @@ describe("VaultFactory", () => {
     let totalAmount2 = 5000000      //5,000,000
     const totalAmount = BigNumber.from(totalAmount2).mul(BigNumber.from(BASE_TEN).pow(decimals))
 
+    let tosStakAmount = 2000
+    let tosAmount = BigNumber.from(tosStakAmount).mul(BigNumber.from(BASE_TEN).pow(decimals))
+
     let claim1Time : any;
     let claim2Time : any;
     let claim3Time : any;
     let claim4Time : any;
     let claim5Time : any;
     let claim6Time : any;
+    let snapshot : any;
 
     let totalClaim = 6
 
@@ -104,7 +109,7 @@ describe("VaultFactory", () => {
         provider = ethers.provider;
     });
 
-    describe("deploy and basic setting", async () => {
+    describe("deploy the contract", async () => {
         it("deploy ERC20 for test", async function() { 
             const erc20mock = await ethers.getContractFactory("ERC20Mock")
     
@@ -163,7 +168,7 @@ describe("VaultFactory", () => {
             expect(afterTotalCreatedContracts).to.be.equal(prevTotalCreatedContracts.add(1));
     
             let info = await TOSVaultFactory.connect(deployer).getContracts(prevTotalCreatedContracts);
-            console.log("info.name :",info.name)
+            // console.log("info.name :",info.name)
             expect(info.name).to.be.equal("ABC");
     
             TOSVault = await ethers.getContractAt("TOSVault", info.contractAddress);
@@ -171,8 +176,40 @@ describe("VaultFactory", () => {
             expect(await TOSVault.isAdmin(person1.address)).to.be.equal(true);
         });
     })
+
+    // describe("setting the stake TOS", async () => {
+    //     it("approve the TOS staking", async () => {
+    //         let allowanceTOS = await tosContract.allowance(person1.address, lockTOSContract.address)
+    //         console.log(allowanceTOS)
+    //         expect(allowanceTOS).to.be.equal(0);
+
+    //         await tosContract.connect(person1).approve(lockTOSContract.address,tosAmount)
+
+    //         let allowanceTOS2 = await tosContract.allowance(person1.address, lockTOSContract.address)
+    //         console.log(allowanceTOS2)
+    //         expect(allowanceTOS2).to.be.equal(tosAmount);
+            
+    //         let setTos = await lockTOSContract.tos();
+    //         console.log(setTos)
+    //     })
+
+    //     it("staking the TOS", async () => {
+    //         console.log(lockTOSContract)
+    //         const block = await ethers.provider.getBlock('latest')
+
+    //         snapshot = block.timestamp;
+    //         let tx = Number(await lockTOSContract.balanceOfAt(person1.address, snapshot))
+    //         console.log("sTOS staking before : ", tx);
+            
+    //         await lockTOSContract.connect(person1).createLock(tosAmount,10);
+
+    //         snapshot = block.timestamp;
+    //         let tx2 = Number(await lockTOSContract.balanceOfAt(person1.address, snapshot))
+    //         console.log("sTOS staking after : ", tx2);
+    //     })
+    // })
     
-    describe("TOSVault test", () => {
+    describe("TOSVault test", async () => {
         it("check name, mock ", async function() {
             expect(await TOSVault.name()).to.equal("ABC");
             expect(await TOSVault.token()).to.equal(erc20.address);
@@ -254,16 +291,6 @@ describe("VaultFactory", () => {
             await expect(TOSVault.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
         })
 
-        // it("anyone can call claim before approve", async () => {
-        //     await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
-        //     await ethers.provider.send('evm_mine');
-
-        //     let round = await TOSVault.currentRound()
-        //     expect(round).to.equal(1);
-    
-        //     await expect(TOSVault.connect(person1).claim()).to.be.revertedWith("ERC20: transfer amount exceeds allowance");
-        // })
-
         it("need the approve", async () => {
             expect(await erc20.allowance(TOSVault.address,dividedPool.address)).to.equal(0);
             // let tx = await erc20.allowance(TOSVault.address,dividedPool.address)
@@ -274,30 +301,36 @@ describe("VaultFactory", () => {
             expect(await erc20.allowance(TOSVault.address,dividedPool.address)).to.equal(totalAmount);
         })
 
-        it("dividedPool have the 6 distributedTokens", async () => {
-            let tx = await dividedPool.distributedTokens(0);
-            console.log(tx);
+        // it("dividedPool have the 6 distributedTokens", async () => {
+        //     let tx = await dividedPool.distributedTokens(0);
+        //     console.log(tx);
 
-            let address1 = await dividedPool.distributedTokens(1);
-            console.log(address1);
+        //     let address1 = await dividedPool.distributedTokens(1);
+        //     console.log(address1);
 
-            let address2 = await dividedPool.distributedTokens(2);
-            console.log(address2);
+        //     let address2 = await dividedPool.distributedTokens(2);
+        //     console.log(address2);
 
-            let address3 = await dividedPool.distributedTokens(3);
-            console.log(address3);
+        //     let address3 = await dividedPool.distributedTokens(3);
+        //     console.log(address3);
 
-            let address4 = await dividedPool.distributedTokens(4);
-            console.log(address4);
+        //     let address4 = await dividedPool.distributedTokens(4);
+        //     console.log(address4);
 
-            let address5 = await dividedPool.distributedTokens(5);
-            console.log(address5);
+        //     let address5 = await dividedPool.distributedTokens(5);
+        //     console.log(address5);
 
-            let address6 = await dividedPool.distributedTokens(6);
-            let address7 = await dividedPool.distributedTokens(7);
+        //     let address6 = await dividedPool.distributedTokens(6);
+        //     let address7 = await dividedPool.distributedTokens(7);
 
-            await expect(dividedPool.distributedTokens(9)).to.be.reverted;
-        })
+        //     await expect(dividedPool.distributedTokens(9)).to.be.reverted;
+        // })
+
+        it("check claimable amount is 0", async () => {
+            let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
+            console.log(tx)
+            expect(tx).to.be.equal(0)
+        }).timeout(1000000)
 
         it("anyone can call claim", async () => {
             expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
@@ -313,19 +346,16 @@ describe("VaultFactory", () => {
             expect(await erc20.balanceOf(dividedPool.address)).to.equal(claim1);
         })
 
+        
         it("dividedPool added storage erc20.address", async () => {
-            let address6 = await dividedPool.distributedTokens(9);
-            console.log(address6);
-
-            console.log(erc20.address);
-
-            expect(address6).to.be.equal(erc20.address);
-
+            // let address6 = await dividedPool.distributedTokens(9);
+            // expect(address6).to.be.equal(erc20.address);
+        
             let tx2 = await dividedPool.distributions(erc20.address)
             console.log(tx2);
         })
-
-        
+            
+            
         it("anyone can call claim2", async () => {
             expect(await erc20.balanceOf(dividedPool.address)).to.equal(claim1);
         
@@ -344,45 +374,46 @@ describe("VaultFactory", () => {
         
             expect(Number(tx)).to.equal(tx4);
         })
+                
+        it("dividedPool claim test", async () => {
+            await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time + (86400*7)]);
+            await ethers.provider.send('evm_mine');
+        
+            // await dividedPool.connect(person1).claimBatch([erc20.address]);
+        
+            // expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
+        })  
+                        
+        it("check claimable amount is above 0 ", async () => {
+            let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
+            console.log(tx)
+            expect(tx).to.be.above(0);
+        }).timeout(1000000)
 
-        it("dividedPool test2", async () => {
-            let tx = await dividedPool.distributions(erc20.address)
-            console.log(tx);
+        it("anyone can call claim6", async () => {
+            let tx = await erc20.balanceOf(dividedPool.address)
+            let claim1A = Number(claim1)
+            let claim2A = Number(claim2)
+            let tx2 = claim1A+claim2A
+            expect(Number(tx)).to.equal(tx2);
+
+            // await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
+            // await ethers.provider.send('evm_mine');
+
+            let round = await TOSVault.currentRound()
+            expect(round).to.equal(6);
+            
+            await TOSVault.connect(person3).claim();
+
+            let claimAfter = await erc20.balanceOf(dividedPool.address)
+            let claim3A = Number(claim3)
+            let claim4A = Number(claim4)
+            let claim5A = Number(claim5)
+            let claim6A = Number(claim6)
+            let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
+
+            expect(Number(claimAfter)).to.equal(claimAfterAmount2);
         })
-            
-        // it("dividedPool claim test", async () => {
-        //     await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time + (86400*7)]);
-        //     await ethers.provider.send('evm_mine');
-
-        //     await dividedPool.connect(person1).claimBatch([erc20.address]);
-
-        //     expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
-        // })
-
-        // it("anyone can call claim6", async () => {
-        //     let tx = await erc20.balanceOf(dividedPool.address)
-        //     let claim1A = Number(claim1)
-        //     let claim2A = Number(claim2)
-        //     let tx2 = claim1A+claim2A
-        //     expect(Number(tx)).to.equal(tx2);
-
-        //     await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
-        //     await ethers.provider.send('evm_mine');
-
-        //     let round = await TOSVault.currentRound()
-        //     expect(round).to.equal(6);
-            
-        //     await TOSVault.connect(person3).claim();
-
-        //     let claimAfter = await erc20.balanceOf(dividedPool.address)
-        //     let claim3A = Number(claim3)
-        //     let claim4A = Number(claim4)
-        //     let claim5A = Number(claim5)
-        //     let claim6A = Number(claim6)
-        //     let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
-
-        //     expect(Number(claimAfter)).to.equal(claimAfterAmount2);
-        // })
     })
 
 })
