@@ -53,7 +53,8 @@ contract TOSVault is AccessiblePlusCommon {
         string memory _name,
         address _token,
         address _owner,
-        address _dividedPool
+        address _dividedPool,
+        address _factoryOwner
     ) {
         name = _name;
         token = _token;
@@ -61,6 +62,7 @@ contract TOSVault is AccessiblePlusCommon {
         dividiedPool = _dividedPool;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, owner);
+        _setupRole(ADMIN_ROLE, _factoryOwner);
     }
 
     ///@dev initialization function
@@ -102,7 +104,7 @@ contract TOSVault is AccessiblePlusCommon {
         }
     }
 
-    function calcalClaimAmount(uint256 _round) public view returns (uint256 amount) {
+    function calculClaimAmount(uint256 _round) public view returns (uint256 amount) {
         uint256 expectedClaimAmount;
         for(uint256 i = 0; i < _round; i++) {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
@@ -126,7 +128,7 @@ contract TOSVault is AccessiblePlusCommon {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 curRound = currentRound();
-        uint256 amount = calcalClaimAmount(curRound);
+        uint256 amount = calculClaimAmount(curRound);
 
         require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
         nowClaimRound = curRound;
