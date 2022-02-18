@@ -1,9 +1,14 @@
 const chai = require("chai");
 const { solidity } = require("ethereum-waffle");
 const { expect, assert } = chai;
+
+const JSBI = require('jsbi');
+
 //chai.use(require("chai-bn")(BN));
 chai.use(solidity);
 require("chai").should();
+const univ3prices = require('@thanpolas/univ3prices');
+const utils = require("./utils");
 
 // const { expect } = require("chai");
 const { ethers } = require("hardhat");
@@ -64,12 +69,17 @@ describe("LiquidityVault", function () {
     let poolInfo={
         name: "test",
         allocateToken: null,
-        admin : null
+        admin : null,
+        poolAddress: null,
+        token0: null,
+        token1: null
     }
 
     let price = {
         tos: ethers.BigNumber.from("10000") ,
-        projectToken:  ethers.BigNumber.from("250")
+        projectToken:  ethers.BigNumber.from("250"),
+        initSqrtPrice: 0,
+        initTick: 0
     }
 
   // rinkeby
@@ -359,26 +369,118 @@ describe("LiquidityVault", function () {
             expect(await liquidityVault.fee()).to.be.eq(uniswapInfo._fee);
 
         });
+
+
+        it("3-1. generatePoolAddress  ", async function () {
+            let poolAddress = await liquidityVault.computePoolAddress(uniswapInfo.tos, poolInfo.allocateToken.address, 3000);
+
+            // console.log('uniswapInfo.tos, poolInfo.allocateToken.address', uniswapInfo.tos, poolInfo.allocateToken.address);
+            // console.log('poolAddress',poolAddress);
+            poolInfo.poolAddress = poolAddress.pool;
+            poolInfo.token0 = poolAddress.token0;
+            poolInfo.token1 = poolAddress.token1;
+
+            /**
+            * Calculates the sqrt ratio as a Q64.96 corresponding to a given ratio of amount1 and amount0
+            *
+            * @param {bigint} amount1 the numerator amount, i.e. amount of token1.
+            * @param {bigint} amount0 the denominator amount, i.en amount of token0.
+            * @return {bigint} the sqrt ratio.
+            */
+            let amount1 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+            let amount0 = 1;
+
+            if(poolAddress.token0.toLowerCase() == uniswapInfo.tos.toLowerCase()){
+                const encodeSqrtRatioX96 = utils.encodeSqrtRatioX96(amount1, amount0);
+                price.initSqrtPrice = encodeSqrtRatioX96.toString();
+
+            } else {
+                const encodeSqrtRatioX96 = utils.encodeSqrtRatioX96(amount0, amount1);
+                price.initSqrtPrice = encodeSqrtRatioX96.toString();
+            }
+
+
+            price.initTick = await liquidityVault.getTickAtSqrtRatio(ethers.BigNumber.from(price.initSqrtPrice));
+            // console.log('price',price);
+
+            var tokenPrice0 = price.initSqrtPrice ** 2 / 2 ** 192; //token0
+            var tokenPrice1 = 2 ** 192 / price.initSqrtPrice ** 2;  //token1
+            // console.log('tokenPrice0', tokenPrice0);
+            // console.log('tokenPrice1', tokenPrice1);
+        });
+
+        it("2-3. setInitialPrice : when not admin, fail", async function () {
+
+            await expect(
+                liquidityVault.connect(user2).setInitialPrice(
+                    price.tos,
+                    price.projectToken,
+                    price.initSqrtPrice
+                )
+             ).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+
+        it("2-3. setInitialPrice  ", async function () {
+            await liquidityVault.connect(poolInfo.admin).setInitialPrice(
+                    price.tos,
+                    price.projectToken,
+                    price.initSqrtPrice
+                );
+            expect((await liquidityVault.initialTosPrice()).toNumber()).to.be.eq(price.tos.toNumber());
+            expect((await liquidityVault.initialTokenPrice()).toNumber()).to.be.eq(price.projectToken.toNumber());
+            expect(await liquidityVault.initSqrtPriceX96()).to.be.eq(price.initSqrtPrice);
+        });
+
     });
 
     describe("LiquidityVault : Can Anybody ", function () {
 
-        it("3-1. setPool  ", async function () {
+        it("3-2. setPool  ", async function () {
             await liquidityVault.setPool();
+
+            expect((await liquidityVault.pool()).toLowerCase()).to.be.eq(poolInfo.poolAddress.toLowerCase());
+            expect((await liquidityVault.token0Address()).toLowerCase()).to.be.eq(poolInfo.token0.toLowerCase());
+            expect((await liquidityVault.token1Address()).toLowerCase()).to.be.eq(poolInfo.token1.toLowerCase());
+
+            uniswapV3Pool = await ethers.getContractAt(UniswapV3Pool.abi, poolInfo.poolAddress );
+
+            let slot0 = await uniswapV3Pool.slot0();
+            //console.log(slot0);
+            expect(slot0.sqrtPriceX96).to.be.eq(price.initSqrtPrice);
+            expect(slot0.tick).to.be.eq(price.initTick);
         });
 
-        it("3-2. setPoolInitialize  ", async function () {
-            await liquidityVault.setPool();
+
+        it("3-3. approveERC20 ", async function () {
+            let amount = ethers.BigNumber.from("1"+"0".repeat(20));
+            await liquidityVault.connect(user2).approveERC20(tosInfo.contract.address, uniswapInfo.npm, amount);
+
+            expect(await tosInfo.contract.allowance(liquidityVault.address, uniswapInfo.npm)).to.be.eq(amount);
         });
 
+        it("3-4. currentRound ", async function () {
+            expect(await liquidityVault.currentRound()).to.be.eq(0);
+        });
 
-        // it("3-1. setPool  ", async function () {
-        //     await liquidityVault.currentRound();
+        it("3-5. calculateClaimAmount ", async function () {
+            expect(await liquidityVault.calculateClaimAmount(0)).to.be.eq(0);
+        });
+
+        // it("3-4. mint ", async function () {
+        //     await liquidityVault.connect(user2).mint();
         // });
 
-        // it("3-1. setPool  ", async function () {
-        //     await liquidityVault.currentRound();
+
+        // it("mint", async function () {
+
+        //     uniswapV3Pool = await ethers.getContractAt(UniswapV3Pool.abi, poolAddress, ethers.provider);
+
+        //     let slot0 = await uniswapV3Pool.slot0();
+        //     console.log(slot0);
+        //     35836
+
         // });
+
 
     });
 

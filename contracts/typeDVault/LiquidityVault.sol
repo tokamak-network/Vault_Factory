@@ -120,15 +120,18 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     ///@dev setInitialPrice function
     ///@param tosPrice tosPrice
     ///@param tokenPrice tokenPrice
+    ///@param initSqrtPrice initSqrtPriceX96
     function setInitialPrice(
         uint256 tosPrice,
-        uint256 tokenPrice
+        uint256 tokenPrice,
+        uint160 initSqrtPrice
         )
         external
         onlyOwner
     {
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;
+        initSqrtPriceX96 = initSqrtPrice;
     }
 
     ///@dev setTickIntervalPercaentage function
@@ -232,6 +235,34 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         token = IERC20(_token);
     }
 
+    function computePoolAddress(address tokenA, address tokenB, uint24 _fee)
+        public view returns (address pool, address token0, address token1)
+    {
+        bytes32  POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
+
+        address token0 = tokenA;
+        address token1 = tokenB;
+
+        if(token0 > token1) {
+            token0 = tokenB;
+            token1 = tokenA;
+        }
+        require(token0 < token1);
+        address pool = address( uint160(
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        hex'ff',
+                        address(UniswapV3Factory),
+                        keccak256(abi.encode(token0, token1, _fee)),
+                        POOL_INIT_CODE_HASH
+                    )
+                )
+            ))
+        );
+
+        return (pool, token0, token1);
+    }
 
     function clean() external onlyOwner afterSetUniswap {
         totalClaimsAmount = 0;
@@ -251,6 +282,10 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         pool = IUniswapV3Pool(getPool);
         token0Address = pool.token0();
         token1Address = pool.token1();
+
+        if(initSqrtPriceX96 > 0){
+            setPoolInitialize(initSqrtPriceX96);
+        }
     }
 
     function setPoolInitialize(uint160 inSqrtPriceX96)
@@ -261,7 +296,6 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             pool.initialize(inSqrtPriceX96);
         }
     }
-
 
     function currentRound() public view returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
@@ -304,30 +338,6 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
-    /*
-    function setPool(address _pool, address token0, address token1)
-        public afterSetUniswap
-    {
-        pool = IUniswapV3Pool(_pool);
-        token0Address = token0;
-        token1Address = token1;
-    }
-
-
-    function initialSqrtPriceX96()
-        public
-        view
-        returns (uint160)
-    {
-        uint256 surtPrice = 0;
-        if(initialTokenPrice > initialTosPrice){
-            surtPrice = sqrt(initialTokenPrice / initialTosPrice) * (2**96);
-        } else {
-            surtPrice = sqrt(initialTosPrice / initialTokenPrice) * (2**96);
-        }
-        return uint160(surtPrice);
-    }
-
 
     function calculateSqrtPriceX96(uint256 price)
         external
@@ -347,7 +357,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             z = (x / z + z) / 2;
         }
     }
-     */
+
     function tickSpace() public view returns (int24) {
        return (TickMath.MAX_TICK / int24(fee));
     }

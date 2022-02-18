@@ -30,6 +30,7 @@ contract LiquidityVaultStorage  {
     address public token1Address;
     uint256 public initialTosPrice ;
     uint256 public initialTokenPrice ;
+    uint160 public initSqrtPriceX96 ;
     uint256 constant INITIAL_PRICE_DIV = 1e18;
     uint public tickIntervalPercaentage;
     //--
