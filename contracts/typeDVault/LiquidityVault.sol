@@ -19,6 +19,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
+
     event Exchanged(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountExchangedOut, uint256 totalClaimsAmount);
 
     event Claimed(uint256 indexed tokenId, uint256 amount, uint256 totalClaimsAmount);
@@ -76,9 +77,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             && address(SwapRouter) != address(0)
             && address(WTON) != address(0)
             && address(TOS) != address(0)
-            && address(WETHUSDCPool) != address(0)
-            && address(WTONWETHPool) != address(0)
-            && address(WTONTOSPool) != address(0)
+            // && address(WETHUSDCPool) != address(0)
+            // && address(WTONWETHPool) != address(0)
+            // && address(WTONTOSPool) != address(0)
             ,
             "Vault: before setUniswap");
         _;
@@ -90,6 +91,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, owner);
         tickIntervalPercaentage = 25;
+
     }
 
     ///@dev setBaseInfo function
@@ -173,10 +175,6 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         // revokeRole(ADMIN_ROLE, owner);
     }
 
-    function clean() external onlyOwner afterSetUniswap {
-        totalClaimsAmount = 0;
-    }
-
     function setUniswapInfo(
         address poolfactory,
         address npm,
@@ -197,10 +195,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     function setPoolInfo(
             address wethUsdcPool,
             address wtonWethPool,
-            address wtonTosPool,
-            address wton,
-            address tos,
-            uint24 _fee
+            address wtonTosPool
         )
         external
         onlyOwner
@@ -208,22 +203,65 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         require(wethUsdcPool != address(0) && wethUsdcPool != address(WETHUSDCPool), "same wethUsdcPool");
         require(wtonWethPool != address(0) && wtonWethPool != address(WTONWETHPool), "same wtonWethPool");
         require(wtonTosPool != address(0) && wtonTosPool != address(WTONTOSPool), "same wtonTosPool");
-        require(wton != address(0) && wton != address(WTON), "same wton");
-        require(tos != address(0) && tos != address(TOS), "same tos");
+
 
         WETHUSDCPool = IUniswapV3Pool(wethUsdcPool);
         WTONWETHPool = IUniswapV3Pool(wtonWethPool);
         WTONTOSPool = IUniswapV3Pool(wtonTosPool);
 
+    }
+
+    function setTokens(
+            address wton,
+            address tos,
+            uint24 _fee
+        )
+        external
+        onlyOwner
+    {
+        require(wton != address(0) && wton != address(WTON), "same wton");
+        require(tos != address(0) && tos != address(TOS), "same tos");
+
         WTON = IERC20(wton);
         TOS = IERC20(tos);
-
         fee = _fee;
     }
+
 
     function changeToken(address _token) external onlyOwner {
         token = IERC20(_token);
     }
+
+
+    function clean() external onlyOwner afterSetUniswap {
+        totalClaimsAmount = 0;
+    }
+
+
+    function setPool()
+        public afterSetUniswap
+    {
+
+        address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
+        if(getPool == address(0)){
+            address _pool = UniswapV3Factory.createPool(address(TOS), address(token), fee);
+            require(_pool != address(0), "createPool fail");
+            getPool = _pool;
+        }
+        pool = IUniswapV3Pool(getPool);
+        token0Address = pool.token0();
+        token1Address = pool.token1();
+    }
+
+    function setPoolInitialize(uint160 inSqrtPriceX96)
+        public nonZeroAddress(address(pool))
+    {
+        (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
+        if(sqrtPriceX96 == 0){
+            pool.initialize(inSqrtPriceX96);
+        }
+    }
+
 
     function currentRound() public view returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
@@ -266,28 +304,6 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
-
-    function setPool()
-        public afterSetUniswap
-    {
-        address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
-        if(getPool == address(0)){
-            address _pool = UniswapV3Factory.createPool(address(TOS), address(token), fee);
-            require(_pool != address(0), "createPool fail");
-        }
-        pool = IUniswapV3Pool(getPool);
-        token0Address = pool.token0();
-        token1Address = pool.token1();
-    }
-
-    function setPoolInitialize(uint160 inSqrtPriceX96)
-        public nonZeroAddress(address(pool))
-    {
-        (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
-        if(sqrtPriceX96 == 0){
-            pool.initialize(inSqrtPriceX96);
-        }
-    }
     /*
     function setPool(address _pool, address token0, address token1)
         public afterSetUniswap

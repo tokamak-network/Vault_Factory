@@ -51,4 +51,5 @@ contract LiquidityVaultStorage  {
 
 
     bool public pauseProxy;
+
 }

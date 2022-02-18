@@ -27,6 +27,7 @@ contract LiquidityVaultProxy is
         tickIntervalPercaentage = 25;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, owner);
+
     }
 
     /// @notice Set pause state
