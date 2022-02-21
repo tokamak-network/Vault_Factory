@@ -90,7 +90,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         owner = msg.sender;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, owner);
-        tickIntervalPercaentage = 25;
+        tickIntervalMinimum = 6000;
 
     }
 
@@ -134,16 +134,16 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         initSqrtPriceX96 = initSqrtPrice;
     }
 
-    ///@dev setTickIntervalPercaentage function
-    ///@param _percentage percentage
-    function setTickIntervalPercaentage(
-        uint _percentage
+    ///@dev setTickIntervalMinimum function
+    ///@param _interval _interval
+    function setTickIntervalMinimum(
+        int24 _interval
         )
         external
         onlyOwner
     {
-        require(_percentage> 0 , "zero _percentage");
-        tickIntervalPercaentage = _percentage;
+        require(_interval > 0 , "zero _interval");
+        tickIntervalMinimum = _interval;
     }
 
     ///@dev initialization function
@@ -165,9 +165,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         uint256 i = 0;
         for(i = 0; i < _claimCounts; i++) {
             claimTimes.push(_claimTimes[i]);
-            console.log("claimTimes['%s'] : '%s', _claimTimes[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
+            //console.log("claimTimes['%s'] : '%s', _claimTimes[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
             claimAmounts.push(_claimAmounts[i]);
-            console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
+            //console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
 
             // 사용한 금액
             addAmounts.push(0);
@@ -323,6 +323,16 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
+    function getClaimInfo() public view returns (
+        uint256 _totalClaimCounts,
+        uint256[] memory _claimTimes,
+        uint256[] memory _claimAmounts,
+        uint256 _totalClaimsAmount,
+        uint256[] memory _addAmounts
+        ) {
+
+        return (totalClaimCounts, claimTimes, claimAmounts, totalClaimsAmount, addAmounts) ;
+    }
 
     function availableUseAmount(uint256 _round) public view returns (uint256 amount) {
         uint256 expectedClaimAmount;
@@ -370,25 +380,11 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         return (minTick, maxTick, numTicks);
     }
 
-    function tickInfos(int24 tick) public view returns (int24, int24, uint128) {
-
-        (int24 minTick, int24 maxTick, uint24 numTicks) = tickBaseInfos() ;
-
-        uint128 tickInterval = uint128(numTicks) * uint128(tickIntervalPercaentage) / 1000 ;
-        int24 tickIntervalConv = int24(uint24(tickInterval))*int24(fee);
-        int24 tickLower =  tick - tickIntervalConv;
-        int24 tickUpper = tick + tickIntervalConv;
-        if(minTick + tickIntervalConv > tick )  tickLower = minTick;
-        if(maxTick - tickIntervalConv < tick )  tickUpper = maxTick;
-
-        return (tickLower, tickUpper, type(uint128).max / numTicks);
-    }
-
-    function getSqrtRatioAtTick(int24 tick) external pure returns (uint160) {
+    function getSqrtRatioAtTick(int24 tick) public pure returns (uint160) {
         return TickMath.getSqrtRatioAtTick(tick);
     }
 
-    function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24) {
+    function getTickAtSqrtRatio(uint160 sqrtPriceX96) public pure returns (int24) {
         return TickMath.getTickAtSqrtRatio(sqrtPriceX96);
     }
 
@@ -415,23 +411,43 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         require(token.balanceOf(address(this)) >= tokenBalance, "token is insufficient.");
     }
 
-    function mint(int24 tickLower, int24 tickUpper, uint256 tosUseAmount, uint256 tokenUseAmount)
+    /*
+    function mint(int24 tickLower, int24 tickUpper, uint256)
         external
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
+        // console.log("tickLower  %s", uint256(uint24(tickLower)));
+        // console.log("tickUpper  %s", uint256(uint24(tickUpper)));
+
+
+        // console.log("tickIntervalMinimum  %s", uint256(uint24(tickIntervalMinimum)));
+
+        // console.log("tick Interval   %s", uint256(uint24(tickUpper - tickLower)));
+
+
+        require(tickUpper - tickLower >= tickIntervalMinimum, "Vault: tick interval is less than tickIntervalMinimum");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 curRound = currentRound();
         uint256 amount = availableUseAmount(curRound);
-        require(tokenUseAmount <= amount, "exceed to claimable amount");
+        // require(tokenUseAmount <= amount, "exceed to claimable amount");
+
+        require(amount > 0, "claimable token is zero");
+        uint256 tokenUseAmount = amount;
+        uint256 tosUseAmount =  TOS.balanceOf(address(this));
+        require(tosUseAmount > 0, "tos balance is zero");
+
+        console.log("tos  %s", tosUseAmount);
+        console.log("token %s", tokenUseAmount);
+
+
         nowClaimRound = curRound;
 
         (,int24 tick,,,,,) =  pool.slot0();
 
-        require(tickLower < tick && tick < tickUpper, "out of range");
-        require(tosUseAmount > 0 && tokenUseAmount > 0, "zero tosUseAmount or tokenUseAmount");
+        require(tickLower < tick && tick < tickUpper, "tick is out of range");
 
         uint256 amount0Desired =  tosUseAmount;
         uint256 amount1Desired =  tokenUseAmount;
@@ -450,6 +466,17 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             require(token.approve(address(NonfungiblePositionManager),token.totalSupply()),"token approve fail");
         }
 
+        console.logInt(tickLower);
+         console.logInt(tickUpper);
+        //console.log("tickUpper %s", uint256(int256(tickUpper)));
+
+        uint256 allowanceTOS = TOS.allowance(address(this), address(NonfungiblePositionManager));
+        console.log("allowanceTOS %s", allowanceTOS);
+
+        uint256 allowanceTOKEN = token.allowance(address(this), address(NonfungiblePositionManager));
+        console.log("allowanceTOKEN %s", allowanceTOKEN);
+
+
         int24 _tickLower = tickLower;
         int24 _tickUpper = tickUpper;
         (
@@ -459,10 +486,12 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             uint256 amount1
         ) = NonfungiblePositionManager.mint(INonfungiblePositionManager.MintParams(
                 token0Address, token1Address, fee, _tickLower, _tickUpper,
-                amount0Desired,amount1Desired, 0, 0,
+                amount0Desired, amount1Desired, 0, 0,
                 address(this), block.timestamp + 100000
             )
         );
+
+        console.log("tokenId %s", tokenId);
 
         if(token0Address != address(TOS)){
             totalClaimsAmount = totalClaimsAmount + amount0;
@@ -474,6 +503,104 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
 
         emit Minted(msg.sender, tokenId, liquidity, amount0, amount1);
     }
+    */
+    function mint(int24 tickLower, int24 tickUpper)
+        external
+    {
+        mintToken(tickLower, tickUpper,  TOS.balanceOf(address(this)),  token.balanceOf(address(this))/totalClaimCounts );
+    }
+    function mintToken(int24 tickLower, int24 tickUpper, uint256 tosUseAmount, uint256 tokenUseAmount)
+        public
+        nonZeroAddress(address(pool))
+        nonZeroAddress(token0Address)
+        nonZeroAddress(token1Address)
+    {
+        require(block.timestamp > claimTimes[0], "Vault: not started yet");
+
+        require(tickUpper - tickLower >= tickIntervalMinimum, "Vault: tick interval is less than tickIntervalMinimum");
+        require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
+        uint256 curRound = currentRound();
+        uint256 amount = availableUseAmount(curRound);
+       // console.log("availableUseAmount  %s", amount);
+        //console.log("tokenUseAmount  %s", tokenUseAmount);
+
+        require(tokenUseAmount <= amount, "exceed to claimable amount");
+        require(amount > 0, "claimable token is zero");
+        //uint256 tokenUseAmount = amount;
+        require(tokenUseAmount > 0, "tokenUseAmount is zero");
+
+        uint256 tosBalance =  TOS.balanceOf(address(this));
+        require(tosBalance >= tosUseAmount && tosUseAmount > 0, "tos balance is zero");
+
+        //console.log("tos  %s", tosUseAmount);
+        //console.log("token %s", tokenUseAmount);
+
+        nowClaimRound = curRound;
+
+        (,int24 tick,,,,,) =  pool.slot0();
+
+        require(tickLower < tick && tick < tickUpper, "tick is out of range");
+
+        uint256 amount0Desired =  tosUseAmount;
+        uint256 amount1Desired =  tokenUseAmount;
+        if(token0Address != address(TOS)){
+            amount0Desired = tokenUseAmount;
+            amount1Desired = tosUseAmount;
+        }
+
+        //console.log("amount0Desired  %s", amount0Desired);
+        //console.log("amount1Desired  %s", amount1Desired);
+
+        checkBalance(tosUseAmount, tokenUseAmount);
+
+        if(tosUseAmount > TOS.allowance(address(this), address(NonfungiblePositionManager)) ) {
+                require(TOS.approve(address(NonfungiblePositionManager),TOS.totalSupply()),"TOS approve fail");
+        }
+
+        if(tokenUseAmount > token.allowance(address(this), address(NonfungiblePositionManager)) ) {
+            require(token.approve(address(NonfungiblePositionManager),token.totalSupply()),"token approve fail");
+        }
+
+        //console.logInt(tickLower);
+        // console.logInt(tickUpper);
+        //console.log("tickUpper %s", uint256(int256(tickUpper)));
+
+        uint256 allowanceTOS = TOS.allowance(address(this), address(NonfungiblePositionManager));
+        //console.log("allowanceTOS %s", allowanceTOS);
+
+        uint256 allowanceTOKEN = token.allowance(address(this), address(NonfungiblePositionManager));
+        //console.log("allowanceTOKEN %s", allowanceTOKEN);
+
+
+        int24 _tickLower = tickLower;
+        int24 _tickUpper = tickUpper;
+        (
+            uint256 tokenId,
+            uint128 liquidity,
+            uint256 amount0,
+            uint256 amount1
+        ) = NonfungiblePositionManager.mint(INonfungiblePositionManager.MintParams(
+                token0Address, token1Address, fee, _tickLower, _tickUpper,
+                amount0Desired, amount1Desired, 0, 0,
+                address(this), block.timestamp + 100000
+            )
+        );
+
+        require(tokenId > 0, "tokenId is zero");
+        tokenIds.push(tokenId);
+        //console.log("tokenId %s", tokenId);
+
+        if(token0Address != address(TOS)){
+            totalClaimsAmount = totalClaimsAmount + amount0;
+            emit Claimed(tokenId, amount0, totalClaimsAmount);
+        } else {
+            totalClaimsAmount = totalClaimsAmount + amount1;
+            emit Claimed(tokenId, amount1, totalClaimsAmount);
+        }
+
+        emit Minted(msg.sender, tokenId, liquidity, amount0, amount1);
+    }
+
 
     function increaseLiquidity(
         uint256 tokenId,

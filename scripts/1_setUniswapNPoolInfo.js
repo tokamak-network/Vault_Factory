@@ -91,14 +91,22 @@ async function main() {
   let tx2 = await LiquidityVaultContract.connect(deployer).setPoolInfo(
       uniswapInfo.wethUsdcPool,
       uniswapInfo.wtonWethPool,
-      uniswapInfo.wtonTosPool,
+      uniswapInfo.wtonTosPool
+  );
+
+  await tx2.wait();
+  console.log('setPoolInfo ',tx2.hash);
+
+
+  let tx3 = await LiquidityVaultContract.connect(deployer).setTokens(
       uniswapInfo.wton,
       uniswapInfo.tos,
       uniswapInfo._fee
   );
 
-  await tx2.wait();
-  console.log('setPoolInfo ',tx2.hash);
+  await tx3.wait();
+  console.log('setTokens ',tx3.hash);
+
 
 }
 

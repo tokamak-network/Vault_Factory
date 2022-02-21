@@ -24,7 +24,7 @@ contract LiquidityVaultProxy is
         );
 
         owner = msg.sender;
-        tickIntervalPercaentage = 25;
+        tickIntervalMinimum = 6000;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, owner);
 

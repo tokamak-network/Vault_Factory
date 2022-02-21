@@ -11,6 +11,17 @@ const {
 const JSBI = require('jsbi');
 const Web3 = require('web3');
 
+const {
+  encodePriceSqrt,
+  getNegativeOneTick,
+  getPositiveOneMaxTick,
+  getTick,
+  TICK_SPACINGS,
+  FeeAmount,
+  getMinTick,
+  getMaxTick
+} = require("../test/uniswap-v3/uniswap-v3-contracts");
+
 
 const ERC20Abi = require("../abis/ERC20A.json");
 const UniswapV3PoolFactoryAbi = require("../abis/UniswapV3Factory.json");
@@ -51,7 +62,6 @@ async function main() {
   }
 
   poolInfo.admin = deployer.address;
-
 
   // rinkeby
   let uniswapInfo={
@@ -130,6 +140,8 @@ async function main() {
   let applySwapPrice = false;
 
   let poolAddress = await LiquidityVaultContract.pool();
+  console.log('poolAddress', poolAddress);
+
   let UniswapV3PoolContract = await ethers.getContractAt(UniswapV3PoolAbi.abi, poolAddress);
 
   let slot0 =  await UniswapV3PoolContract.slot0();
@@ -137,42 +149,29 @@ async function main() {
 
   let sqrtPriceX96 = slot0.sqrtPriceX96;
 
-  if(sqrtPriceX96.eq(ethers.BigNumber.from("0"))){
-  // let initialSqrtPriceX96 = sqrt()
-
-  }
-
   var tokenPrice0 = sqrtPriceX96 ** 2 / 2 ** 192; //token0
   var tokenPrice1 = 2 ** 192 / sqrtPriceX96 ** 2;  //token1
   console.log('tokenPrice0', tokenPrice0);
   console.log('tokenPrice1', tokenPrice1);
 
-  // let price = {
-  //     tos: ethers.BigNumber.from("10000") ,
-  //     projectToken:  ethers.BigNumber.from("250")
-  // }
+  let tickIntervalMinimum = await LiquidityVaultContract.tickIntervalMinimum();
+  console.log('tickIntervalMinimum', tickIntervalMinimum);
 
-  // var tokenPrice0_1 = sqrtPriceX96 ** 2 / 2 ** 192; //token0
-  // var tokenPrice1_1 = 2 ** 192 / sqrtPriceX96 ** 2;  //token1
-  // console.log('tokenPrice0', tokenPrice0);
-  // console.log('tokenPrice1', tokenPrice1);
+  // let tick1 = slot0.tick - (tickIntervalMinimum/2) -1  ;
+  // let tick2 = slot0.tick + (tickIntervalMinimum/2) + 1  ;
 
-  let tickInfos = await LiquidityVaultContract.tickInfos(slot0.tick);
-  console.log('tickInfos', tickInfos);
+  // let tick1 = slot0.tick -10000  ;
+  // let tick2 = slot0.tick +10000  ;
 
-  //개수 : (885000*2+1) * 20/100
-//  575773886499049853575929961813482591
-
-
-  let tick1 = 34140 ;
-  let tick2 = 37620 ;
+  let tick1 = getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM])  ;
+  let tick2 = getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) ;
 
   let getSqrtRatioAtTick1 = await LiquidityVaultContract.getSqrtRatioAtTick(tick1);
   console.log('tick1', tick1, getSqrtRatioAtTick1, getSqrtRatioAtTick1 ** 2 / 2 ** 192 );
   let getSqrtRatioAtTick2 = await LiquidityVaultContract.getSqrtRatioAtTick(tick2);
   console.log('tick2', tick2, getSqrtRatioAtTick2, getSqrtRatioAtTick2 ** 2 / 2 ** 192);
 
-
+  /*
   let tick3 = 34141 ;
   let getSqrtRatioAtTick3 = await LiquidityVaultContract.getSqrtRatioAtTick(tick3);
   console.log('tick3', tick3, getSqrtRatioAtTick3, getSqrtRatioAtTick3 ** 2 / 2 ** 192);
@@ -186,24 +185,28 @@ async function main() {
 
   let getSqrtRatioAtTick5 = await LiquidityVaultContract.getSqrtRatioAtTick(tick5);
   console.log('tick5', tick5, getSqrtRatioAtTick5, getSqrtRatioAtTick5 ** 2 / 2 ** 192);
+  */
 
 
- /*
    // let tx3 = await LiquidityVaultContract.connect(deployer).createLP(tokenAmount, applySwapPrice);
   // await tx3.wait();
   // console.log('createLP ',tx3.hash);
-  let amount0Desired = ethers.BigNumber.from("2500000000000000000");
-  let amount1Desired = ethers.BigNumber.from("100000000000000000000");
+
+  let token0 =  await LiquidityVaultContract.token0Address();
+  let token1 =  await LiquidityVaultContract.token1Address();
+
+  let amount0Desired = ethers.BigNumber.from("999999999999999982");
+  let amount1Desired = ethers.BigNumber.from("25988263981680822");
+
   let NPMContract = await ethers.getContractAt(NonfungiblePositionManagerAbi.abi, NPMAddress);
 
 
-
   let tx1 = await NPMContract.connect(deployer).mint({
-          token0: '0xebffb9497237fc84687e09a1c14dae2a3be73d9c',
-          token1: '0x73a54e5c054aa64c1ae7373c2b5474d8afea08bd',
+          token0: token0,
+          token1: token1,
           fee: 3000,
-          tickLower: 35689,
-          tickUpper: 35983,
+          tickLower: tick1,
+          tickUpper: tick2,
           amount0Desired,
           amount1Desired,
           amount0Min: 0,
@@ -218,7 +221,6 @@ async function main() {
     //2500000000000000000,100000000000000000000,0,0,’0x865264b30eb29A2978b9503B8AfE2A2DDa33eD7E’,1644921216]);
   console.log('tx1 ',tx1);
   // amount0Desired 2500000000000000000, amount1Desired 100000000000000000000
-  */
 
 
   // let tx  = await LiquidityVaultContract.mint(

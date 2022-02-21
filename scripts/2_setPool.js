@@ -10,6 +10,12 @@ const UniswapV3PoolAbi = require("../abis/UniswapV3Pool.json");
 const save = require("./save_deployed");
 const loadDeployed = require("./load_deployed");
 
+
+const {
+  encodePriceSqrt,
+} = require("../test/uniswap-v3/uniswap-v3-contracts");
+
+
 async function main() {
    let deployer, user2;
 
@@ -26,12 +32,21 @@ async function main() {
   let poolInfo={
     name: "test",
     allocateToken: AllocatedToken,
-    admin : "0x5b6e72248b19F2c5b88A4511A6994AD101d0c287"
+    admin : "0x5b6e72248b19F2c5b88A4511A6994AD101d0c287",
+    poolAddress : null,
+    token0: null,
+    token1: null,
+    reserve0: null,
+    reserve1: null
   }
 
   let price = {
       tos: ethers.BigNumber.from("10000") ,
-      projectToken:  ethers.BigNumber.from("250")
+      projectToken:  ethers.BigNumber.from("250"),
+      initSqrtPrice: 0,
+      initTick: 0,
+      targetPriceInterval: 10,
+      tickPrice: 0
   }
 
   let deployInfo = {
@@ -78,9 +93,61 @@ async function main() {
   const LiquidityVaultContract = await ethers.getContractAt("LiquidityVault", LiquidityVaultProxy);
   console.log("LiquidityVaultProxy :", LiquidityVaultProxy);
 
-  let tx3 = await LiquidityVaultContract.connect(deployer)["setPool()"]();
-  await tx3.wait();
-  console.log('setPool ',tx3.hash);
+  let poolAddress = await LiquidityVaultContract.computePoolAddress(uniswapInfo.tos, poolInfo.allocateToken, 3000);
+
+  console.log('uniswapInfo.tos, poolInfo.allocateToken.address', uniswapInfo.tos, poolInfo.allocateToken.address);
+  console.log('poolAddress',poolAddress);
+
+            poolInfo.poolAddress = poolAddress.pool;
+            poolInfo.token0 = poolAddress.token0;
+            poolInfo.token1 = poolAddress.token1;
+
+            if(poolInfo.token0.toLowerCase() == uniswapInfo.tos.toLowerCase()){
+                poolInfo.reserve0 = 1;
+                poolInfo.reserve1 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+            } else {
+                poolInfo.reserve0 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+                poolInfo.reserve1 = 1;
+            }
+
+            let sqrtPrice = encodePriceSqrt(poolInfo.reserve1,  poolInfo.reserve0);
+            console.log('** sqrtPrice',sqrtPrice);
+            price.initSqrtPrice = sqrtPrice;
+
+            price.initTick = await LiquidityVaultContract.getTickAtSqrtRatio(ethers.BigNumber.from(price.initSqrtPrice));
+            // console.log('price',price);
+            var tokenPrice0 = price.initSqrtPrice ** 2 / 2 ** 192; //token0
+            var tokenPrice1 = 2 ** 192 / price.initSqrtPrice ** 2;  //token1
+            console.log('tokenPrice0',tokenPrice0);
+            console.log('tokenPrice1',tokenPrice1);
+            let sqrt1 = await LiquidityVaultContract.getSqrtRatioAtTick(price.initTick+1);
+            var tokenPrice01= sqrt1 ** 2 / 2 ** 192;
+            let tickPrice = 0;
+            if(tokenPrice01 > tokenPrice0)  tickPrice = tokenPrice01-tokenPrice0;
+            else tickPrice = tokenPrice0-tokenPrice01;
+            price.tickPrice = tickPrice;
+            let targetTickInterval = price.targetPriceInterval / price.tickPrice;
+            targetTickInterval = parseInt(targetTickInterval);
+
+
+          let tx1 = await LiquidityVaultContract.connect(deployer).setInitialPrice(
+            price.tos,
+            price.projectToken,
+            price.initSqrtPrice
+          );
+          await tx1.wait();
+          console.log('setInitialPrice hash ',tx1.hash);
+
+
+          let tx2 = await LiquidityVaultContract.connect(deployer).setTickIntervalMinimum(targetTickInterval);
+          await tx2.wait();
+          console.log('setTickIntervalMinimum hash ',tx2.hash);
+
+
+          let tx3 = await LiquidityVaultContract.connect(deployer)["setPool()"]();
+          await tx3.wait();
+          console.log('setPool hash ',tx3.hash);
+
 
 }
 
