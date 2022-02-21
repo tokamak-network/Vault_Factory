@@ -20,11 +20,11 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     using SafeMath for uint256;
 
 
-    event Exchanged(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountExchangedOut, uint256 totalClaimsAmount);
+    event ExchangedInVault(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountExchangedOut, uint256 totalClaimsAmount);
 
     event Claimed(uint256 indexed tokenId, uint256 amount, uint256 totalClaimsAmount);
 
-    event Minted(
+    event MintedInVault(
         address indexed caller,
         uint256 tokenId,
         uint128 liquidity,
@@ -32,7 +32,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         uint256 amount1
     );
 
-    event Withdrawal(address caller, address tokenAddress, address to, uint256 amount);
+    event WithdrawalInVault(address caller, address tokenAddress, address to, uint256 amount);
 
     event Initialized(uint256 _totalAllocatedAmount,
         uint256 _claimCounts,
@@ -45,19 +45,19 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     /// @param liquidity The amount by which liquidity for the NFT position was increased
     /// @param amount0 The amount of token0 that was paid for the increase in liquidity
     /// @param amount1 The amount of token1 that was paid for the increase in liquidity
-    event IncreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+    event IncreaseLiquidityInVault(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
     /// @notice Emitted when liquidity is decreased for a position NFT
     /// @param tokenId The ID of the token for which liquidity was decreased
     /// @param liquidity The amount by which liquidity for the NFT position was decreased
     /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
     /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
-    event DecreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+    event DecreaseLiquidityInVault(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
     /// @param tokenId The ID of the token for which underlying tokens were collected
     /// @param amount0 The amount of token0 owed to the position that was collected
     /// @param amount1 The amount of token1 owed to the position that was collected
-    event Collect(uint256 indexed tokenId, uint256 amount0, uint256 amount1);
+    event CollectInVault(uint256 indexed tokenId, uint256 amount0, uint256 amount1);
 
 
     modifier nonZeroAddress(address _addr) {
@@ -315,8 +315,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
         }
         if(_round == 1 ) {
-            amount = claimAmounts[0];
-        } else if(totalClaimCounts == _round) {
+            amount = claimAmounts[0] ;
+        } else
+        if(totalClaimCounts == _round) {
             amount = totalAllocatedAmount - totalClaimsAmount;
         } else {
             amount = expectedClaimAmount - totalClaimsAmount;
@@ -340,7 +341,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i] + addAmounts[i];
         }
         if(_round == 1 ) {
-            amount = claimAmounts[0];
+            amount = claimAmounts[0] - totalClaimsAmount;
         } else if(totalClaimCounts == _round) {
             amount = totalAllocatedAmount - totalClaimsAmount;
         } else {
@@ -509,6 +510,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     {
         mintToken(tickLower, tickUpper,  TOS.balanceOf(address(this)),  token.balanceOf(address(this))/totalClaimCounts );
     }
+
     function mintToken(int24 tickLower, int24 tickUpper, uint256 tosUseAmount, uint256 tokenUseAmount)
         public
         nonZeroAddress(address(pool))
@@ -516,13 +518,13 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         nonZeroAddress(token1Address)
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
-
+        require(tokenUseAmount > 1 ether, "small token amount");
         require(tickUpper - tickLower >= tickIntervalMinimum, "Vault: tick interval is less than tickIntervalMinimum");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 curRound = currentRound();
         uint256 amount = availableUseAmount(curRound);
-       // console.log("availableUseAmount  %s", amount);
-        //console.log("tokenUseAmount  %s", tokenUseAmount);
+        // console.log("availableUseAmount  %s", amount);
+        // console.log("tokenUseAmount  %s", tokenUseAmount);
 
         require(tokenUseAmount <= amount, "exceed to claimable amount");
         require(amount > 0, "claimable token is zero");
@@ -589,7 +591,10 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         require(tokenId > 0, "tokenId is zero");
         tokenIds.push(tokenId);
         //console.log("tokenId %s", tokenId);
-
+        // console.log("amount0 %s", amount0);
+        // console.log("amount1 %s", amount1);
+        // console.log("token0Address %s", token0Address);
+        // console.log("address(TOS) %s", address(TOS));
         if(token0Address != address(TOS)){
             totalClaimsAmount = totalClaimsAmount + amount0;
             emit Claimed(tokenId, amount0, totalClaimsAmount);
@@ -597,8 +602,8 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             totalClaimsAmount = totalClaimsAmount + amount1;
             emit Claimed(tokenId, amount1, totalClaimsAmount);
         }
-
-        emit Minted(msg.sender, tokenId, liquidity, amount0, amount1);
+        // console.log("totalClaimsAmount %s", totalClaimsAmount);
+        emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
     }
 
 
@@ -640,15 +645,21 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             )
         );
 
-        if(token0Address == address(token)){
+        // console.log("tokenId %s", tokenId);
+        // console.log("amount0 %s", amount0);
+        // console.log("amount1 %s", amount1);
+        // console.log("token0Address %s", token0Address);
+        // console.log("address(TOS) %s", address(TOS));
+
+        if(token0Address != address(TOS)){
             totalClaimsAmount = totalClaimsAmount + amount0;
             emit Claimed(tokenId, amount0, totalClaimsAmount);
         } else {
             totalClaimsAmount = totalClaimsAmount + amount1;
             emit Claimed(tokenId, amount1, totalClaimsAmount);
         }
-
-        emit IncreaseLiquidity(tokenId, liquidity, amount0, amount1);
+        // console.log("totalClaimsAmount %s", totalClaimsAmount);
+        emit IncreaseLiquidityInVault(tokenId, liquidity, amount0, amount1);
     }
 
     function decreaseLiquidity(
@@ -682,7 +693,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             emit Claimed(tokenId, amount1, totalClaimsAmount);
         }
 
-        emit DecreaseLiquidity(tokenId, liquidity, amount0, amount1);
+        emit DecreaseLiquidityInVault(tokenId, liquidity, amount0, amount1);
     }
 
     function collect(
@@ -712,7 +723,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
 
         }
 
-        emit Collect(tokenId, amount0, amount1);
+        emit CollectInVault(tokenId, amount0, amount1);
     }
 
     function swap(bool tosToToken, uint256 amountIn, uint256 amountOut, uint160 sqrtPriceLimitX96)
@@ -736,7 +747,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             totalClaimsAmount = totalClaimsAmount - amountIn;
         }
 
-        emit Exchanged(tokenIn, tokenOut, amountIn, amountExchangedOut, totalClaimsAmount);
+        emit ExchangedInVault(tokenIn, tokenOut, amountIn, amountExchangedOut, totalClaimsAmount);
     }
 
     function withdraw(address _token, address _account, uint256 _amount)
@@ -748,7 +759,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         require(IERC20(_token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
         IERC20(_token).safeTransfer(_account, _amount);
 
-        emit Withdrawal(msg.sender, _token, _account, _amount);
+        emit WithdrawalInVault(msg.sender, _token, _account, _amount);
     }
 
 }
