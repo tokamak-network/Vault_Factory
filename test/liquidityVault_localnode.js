@@ -75,20 +75,21 @@ describe("LiquidityVault", function () {
         token1: null,
         reserve0: null,
         reserve1: null,
-        totalAllocatedAmount: ethers.BigNumber.from("40000000000000000000"),
+        totalAllocatedAmount: ethers.BigNumber.from("400000000000000000000"),
         claimCounts: ethers.BigNumber.from("4"),
         claimTimes: [] ,
         claimIntervalSeconds : 60*60*24,
         claimAmounts: [
-            ethers.BigNumber.from("10000000000000000000"),
-            ethers.BigNumber.from("10000000000000000000"),
-            ethers.BigNumber.from("10000000000000000000"),
-            ethers.BigNumber.from("10000000000000000000")
+            ethers.BigNumber.from("100000000000000000000"),
+            ethers.BigNumber.from("100000000000000000000"),
+            ethers.BigNumber.from("100000000000000000000"),
+            ethers.BigNumber.from("100000000000000000000")
             ],
         tokenIds: [],
         totalClaimsAmount: ethers.BigNumber.from("0"),
     }
 
+    /*
     let price = {
         tos: ethers.BigNumber.from("100") ,
         projectToken:  ethers.BigNumber.from("20"),
@@ -96,8 +97,17 @@ describe("LiquidityVault", function () {
         initTick: 0,
         targetPriceInterval: 10,
         tickPrice: 0
-    }
+    } */
 
+     let price = {
+        tos: ethers.BigNumber.from("10"),
+        projectToken:  ethers.BigNumber.from("100"),
+        initSqrtPrice: 0,
+        initTick: 0,
+        targetPriceInterval: 1,
+        targetInterval: 1,
+        tickPrice: 0
+    }
 
   // rinkeby
   let uniswapInfo={
@@ -390,22 +400,34 @@ describe("LiquidityVault", function () {
         it("3-1. generatePoolAddress  ", async function () {
             let poolAddress = await liquidityVault.computePoolAddress(uniswapInfo.tos, poolInfo.allocateToken.address, 3000);
 
-            console.log('uniswapInfo.tos, poolInfo.allocateToken.address', uniswapInfo.tos, poolInfo.allocateToken.address);
-            console.log('poolAddress',poolAddress);
+            // console.log('uniswapInfo.tos, poolInfo.allocateToken.address', uniswapInfo.tos, poolInfo.allocateToken.address);
+            // console.log('poolAddress',poolAddress);
             poolInfo.poolAddress = poolAddress.pool;
             poolInfo.token0 = poolAddress.token0;
             poolInfo.token1 = poolAddress.token1;
 
             if(poolInfo.token0.toLowerCase() == uniswapInfo.tos.toLowerCase()){
-                poolInfo.reserve0 = 1;
-                poolInfo.reserve1 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+
+                if(price.tos.gt(price.projectToken)) {
+                    poolInfo.reserve0 = 1;
+                    poolInfo.reserve1 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+                } else {
+                    poolInfo.reserve0 = Math.floor(price.projectToken.toNumber()/price.tos.toNumber());
+                    poolInfo.reserve1 = 1;
+                }
+
             } else {
-                poolInfo.reserve0 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
-                poolInfo.reserve1 = 1;
+                if(price.tos.gt(price.projectToken)) {
+                    poolInfo.reserve0 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+                    poolInfo.reserve1 = 1;
+                } else {
+                    poolInfo.reserve0 = 1;
+                    poolInfo.reserve1 = Math.floor(price.projectToken.toNumber()/price.tos.toNumber());
+                }
             }
 
             let sqrtPrice = encodePriceSqrt(poolInfo.reserve1,  poolInfo.reserve0);
-            //console.log('** sqrtPrice',sqrtPrice);
+            // console.log('** sqrtPrice',sqrtPrice);
             price.initSqrtPrice = sqrtPrice;
 
             /**
@@ -493,23 +515,31 @@ describe("LiquidityVault", function () {
         });
 
         it("2-4. setTickIntervalMinimum : when not admin, fail ", async function () {
-            let targetTickInterval = price.targetPriceInterval / price.tickPrice;
-            targetTickInterval = parseInt(targetTickInterval);
-            let interval = ethers.BigNumber.from(""+targetTickInterval);
-            await expect(
-                liquidityVault.connect(user2).setTickIntervalMinimum(interval)
-            ).to.be.revertedWith("Accessible: Caller is not an admin");
+            //console.log('price.targetPriceInterval',price.targetPriceInterval);
+
+            if(price.targetInterval > 0 ){
+                // let targetTickInterval = price.targetPriceInterval / price.tickPrice;
+                // targetTickInterval = parseInt(targetTickInterval);
+                //let interval = ethers.BigNumber.from(""+targetTickInterval);
+                // let interval = targetTickInterval;
+                // console.log('interval',interval);
+                await expect(
+                    liquidityVault.connect(user2).setTickIntervalMinimum(price.targetInterval)
+                ).to.be.revertedWith("Accessible: Caller is not an admin");
+            }
         });
 
         it("2-4. setTickIntervalMinimum  ", async function () {
-            let targetTickInterval = price.targetPriceInterval / price.tickPrice;
-            targetTickInterval = parseInt(targetTickInterval);
-            let interval = ethers.BigNumber.from(""+targetTickInterval);
-
-            await liquidityVault.connect(poolInfo.admin).setTickIntervalMinimum(interval);
-            expect(await liquidityVault.tickIntervalMinimum()).to.be.eq(interval);
+            if(price.targetPriceInterval > 0 ){
+                // let targetTickInterval = price.targetPriceInterval / price.tickPrice;
+                // targetTickInterval = parseInt(targetTickInterval);
+                //let interval = ethers.BigNumber.from(""+targetTickInterval);
+                // let interval = targetTickInterval;
+                // console.log('interval',interval);
+                await liquidityVault.connect(poolInfo.admin).setTickIntervalMinimum(price.targetInterval);
+                expect(await liquidityVault.tickIntervalMinimum()).to.be.eq(price.targetInterval);
+            }
         });
-
 
         it("3-3. approveERC20 ", async function () {
             let amount = ethers.BigNumber.from("1"+"0".repeat(20));
@@ -522,8 +552,8 @@ describe("LiquidityVault", function () {
             expect(await liquidityVault.currentRound()).to.be.eq(0);
         });
 
-        it("3-5. calculateClaimAmount ", async function () {
-            expect(await liquidityVault.calculateClaimAmount(0)).to.be.eq(0);
+        it("3-5. availableUseAmount ", async function () {
+            expect(await liquidityVault.availableUseAmount(0)).to.be.eq(0);
         });
     });
 
@@ -599,7 +629,7 @@ describe("LiquidityVault", function () {
 
         it("3-4. mint fail : When the first claim time does not start ", async function () {
             let round = await liquidityVault.currentRound();
-            let calculateClaimAmount = await liquidityVault.calculateClaimAmount(round);
+            let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
 
             expect(calculateClaimAmount).to.be.eq(ethers.BigNumber.from("0"));
             await expect(
@@ -617,12 +647,17 @@ describe("LiquidityVault", function () {
         it("3-5. mint fail : when tick interval is lower than tickIntervalMinimum ", async function () {
 
             let round = await liquidityVault.currentRound();
-            let calculateClaimAmount = await liquidityVault.calculateClaimAmount(round);
+            let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
 
             expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
-            await expect(
-                liquidityVault.connect(user2).mint(-100, 100)
-            ).to.be.revertedWith("Vault: tick interval is less than tickIntervalMinimum");
+
+            let tickIntervalMinimum = await liquidityVault.tickIntervalMinimum();
+            if(tickIntervalMinimum > 0 ){
+                await expect(
+                    liquidityVault.connect(user2).mint(1, tickIntervalMinimum-1)
+                ).to.be.revertedWith("Vault: tick interval is less than tickIntervalMinimum");
+            }
+
         });
 
         it("3-6. mint fail : when tos balance is zero", async function () {
@@ -634,18 +669,25 @@ describe("LiquidityVault", function () {
             // console.log(' tokenPrice1_1 ',tokenPrice1_1);
             let targetTickInterval = Math.floor(price.targetPriceInterval / price.tickPrice);
 
-            let lowerTick = slot0.tick - Math.floor(targetTickInterval / 2);
-            let upperTick = slot0.tick + Math.floor(targetTickInterval / 2);
+            let lowerTick = getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM])  ;
+            let upperTick = getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) ;
             //console.log(' slot0.tick ', slot0.tick , 'lowerTick  ', lowerTick, "upperTick ", upperTick);
 
             let round = await liquidityVault.currentRound();
             expect(round).to.be.gt(ethers.BigNumber.from("0"));
-            let calculateClaimAmount = await liquidityVault.calculateClaimAmount(round);
+            let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
             expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
 
-            await expect(
-                liquidityVault.connect(user2).mint(lowerTick, upperTick)
-            ).to.be.revertedWith("tos balance is zero");
+            if(calculateClaimAmount.lte(ethers.utils.parseUnits("1", 18)) ){
+                await expect(
+                    liquidityVault.connect(user2).mint(lowerTick, upperTick)
+                ).to.be.revertedWith("Vault: tick interval is less than tickIntervalMinimum");
+            } else {
+                 await expect(
+                    liquidityVault.connect(user2).mint(lowerTick, upperTick)
+                ).to.be.revertedWith("tos balance is zero");
+            }
+
         });
 
         it("     TOS transfer to LiquidityVault", async function () {
@@ -664,14 +706,32 @@ describe("LiquidityVault", function () {
             let slot0 = await uniswapV3Pool.slot0();
             let targetTickInterval = Math.floor(price.targetPriceInterval / price.tickPrice);
 
-            let lowerTick = slot0.tick + 1;
-            let upperTick = lowerTick + Math.floor(targetTickInterval);
-           // console.log(' slot0.tick ', slot0.tick , 'lowerTick  ', lowerTick, "upperTick ", upperTick);
+            // let lowerTick = slot0.tick + 1;
+            // let upperTick = lowerTick + Math.floor(targetTickInterval);
+            //console.log(' slot0.tick ', slot0.tick , 'lowerTick  ', lowerTick, "upperTick ", upperTick);
+
+            let lowerTick = slot0.tick + getPositiveOneMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+            let upperTick = slot0.tick + 2 * getPositiveOneMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+            // console.log(' slot0.tick ', slot0.tick , 'lowerTick  ', lowerTick, "upperTick ", upperTick);
 
             let round = await liquidityVault.currentRound();
             expect(round).to.be.gt(ethers.BigNumber.from("0"));
-            let calculateClaimAmount = await liquidityVault.calculateClaimAmount(round);
+            let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
             expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
+
+
+            //for (let i = 0; i < 128; i++) {
+                // let base =  parseInt(slot0.tick /TICK_SPACINGS[FeeAmount.MEDIUM]);
+                // console.log('base ',base);
+                // console.log('slot0.tick ',slot0.tick);
+
+
+                // lowerTick = (base-1) * TICK_SPACINGS[FeeAmount.MEDIUM];
+                // upperTick = (255 - base) * TICK_SPACINGS[FeeAmount.MEDIUM]
+                // console.log('lowerTick ',lowerTick);
+                // console.log('upperTick',upperTick);
+                // await liquidityVault.connect(user2).mint(lowerTick, upperTick)
+           // }
 
             await expect(
                 liquidityVault.connect(user2).mint(lowerTick, upperTick)
@@ -859,9 +919,6 @@ describe("LiquidityVault", function () {
 
         });
 
-        it("3-11. mint : when 민트할 금액이 남아있다면 민트가 가능하다  ", async function () {
-        })
-
         it("      pass blocks", async function () {
             let block = await ethers.provider.getBlock();
             let passTime = poolInfo.claimTimes[1] - block.timestamp +10 ;
@@ -895,7 +952,8 @@ describe("LiquidityVault", function () {
             // console.log('tosToken.address.toLowerCase()',tosToken.address.toLowerCase());
             // console.log('poolInfo.token0.toLowerCase()',poolInfo.token0.toLowerCase());
 
-            let tx = await liquidityVault.connect(user2).increaseLiquidity(poolInfo.tokenIds[0], amount0Desired, amount1Desired, 100000000000000);
+            let tx = await liquidityVault.connect(user2).increaseLiquidity(poolInfo.tokenIds[0],
+                 amount0Desired, amount1Desired, 100000000000000);
             const receipt = await tx.wait();
             let _function ="IncreaseLiquidityInVault(uint256, uint128, uint256, uint256)";
             let interface = liquidityVault.interface;
@@ -922,9 +980,346 @@ describe("LiquidityVault", function () {
             expect(await liquidityVault.totalClaimsAmount()).to.be.eq(poolInfo.totalClaimsAmount);
             expect(await tosToken.balanceOf(liquidityVault.address)).to.be.lt(preTosBalance);
             expect(await tokenA.balanceOf(liquidityVault.address)).to.be.lt(preTokenBalance);
+        });
 
+        it("3-13. decreaseLiquidity fail : when token is not out of range  ", async function () {
+
+            let position = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[0]);
+            let ownerOf = await deployedUniswapV3.nftPositionManager.ownerOf(poolInfo.tokenIds[0]);
+            let slot0 = await uniswapV3Pool.slot0();
+            // console.log('slot0', slot0)
+            // console.log('position', position)
+            expect(ownerOf).to.be.eq(liquidityVault.address);
+            expect(position.liquidity).to.be.gt(ethers.BigNumber.from("0"));
+            expect(position.tickLower).to.be.lt(slot0.tick);
+            expect(position.tickUpper).to.be.gt(slot0.tick);
+
+            let liquidity = position.liquidity.div(ethers.BigNumber.from('2'));
+
+            await expect(
+                liquidityVault.connect(user2).decreaseLiquidity(
+                    poolInfo.tokenIds[0],liquidity, 0,0 , 100000000000000)
+            ).to.be.revertedWith("tick is not out of range");
 
         });
+
+        it("      pass blocks", async function () {
+            let block = await ethers.provider.getBlock();
+            let passTime = poolInfo.claimTimes[2] - block.timestamp +10 ;
+
+            ethers.provider.send("evm_increaseTime", [passTime])
+            ethers.provider.send("evm_mine")      // mine the next block
+        });
+
+        it("     TOS transfer to LiquidityVault", async function () {
+
+            let tosAmount = poolInfo.claimAmounts[0].mul(price.projectToken).div(price.tos);
+
+            await tosToken.connect(tosInfo.admin).mint(liquidityVault.address, tosAmount);
+            expect(await tosToken.balanceOf(liquidityVault.address)).to.be.gte(tosAmount);
+
+        });
+
+        it("3-9. mint : particular range ", async function () {
+            let preTosBalance = await tosToken.balanceOf(liquidityVault.address);
+            let preTokenBalance = await tokenA.balanceOf(liquidityVault.address);
+
+            let round = await liquidityVault.currentRound();
+            expect(round).to.be.gt(ethers.BigNumber.from("0"));
+            let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
+            expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
+
+            let tokenAmount = calculateClaimAmount;
+
+            let slot0 = await uniswapV3Pool.slot0();
+            let tickIntervalMinimum = await liquidityVault.tickIntervalMinimum();
+
+            //tickIntervalMinimum/TICK_SPACINGS[FeeAmount.MEDIUM]
+            let lowerTick = slot0.tick + getNegativeOneTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+            let upperTick = slot0.tick + getPositiveOneMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+            //console.log('slot0',slot0.tick);
+            //console.log('slot0.tick',slot0.tick);
+            //for (let i = 0; i < 128; i++) {
+                let base =  parseInt(slot0.tick /TICK_SPACINGS[FeeAmount.MEDIUM]);
+                //console.log('base',base);
+                lowerTick = (base-1) * TICK_SPACINGS[FeeAmount.MEDIUM];
+                upperTick = (base+1) * TICK_SPACINGS[FeeAmount.MEDIUM]
+
+           // }
+            //console.log('lowerTick',lowerTick,'upperTick',upperTick );
+            let tx = await liquidityVault.connect(user2).mintToken(lowerTick, upperTick, preTosBalance, tokenAmount) ;
+
+            const receipt = await tx.wait();
+
+            let _function ="MintedInVault(address, uint256, uint128, uint256, uint256)";
+            let interface = liquidityVault.interface;
+            let tokenId = null;
+            for(let i=0; i< receipt.events.length; i++){
+                if(receipt.events[i].topics[0] == interface.getEventTopic(_function)){
+                    let data = receipt.events[i].data;
+                    let topics = receipt.events[i].topics;
+                    let log = interface.parseLog(
+                    {  data,  topics } );
+                    tokenId = log.args.tokenId;
+                    //console.log('tokenId',tokenId );
+                    poolInfo.tokenIds.push(log.args.tokenId) ;
+                    if(poolInfo.token0.toLowerCase() == tosToken.address.toLowerCase()){
+                        poolInfo.totalClaimsAmount = poolInfo.totalClaimsAmount.add(log.args.amount1);
+                    } else {
+                        poolInfo.totalClaimsAmount = poolInfo.totalClaimsAmount.add(log.args.amount0);
+                    }
+
+                }
+            }
+
+            expect(await deployedUniswapV3.nftPositionManager.ownerOf(tokenId)).to.be.eq(liquidityVault.address);
+            expect(await liquidityVault.totalClaimsAmount()).to.be.eq(poolInfo.totalClaimsAmount);
+            expect(await tosToken.balanceOf(liquidityVault.address)).to.be.lt(preTosBalance);
+            expect(await tokenA.balanceOf(liquidityVault.address)).to.be.lt(preTokenBalance);
+
+            // let slot01 = await uniswapV3Pool.slot0();
+            // console.log('slot01.tick',slot01.tick);
+        });
+
+        it("      pass blocks", async function () {
+            let block = await ethers.provider.getBlock();
+            let passTime = poolInfo.claimTimes[1] - block.timestamp +10 ;
+
+            ethers.provider.send("evm_increaseTime", [3000])
+            ethers.provider.send("evm_mine")      // mine the next block
+        });
+
+        it("3-14. decreaseLiquidity  : when token is out of range  ", async function () {
+
+            let position = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[1]);
+            let ownerOf = await deployedUniswapV3.nftPositionManager.ownerOf(poolInfo.tokenIds[1]);
+            let slot0 = await uniswapV3Pool.slot0();
+            // console.log('slot0', slot0)
+            // console.log('position', position)
+            expect(ownerOf).to.be.eq(liquidityVault.address);
+            expect(position.liquidity).to.be.gt(ethers.BigNumber.from("0"));
+            // expect(position.tickLower).to.be.lt(slot0.tick);
+            // expect(position.tickUpper).to.be.gt(slot0.tick);
+
+            let liquidity = position.liquidity.div(ethers.BigNumber.from('2'));
+
+            await expect(
+                liquidityVault.connect(user2).decreaseLiquidity(
+                    poolInfo.tokenIds[1],liquidity, 0,0 , 100000000000000)
+            ).to.be.revertedWith("tick is not out of range");
+
+            // let position1 = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[1]);
+            // let slot01 = await uniswapV3Pool.slot0();
+            // console.log('slot01', slot01)
+            // console.log('position1', position1)
+
+        });
+
+        it("      swap ", async function () {
+            let swapAmountTOS = ethers.utils.parseUnits("500", 18);
+            let swapAmountToken = ethers.utils.parseUnits("0.25", 18);
+
+            await tosToken.connect(tosInfo.admin).mint(user2.address, swapAmountTOS);
+            let tosbalanceBefore = await tosToken.balanceOf(user2.address);
+            let tokenbalanceBefore = await poolInfo.allocateToken.balanceOf(user2.address);
+
+            await tosToken.connect(user2).approve(
+                deployedUniswapV3.swapRouter.address,
+                swapAmountTOS
+                );
+
+            let allowance = await tosToken.allowance(user2.address, deployedUniswapV3.swapRouter.address);
+            //console.log('allowance', allowance);
+            expect(allowance).to.be.gte(swapAmountTOS);
+
+            const params = {
+                tokenIn: tosToken.address,
+                tokenOut: poolInfo.allocateToken.address,
+                fee: FeeAmount.MEDIUM,
+                recipient: user2.address,
+                deadline: 100000000000000,
+                amountIn: swapAmountTOS,
+                amountOutMinimum: ethers.BigNumber.from("0"),
+                sqrtPriceLimitX96: ethers.BigNumber.from("0"),
+            };
+
+            const tx = await deployedUniswapV3.swapRouter
+                .connect(user2)
+                .exactInputSingle(params);
+            await tx.wait();
+
+            const tokenBalance = await poolInfo.allocateToken.balanceOf(user2.address);
+            const tosBalance = await tosToken.balanceOf(user2.address);
+
+            expect(tokenBalance).to.be.gt(tokenbalanceBefore);
+            expect(tosBalance).to.be.lt(tosbalanceBefore);
+
+
+            // console.log('tokenBalance', tokenBalance)
+            // console.log('tosBalance', tokenBalance)
+            // console.log('used tosBalance', tosbalanceBefore.sub(tosBalance))
+
+            // let slot0 = await uniswapV3Pool.slot0();
+            // console.log('slot0', slot0)
+
+            // let position = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[1]);
+            // console.log('position', position)
+
+        });
+
+        it("3-15. decreaseLiquidity  ", async function () {
+
+            let position = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[1]);
+            let ownerOf = await deployedUniswapV3.nftPositionManager.ownerOf(poolInfo.tokenIds[1]);
+            let slot0 = await uniswapV3Pool.slot0();
+            // console.log('slot0', slot0)
+            // console.log('position', position)
+            expect(ownerOf).to.be.eq(liquidityVault.address);
+            expect(position.liquidity).to.be.gt(ethers.BigNumber.from("0"));
+            // expect(position.tickLower).to.be.lt(slot0.tick);
+            // expect(position.tickUpper).to.be.gt(slot0.tick);
+
+            let liquidity = position.liquidity.div(ethers.BigNumber.from('2'));
+
+            await liquidityVault.connect(user2).decreaseLiquidity(
+                    poolInfo.tokenIds[1],liquidity, 0,0 , 100000000000000);
+
+            position = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[1]);
+            let slot01 = await uniswapV3Pool.slot0();
+            // console.log('slot01', slot01)
+            // console.log('position', position)
+
+            expect(position.tokensOwed0.add(position.tokensOwed1)).to.be.gt(ethers.BigNumber.from("0"));
+        });
+
+        it("3-16. collect  ", async function () {
+            let tokenIndex= 1;
+
+            let tokenBalance = await tokenA.balanceOf(liquidityVault.address);
+            let tosBalance = await tosToken.balanceOf(liquidityVault.address);
+            let positions = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[tokenIndex]);
+
+            const tx = await liquidityVault.connect(user2).collect(
+                    poolInfo.tokenIds[tokenIndex], positions.tokensOwed0, positions.tokensOwed1);
+
+            const receipt = await tx.wait();
+
+            let _function ="CollectInVault(uint256, uint256, uint256)";
+            let interface = liquidityVault.interface;
+            let tokensOwed0 = ethers.BigNumber.from("0");
+            let tokensOwed1 = ethers.BigNumber.from("0");
+            for(let i=0; i< receipt.events.length; i++){
+                if(receipt.events[i].topics[0] == interface.getEventTopic(_function)){
+                    let data = receipt.events[i].data;
+                    let topics = receipt.events[i].topics;
+                    let log = interface.parseLog(
+                    {  data,  topics } );
+                    tokensOwed0 = log.args.amount0;
+                    tokensOwed1 = log.args.amount1;
+                    //console.log(log.args);
+                    if(poolInfo.token0.toLowerCase() == tosToken.address.toLowerCase()){
+                        poolInfo.totalClaimsAmount = poolInfo.totalClaimsAmount.add(log.args.amount1);
+                    } else {
+                        poolInfo.totalClaimsAmount = poolInfo.totalClaimsAmount.add(log.args.amount0);
+                    }
+                }
+            }
+
+            let tokenBalanceAfter = await tokenA.balanceOf(liquidityVault.address);
+            let tosBalanceAfter = await tosToken.balanceOf(liquidityVault.address);
+
+            if(poolInfo.token0.toLowerCase() == tosToken.address.toLowerCase()){
+                expect(tosBalanceAfter).to.be.equal(tosBalance.add(tokensOwed0));
+                expect(tokenBalanceAfter).to.be.equal(tokenBalance.add(tokensOwed1));
+
+            } else {
+                expect(tosBalanceAfter).to.be.equal(tosBalance.add(tokensOwed1));
+                expect(tokenBalanceAfter).to.be.equal(tokenBalance.add(tokensOwed0));
+            }
+
+            expect(await liquidityVault.totalClaimsAmount()).to.be.equal(poolInfo.totalClaimsAmount);
+            positions = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[tokenIndex]);
+            expect(positions.tokensOwed0).to.be.equal(ethers.BigNumber.from("0"));
+            expect(positions.tokensOwed1).to.be.equal(ethers.BigNumber.from("0"));
+
+        });
+
+        it("     TOS transfer to LiquidityVault", async function () {
+
+            let tosAmount = poolInfo.claimAmounts[0].mul(price.projectToken).div(price.tos);
+
+            await tosToken.connect(tosInfo.admin).mint(liquidityVault.address, tosAmount);
+            expect(await tosToken.balanceOf(liquidityVault.address)).to.be.gte(tosAmount);
+
+        });
+        it("3-11. mint : If you have an amount that you can mint  ", async function () {
+
+            let tokenBalance = await tokenA.balanceOf(liquidityVault.address);
+
+            if(tokenBalance.gt(ethers.BigNumber.from("0"))){
+                let tosAmount = poolInfo.claimAmounts[0].mul(price.projectToken).div(price.tos);
+                await tosToken.connect(tosInfo.admin).mint(liquidityVault.address, tosAmount);
+                expect(await tosToken.balanceOf(liquidityVault.address)).to.be.gte(tosAmount);
+
+                let preTosBalance = await tosToken.balanceOf(liquidityVault.address);
+                let preTokenBalance = await tokenA.balanceOf(liquidityVault.address);
+
+                let round = await liquidityVault.currentRound();
+                expect(round).to.be.gt(ethers.BigNumber.from("0"));
+                let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
+                expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
+
+                let tokenAmount = calculateClaimAmount;
+
+                let slot0 = await uniswapV3Pool.slot0();
+                let tickIntervalMinimum = await liquidityVault.tickIntervalMinimum();
+                let lowerTick = slot0.tick + getNegativeOneTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+                let upperTick = slot0.tick + getPositiveOneMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]);
+                //console.log('slot0',slot0.tick);
+                //console.log('slot0.tick',slot0.tick);
+                //for (let i = 0; i < 128; i++) {
+                    let base =  parseInt(slot0.tick /TICK_SPACINGS[FeeAmount.MEDIUM]);
+                    //console.log('base',base);
+                    lowerTick = (base-1) * TICK_SPACINGS[FeeAmount.MEDIUM];
+                    upperTick = (base+1) * TICK_SPACINGS[FeeAmount.MEDIUM]
+
+            // }
+                //console.log('lowerTick',lowerTick,'upperTick',upperTick );
+                let tx = await liquidityVault.connect(user2).mintToken(lowerTick, upperTick, preTosBalance, tokenAmount) ;
+
+                const receipt = await tx.wait();
+
+                let _function ="MintedInVault(address, uint256, uint128, uint256, uint256)";
+                let interface = liquidityVault.interface;
+                let tokenId = null;
+                for(let i=0; i< receipt.events.length; i++){
+                    if(receipt.events[i].topics[0] == interface.getEventTopic(_function)){
+                        let data = receipt.events[i].data;
+                        let topics = receipt.events[i].topics;
+                        let log = interface.parseLog(
+                        {  data,  topics } );
+                        tokenId = log.args.tokenId;
+                        //console.log('tokenId',tokenId );
+                        poolInfo.tokenIds.push(log.args.tokenId) ;
+                        if(poolInfo.token0.toLowerCase() == tosToken.address.toLowerCase()){
+                            poolInfo.totalClaimsAmount = poolInfo.totalClaimsAmount.add(log.args.amount1);
+                        } else {
+                            poolInfo.totalClaimsAmount = poolInfo.totalClaimsAmount.add(log.args.amount0);
+                        }
+
+                    }
+                }
+
+                expect(await deployedUniswapV3.nftPositionManager.ownerOf(tokenId)).to.be.eq(liquidityVault.address);
+                expect(await liquidityVault.totalClaimsAmount()).to.be.eq(poolInfo.totalClaimsAmount);
+                expect(await tosToken.balanceOf(liquidityVault.address)).to.be.lt(preTosBalance);
+                expect(await tokenA.balanceOf(liquidityVault.address)).to.be.lt(preTokenBalance);
+
+            } else {
+                console.log("token is zero balance ");
+            }
+        });
+
 
     });
 

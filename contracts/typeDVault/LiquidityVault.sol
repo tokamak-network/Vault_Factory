@@ -5,8 +5,10 @@ import "../interfaces/IUniswapV3Factory.sol";
 import "../interfaces/IUniswapV3Pool.sol";
 import "../interfaces/INonfungiblePositionManager.sol";
 import "../interfaces/ISwapRouter.sol";
+import "../interfaces/ILiquidityVaultEvent.sol";
+import "../interfaces/ILiquidityVaultAction.sol";
 
-import '../libraries/TickMath.sol';
+import "../libraries/TickMath.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -15,50 +17,9 @@ import "../common/AccessiblePlusCommon.sol";
 import "./LiquidityVaultStorage.sol";
 import "hardhat/console.sol";
 
-contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
+contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon, ILiquidityVaultEvent, ILiquidityVaultAction {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
-
-
-    event ExchangedInVault(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountExchangedOut, uint256 totalClaimsAmount);
-
-    event Claimed(uint256 indexed tokenId, uint256 amount, uint256 totalClaimsAmount);
-
-    event MintedInVault(
-        address indexed caller,
-        uint256 tokenId,
-        uint128 liquidity,
-        uint256 amount0,
-        uint256 amount1
-    );
-
-    event WithdrawalInVault(address caller, address tokenAddress, address to, uint256 amount);
-
-    event Initialized(uint256 _totalAllocatedAmount,
-        uint256 _claimCounts,
-        uint256[] _claimTimes,
-        uint256[] _claimAmounts);
-
-    /// @notice Emitted when liquidity is increased for a position NFT
-    /// @dev Also emitted when a token is minted
-    /// @param tokenId The ID of the token for which liquidity was increased
-    /// @param liquidity The amount by which liquidity for the NFT position was increased
-    /// @param amount0 The amount of token0 that was paid for the increase in liquidity
-    /// @param amount1 The amount of token1 that was paid for the increase in liquidity
-    event IncreaseLiquidityInVault(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
-    /// @notice Emitted when liquidity is decreased for a position NFT
-    /// @param tokenId The ID of the token for which liquidity was decreased
-    /// @param liquidity The amount by which liquidity for the NFT position was decreased
-    /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
-    /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
-    event DecreaseLiquidityInVault(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
-    /// @notice Emitted when tokens are collected for a position NFT
-    /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
-    /// @param tokenId The ID of the token for which underlying tokens were collected
-    /// @param amount0 The amount of token0 owed to the position that was collected
-    /// @param amount1 The amount of token1 owed to the position that was collected
-    event CollectInVault(uint256 indexed tokenId, uint256 amount0, uint256 amount1);
-
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
@@ -77,9 +38,6 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             && address(SwapRouter) != address(0)
             && address(WTON) != address(0)
             && address(TOS) != address(0)
-            // && address(WETHUSDCPool) != address(0)
-            // && address(WTONWETHPool) != address(0)
-            // && address(WTONTOSPool) != address(0)
             ,
             "Vault: before setUniswap");
         _;
@@ -90,20 +48,17 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         owner = msg.sender;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, owner);
-        tickIntervalMinimum = 6000;
+        tickIntervalMinimum = 0;
 
     }
 
-    ///@dev setBaseInfo function
-    ///@param _name Vault's name
-    ///@param _token Allocated token address
-    ///@param _owner owner address
+    /// @inheritdoc ILiquidityVaultAction
     function setBaseInfo(
         string memory _name,
         address _token,
         address _owner
         )
-        external
+        external override
         onlyOwner
     {
         //require(bytes(name).length == 0,"already set");
@@ -117,16 +72,13 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
-    ///@dev setInitialPrice function
-    ///@param tosPrice tosPrice
-    ///@param tokenPrice tokenPrice
-    ///@param initSqrtPrice initSqrtPriceX96
+    /// @inheritdoc ILiquidityVaultAction
     function setInitialPrice(
         uint256 tosPrice,
         uint256 tokenPrice,
         uint160 initSqrtPrice
         )
-        external
+        external override
         onlyOwner
     {
         initialTosPrice = tosPrice;
@@ -134,30 +86,25 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         initSqrtPriceX96 = initSqrtPrice;
     }
 
-    ///@dev setTickIntervalMinimum function
-    ///@param _interval _interval
+    /// @inheritdoc ILiquidityVaultAction
     function setTickIntervalMinimum(
         int24 _interval
         )
-        external
+        external override
         onlyOwner
     {
         require(_interval > 0 , "zero _interval");
         tickIntervalMinimum = _interval;
     }
 
-    ///@dev initialization function
-    ///@param _totalAllocatedAmount total allocated amount
-    ///@param _claimCounts total claim Counts
-    ///@param _claimTimes each claimTime
-    ///@param _claimAmounts each claimAmount
+    /// @inheritdoc ILiquidityVaultAction
     function initialize(
         uint256 _totalAllocatedAmount,
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
 
-    ) external onlyOwner afterSetUniswap {
+    ) external override onlyOwner afterSetUniswap {
 
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
@@ -169,21 +116,17 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             claimAmounts.push(_claimAmounts[i]);
             //console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
 
-            // 사용한 금액
             addAmounts.push(0);
         }
-
-        // _setRoleAdmin(CLAIMER_ROLE, CLAIMER_ROLE);
-        // _setupRole(CLAIMER_ROLE, owner);
-        // revokeRole(ADMIN_ROLE, owner);
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function setUniswapInfo(
         address poolfactory,
         address npm,
         address swapRouter
         )
-        external
+        external override
         onlyOwner
     {
         require(poolfactory != address(0) && poolfactory != address(UniswapV3Factory), "same factory");
@@ -195,12 +138,13 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         SwapRouter = ISwapRouter(swapRouter);
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function setPoolInfo(
             address wethUsdcPool,
             address wtonWethPool,
             address wtonTosPool
         )
-        external
+        external override
         onlyOwner
     {
         require(wethUsdcPool != address(0) && wethUsdcPool != address(WETHUSDCPool), "same wethUsdcPool");
@@ -214,12 +158,13 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
 
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function setTokens(
             address wton,
             address tos,
             uint24 _fee
         )
-        external
+        external override
         onlyOwner
     {
         require(wton != address(0) && wton != address(WTON), "same wton");
@@ -230,47 +175,14 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         fee = _fee;
     }
 
-
-    function changeToken(address _token) external onlyOwner {
+    /// @inheritdoc ILiquidityVaultAction
+    function changeToken(address _token) external override onlyOwner {
         token = IERC20(_token);
     }
 
-    function computePoolAddress(address tokenA, address tokenB, uint24 _fee)
-        public view returns (address pool, address token0, address token1)
-    {
-        bytes32  POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
-
-        address token0 = tokenA;
-        address token1 = tokenB;
-
-        if(token0 > token1) {
-            token0 = tokenB;
-            token1 = tokenA;
-        }
-        require(token0 < token1);
-        address pool = address( uint160(
-            uint256(
-                keccak256(
-                    abi.encodePacked(
-                        hex'ff',
-                        address(UniswapV3Factory),
-                        keccak256(abi.encode(token0, token1, _fee)),
-                        POOL_INIT_CODE_HASH
-                    )
-                )
-            ))
-        );
-
-        return (pool, token0, token1);
-    }
-
-    function clean() external onlyOwner afterSetUniswap {
-        totalClaimsAmount = 0;
-    }
-
-
+    /// @inheritdoc ILiquidityVaultAction
     function setPool()
-        public afterSetUniswap
+        public override afterSetUniswap
     {
 
         address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
@@ -288,8 +200,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function setPoolInitialize(uint160 inSqrtPriceX96)
-        public nonZeroAddress(address(pool))
+        public nonZeroAddress(address(pool)) override
     {
         (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
         if(sqrtPriceX96 == 0){
@@ -297,7 +210,38 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
-    function currentRound() public view returns (uint256 round) {
+    /// @inheritdoc ILiquidityVaultAction
+    function computePoolAddress(address tokenA, address tokenB, uint24 _fee)
+        public view override returns (address pool, address token0, address token1)
+    {
+        bytes32  POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
+
+        token0 = tokenA;
+        token1 = tokenB;
+
+        if(token0 > token1) {
+            token0 = tokenB;
+            token1 = tokenA;
+        }
+        require(token0 < token1);
+        pool = address( uint160(
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        hex'ff',
+                        address(UniswapV3Factory),
+                        keccak256(abi.encode(token0, token1, _fee)),
+                        POOL_INIT_CODE_HASH
+                    )
+                )
+            ))
+        );
+
+        return (pool, token0, token1);
+    }
+
+    /// @inheritdoc ILiquidityVaultAction
+    function currentRound() public view override returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
             if(block.timestamp < claimTimes[0]){
                 round = 0;
@@ -309,22 +253,8 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         }
     }
 
-    function calculateClaimAmount(uint256 _round) public view returns (uint256 amount) {
-        uint256 expectedClaimAmount;
-        for(uint256 i = 0; i < _round; i++) {
-           expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
-        }
-        if(_round == 1 ) {
-            amount = claimAmounts[0] ;
-        } else
-        if(totalClaimCounts == _round) {
-            amount = totalAllocatedAmount - totalClaimsAmount;
-        } else {
-            amount = expectedClaimAmount - totalClaimsAmount;
-        }
-    }
-
-    function getClaimInfo() public view returns (
+    /// @inheritdoc ILiquidityVaultAction
+    function getClaimInfo() public view override returns (
         uint256 _totalClaimCounts,
         uint256[] memory _claimTimes,
         uint256[] memory _claimAmounts,
@@ -335,7 +265,8 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         return (totalClaimCounts, claimTimes, claimAmounts, totalClaimsAmount, addAmounts) ;
     }
 
-    function availableUseAmount(uint256 _round) public view returns (uint256 amount) {
+    /// @inheritdoc ILiquidityVaultAction
+    function availableUseAmount(uint256 _round) public view override returns (uint256 amount) {
         uint256 expectedClaimAmount;
         for(uint256 i = 0; i < _round; i++) {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i] + addAmounts[i];
@@ -350,55 +281,25 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
     }
 
 
-    function calculateSqrtPriceX96(uint256 price)
-        external
-        pure
-        returns (uint)
-    {
-        uint sqrtPriceX96 = sqrt(price) * (2**96);
-        return sqrtPriceX96 ;
-    }
-
-
-    function sqrt(uint x) public pure returns (uint y) {
-        uint z = (x + 1) / 2;
-        y = x;
-        while (z < y) {
-            y = z;
-            z = (x / z + z) / 2;
-        }
-    }
-
-    function tickSpace() public view returns (int24) {
-       return (TickMath.MAX_TICK / int24(fee));
-    }
-
-    function tickBaseInfos() public view returns (int24, int24, uint24) {
-        int24 minTick = -1 * tickSpace() * int24(fee);
-        int24 maxTick = tickSpace() * int24(fee);
-        uint24 numTicks = uint24(int24((maxTick - minTick) / int24(fee))) + 1;
-
-        return (minTick, maxTick, numTicks);
-    }
-
-    function getSqrtRatioAtTick(int24 tick) public pure returns (uint160) {
+    function getSqrtRatioAtTick(int24 tick) public pure override returns (uint160) {
         return TickMath.getSqrtRatioAtTick(tick);
     }
 
-    function getTickAtSqrtRatio(uint160 sqrtPriceX96) public pure returns (int24) {
+    function getTickAtSqrtRatio(uint160 sqrtPriceX96) public pure  override returns (int24) {
         return TickMath.getTickAtSqrtRatio(sqrtPriceX96);
     }
 
-    function MIN_SQRT_RATIO() external pure returns (uint160) {
+    function MIN_SQRT_RATIO() external pure override returns (uint160) {
         return TickMath.MIN_SQRT_RATIO;
     }
 
-    function MAX_SQRT_RATIO() external pure returns (uint160) {
+    function MAX_SQRT_RATIO() external pure override returns (uint160) {
         return TickMath.MAX_SQRT_RATIO;
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function approveERC20(address token, address to, uint256 amount)
-        public
+        public override
         nonZeroAddress(token)
         nonZeroAddress(to)
         nonZero(amount)
@@ -407,135 +308,48 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         return IERC20(token).approve(to, amount);
     }
 
-    function checkBalance(uint256 tosBalance, uint256 tokenBalance) public view {
+    function checkBalance(uint256 tosBalance, uint256 tokenBalance) internal  {
         require(TOS.balanceOf(address(this)) >= tosBalance, "tos is insufficient.");
         require(token.balanceOf(address(this)) >= tokenBalance, "token is insufficient.");
-    }
-
-    /*
-    function mint(int24 tickLower, int24 tickUpper, uint256)
-        external
-        nonZeroAddress(address(pool))
-        nonZeroAddress(token0Address)
-        nonZeroAddress(token1Address)
-    {
-        require(block.timestamp > claimTimes[0], "Vault: not started yet");
-        // console.log("tickLower  %s", uint256(uint24(tickLower)));
-        // console.log("tickUpper  %s", uint256(uint24(tickUpper)));
-
-
-        // console.log("tickIntervalMinimum  %s", uint256(uint24(tickIntervalMinimum)));
-
-        // console.log("tick Interval   %s", uint256(uint24(tickUpper - tickLower)));
-
-
-        require(tickUpper - tickLower >= tickIntervalMinimum, "Vault: tick interval is less than tickIntervalMinimum");
-        require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
-        uint256 curRound = currentRound();
-        uint256 amount = availableUseAmount(curRound);
-        // require(tokenUseAmount <= amount, "exceed to claimable amount");
-
-        require(amount > 0, "claimable token is zero");
-        uint256 tokenUseAmount = amount;
-        uint256 tosUseAmount =  TOS.balanceOf(address(this));
-        require(tosUseAmount > 0, "tos balance is zero");
-
-        console.log("tos  %s", tosUseAmount);
-        console.log("token %s", tokenUseAmount);
-
-
-        nowClaimRound = curRound;
-
-        (,int24 tick,,,,,) =  pool.slot0();
-
-        require(tickLower < tick && tick < tickUpper, "tick is out of range");
-
-        uint256 amount0Desired =  tosUseAmount;
-        uint256 amount1Desired =  tokenUseAmount;
-        if(token0Address != address(TOS)){
-            amount0Desired = tokenUseAmount;
-            amount1Desired = tosUseAmount;
-        }
-
-        checkBalance(tosUseAmount, tokenUseAmount);
-
-        if(tosUseAmount > TOS.allowance(address(this), address(NonfungiblePositionManager)) ) {
+         if(tosBalance > TOS.allowance(address(this), address(NonfungiblePositionManager)) ) {
                 require(TOS.approve(address(NonfungiblePositionManager),TOS.totalSupply()),"TOS approve fail");
         }
 
-        if(tokenUseAmount > token.allowance(address(this), address(NonfungiblePositionManager)) ) {
+        if(tokenBalance > token.allowance(address(this), address(NonfungiblePositionManager)) ) {
             require(token.approve(address(NonfungiblePositionManager),token.totalSupply()),"token approve fail");
         }
-
-        console.logInt(tickLower);
-         console.logInt(tickUpper);
-        //console.log("tickUpper %s", uint256(int256(tickUpper)));
-
-        uint256 allowanceTOS = TOS.allowance(address(this), address(NonfungiblePositionManager));
-        console.log("allowanceTOS %s", allowanceTOS);
-
-        uint256 allowanceTOKEN = token.allowance(address(this), address(NonfungiblePositionManager));
-        console.log("allowanceTOKEN %s", allowanceTOKEN);
-
-
-        int24 _tickLower = tickLower;
-        int24 _tickUpper = tickUpper;
-        (
-            uint256 tokenId,
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        ) = NonfungiblePositionManager.mint(INonfungiblePositionManager.MintParams(
-                token0Address, token1Address, fee, _tickLower, _tickUpper,
-                amount0Desired, amount1Desired, 0, 0,
-                address(this), block.timestamp + 100000
-            )
-        );
-
-        console.log("tokenId %s", tokenId);
-
-        if(token0Address != address(TOS)){
-            totalClaimsAmount = totalClaimsAmount + amount0;
-            emit Claimed(tokenId, amount0, totalClaimsAmount);
-        } else {
-            totalClaimsAmount = totalClaimsAmount + amount1;
-            emit Claimed(tokenId, amount1, totalClaimsAmount);
-        }
-
-        emit Minted(msg.sender, tokenId, liquidity, amount0, amount1);
     }
-    */
+
+    /// @inheritdoc ILiquidityVaultAction
     function mint(int24 tickLower, int24 tickUpper)
-        external
+        external override
     {
         mintToken(tickLower, tickUpper,  TOS.balanceOf(address(this)),  token.balanceOf(address(this))/totalClaimCounts );
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function mintToken(int24 tickLower, int24 tickUpper, uint256 tosUseAmount, uint256 tokenUseAmount)
-        public
+        public override
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(tokenUseAmount > 1 ether, "small token amount");
+
         require(tickUpper - tickLower >= tickIntervalMinimum, "Vault: tick interval is less than tickIntervalMinimum");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 curRound = currentRound();
         uint256 amount = availableUseAmount(curRound);
-        // console.log("availableUseAmount  %s", amount);
-        // console.log("tokenUseAmount  %s", tokenUseAmount);
+
 
         require(tokenUseAmount <= amount, "exceed to claimable amount");
         require(amount > 0, "claimable token is zero");
-        //uint256 tokenUseAmount = amount;
+
         require(tokenUseAmount > 0, "tokenUseAmount is zero");
 
         uint256 tosBalance =  TOS.balanceOf(address(this));
         require(tosBalance >= tosUseAmount && tosUseAmount > 0, "tos balance is zero");
-
-        //console.log("tos  %s", tosUseAmount);
-        //console.log("token %s", tokenUseAmount);
 
         nowClaimRound = curRound;
 
@@ -550,29 +364,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             amount1Desired = tosUseAmount;
         }
 
-        //console.log("amount0Desired  %s", amount0Desired);
-        //console.log("amount1Desired  %s", amount1Desired);
-
         checkBalance(tosUseAmount, tokenUseAmount);
-
-        if(tosUseAmount > TOS.allowance(address(this), address(NonfungiblePositionManager)) ) {
-                require(TOS.approve(address(NonfungiblePositionManager),TOS.totalSupply()),"TOS approve fail");
-        }
-
-        if(tokenUseAmount > token.allowance(address(this), address(NonfungiblePositionManager)) ) {
-            require(token.approve(address(NonfungiblePositionManager),token.totalSupply()),"token approve fail");
-        }
-
-        //console.logInt(tickLower);
-        // console.logInt(tickUpper);
-        //console.log("tickUpper %s", uint256(int256(tickUpper)));
-
-        uint256 allowanceTOS = TOS.allowance(address(this), address(NonfungiblePositionManager));
-        //console.log("allowanceTOS %s", allowanceTOS);
-
-        uint256 allowanceTOKEN = token.allowance(address(this), address(NonfungiblePositionManager));
-        //console.log("allowanceTOKEN %s", allowanceTOKEN);
-
 
         int24 _tickLower = tickLower;
         int24 _tickUpper = tickUpper;
@@ -590,11 +382,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
 
         require(tokenId > 0, "tokenId is zero");
         tokenIds.push(tokenId);
-        //console.log("tokenId %s", tokenId);
-        // console.log("amount0 %s", amount0);
-        // console.log("amount1 %s", amount1);
-        // console.log("token0Address %s", token0Address);
-        // console.log("address(TOS) %s", address(TOS));
+
         if(token0Address != address(TOS)){
             totalClaimsAmount = totalClaimsAmount + amount0;
             emit Claimed(tokenId, amount0, totalClaimsAmount);
@@ -602,66 +390,82 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             totalClaimsAmount = totalClaimsAmount + amount1;
             emit Claimed(tokenId, amount1, totalClaimsAmount);
         }
-        // console.log("totalClaimsAmount %s", totalClaimsAmount);
+
         emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
     }
 
 
+    function shouldInRange(uint256 tokenId) internal view {
+
+        (,int24 tick,,,,,) =  pool.slot0();
+        (,,,,, int24 tickLower, int24 tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
+
+        require(tickLower < tick && tick < tickUpper, "tick is out of range");
+    }
+
+    function shouldOutOfRange(uint256 tokenId) internal view {
+
+        (,int24 tick,,,,,) =  pool.slot0();
+        (,,,,, int24 tickLower, int24 tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
+
+        require(tick < tickLower ||  tickUpper < tick
+            , "tick is not out of range");
+    }
+
+    /// @inheritdoc ILiquidityVaultAction
     function increaseLiquidity(
         uint256 tokenId,
         uint256 amount0Desired,
         uint256 amount1Desired,
         uint256 deadline
     )
-        external
+        external override
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
-        returns (
-            uint128 liquidity,
-            uint256 amount0,
-            uint256 amount1
-        )
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
-        uint256 curRound = currentRound();
-        uint256 amount = availableUseAmount(curRound);
 
-        if(token0Address != address(TOS)){
+        //require(NonfungiblePositionManager.ownerOf(tokenId) == address(this), "token's owner is not this.");
+        shouldInRange(tokenId);
+
+        nowClaimRound = currentRound();
+        uint256 amount = availableUseAmount(nowClaimRound);
+
+        if(token0Address != address(TOS)) {
             require(amount0Desired <= amount, "exceed to claimable amount");
-        } else {
+            checkBalance(amount1Desired, amount0Desired);
+        }
+        else {
             require(amount1Desired <= amount, "exceed to claimable amount");
+            checkBalance(amount0Desired, amount1Desired);
         }
 
-        nowClaimRound = curRound;
 
-        (
-            liquidity,
-            amount0,
-            amount1
-        ) = NonfungiblePositionManager.increaseLiquidity(INonfungiblePositionManager.IncreaseLiquidityParams(
-                tokenId, amount0Desired, amount1Desired, 0, 0, deadline
-            )
-        );
+        uint256 tokenId_ = tokenId;
+        uint256 amount0Desired_ = amount0Desired;
+        uint256 amount1Desired_ = amount1Desired;
+        uint256 deadline_ = deadline;
 
-        // console.log("tokenId %s", tokenId);
-        // console.log("amount0 %s", amount0);
-        // console.log("amount1 %s", amount1);
-        // console.log("token0Address %s", token0Address);
-        // console.log("address(TOS) %s", address(TOS));
+        (liquidity, amount0, amount1) = NonfungiblePositionManager.increaseLiquidity(INonfungiblePositionManager.IncreaseLiquidityParams(
+                tokenId_, amount0Desired_, amount1Desired_, 0, 0, deadline_));
+
 
         if(token0Address != address(TOS)){
             totalClaimsAmount = totalClaimsAmount + amount0;
-            emit Claimed(tokenId, amount0, totalClaimsAmount);
+            emit Claimed(tokenId_, amount0, totalClaimsAmount);
         } else {
             totalClaimsAmount = totalClaimsAmount + amount1;
-            emit Claimed(tokenId, amount1, totalClaimsAmount);
+            emit Claimed(tokenId_, amount1, totalClaimsAmount);
         }
-        // console.log("totalClaimsAmount %s", totalClaimsAmount);
-        emit IncreaseLiquidityInVault(tokenId, liquidity, amount0, amount1);
+
+        emit IncreaseLiquidityInVault(tokenId_, liquidity, amount0, amount1);
+
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function decreaseLiquidity(
         uint256 tokenId,
         uint128 liquidity,
@@ -669,7 +473,7 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         uint256 amount1Min,
         uint256 deadline
     )
-        external
+        external override
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
@@ -678,6 +482,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
             uint256 amount1
         )
     {
+        //require(NonfungiblePositionManager.ownerOf(tokenId) == address(this), "token's owner is not this.");
+        shouldOutOfRange(tokenId);
+
         (
             amount0,
             amount1
@@ -696,12 +503,13 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         emit DecreaseLiquidityInVault(tokenId, liquidity, amount0, amount1);
     }
 
+    /// @inheritdoc ILiquidityVaultAction
     function collect(
         uint256 tokenId,
         uint128 amount0Max,
         uint128 amount1Max
     )
-        external returns (uint256 amount0, uint256 amount1)
+        external override returns (uint256 amount0, uint256 amount1)
     {
         (
             amount0,
@@ -726,32 +534,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon {
         emit CollectInVault(tokenId, amount0, amount1);
     }
 
-    function swap(bool tosToToken, uint256 amountIn, uint256 amountOut, uint160 sqrtPriceLimitX96)
-        public
-    {
-        uint256 amountExchangedOut = 0;
-        address tokenIn = address(TOS);
-        address tokenOut = address(token);
-        if(!tosToToken){
-            tokenIn = address(token);
-            tokenOut = address(TOS);
-        }
-
-        amountExchangedOut = SwapRouter.exactInputSingle(ISwapRouter.ExactInputSingleParams(
-                tokenIn, tokenOut, fee, address(this), block.timestamp+10000, amountIn, amountOut, sqrtPriceLimitX96
-        ));
-
-        if(tosToToken){
-            totalClaimsAmount = totalClaimsAmount + amountExchangedOut;
-        } else {
-            totalClaimsAmount = totalClaimsAmount - amountIn;
-        }
-
-        emit ExchangedInVault(tokenIn, tokenOut, amountIn, amountExchangedOut, totalClaimsAmount);
-    }
-
+    /// @inheritdoc ILiquidityVaultAction
     function withdraw(address _token, address _account, uint256 _amount)
-        external
+        external override
         onlyOwner
     {
         require(totalAllocatedAmount <= totalClaimsAmount, "not closed");
