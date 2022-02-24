@@ -47,9 +47,9 @@ let poolAddress = "0x090EFde9AD3dc88B01143c3C83DbA97714f5306e";
 
 describe("LiquidityVault", function () {
 
-    let tokenA, liquidityVaultLogic,  liquidityVault, liquidityVaultProxy, provider;
+    let tokenA, liquidityVaultFactory, liquidityVaultLogic,  liquidityVault, liquidityVaultProxy, provider;
     let uniswapV3Factory, uniswapV3Pool ;
-    let deployedUniswapV3 , tosToken;
+    let deployedUniswapV3 , tosToken , vaultAddress;
 
     let tosInfo={
         name: "TOS",
@@ -154,7 +154,6 @@ describe("LiquidityVault", function () {
         poolInfo.allocateToken = tokenA;
     });
 
-
     it("create LiquidityVault Logic", async function () {
         const LiquidityVault = await ethers.getContractFactory("LiquidityVault");
         let LiquidityVaultLogicDeployed = await LiquidityVault.deploy();
@@ -164,13 +163,88 @@ describe("LiquidityVault", function () {
         liquidityVaultLogic = LiquidityVaultLogicDeployed.address;
     });
 
-     it("create LiquidityVaultProxy ", async function () {
+    it("create LiquidityVaultFactory ", async function () {
+        const LiquidityVaultFactory = await ethers.getContractFactory("LiquidityVaultFactory");
+        let LiquidityVaultFactoryDeployed = await LiquidityVaultFactory.deploy();
+        let tx = await LiquidityVaultFactoryDeployed.deployed();
+        // console.log('tx',tx.deployTransaction.hash);
+        // console.log("LiquidityVaultFactory deployed to:", LiquidityVaultFactoryDeployed.address);
+        liquidityVaultFactory =  await ethers.getContractAt("LiquidityVaultFactory", LiquidityVaultFactoryDeployed.address);
+        let code = await ethers.provider.getCode(liquidityVaultFactory.address);
+        expect(code).to.not.eq("0x");
+
+    });
+
+    describe("LiquidityVaultFactory   ", function () {
+
+        it("0-1. setLogic : when not admin, fail ", async function () {
+
+            await expect(
+                liquidityVaultFactory.connect(user2).setLogic(liquidityVaultLogic)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+
+        it("0-1. setLogic ", async function () {
+
+            await liquidityVaultFactory.connect(admin1).setLogic(liquidityVaultLogic);
+
+            expect(await liquidityVaultFactory.vaultLogic()).to.be.eq(liquidityVaultLogic);
+        });
+
+        it("0-2. setUpgradeAdmin : when not admin, fail ", async function () {
+
+            await expect(
+                liquidityVaultFactory.connect(user2).setUpgradeAdmin(admin2.address)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+
+        it("0-2. setUpgradeAdmin ", async function () {
+
+            await liquidityVaultFactory.connect(admin1).setUpgradeAdmin(admin2.address);
+
+            expect(await liquidityVaultFactory.upgradeAdmin()).to.be.eq(admin2.address);
+        });
+
+        it("0-3/4/5/6. create : LiquidityVaultProxy ", async function () {
+
+            let tx = await liquidityVaultFactory.create(
+                    poolInfo.name,
+                    poolInfo.allocateToken.address,
+                    poolInfo.admin.address,
+                    price.tos,
+                    price.projectToken
+            );
+
+            const receipt = await tx.wait();
+            let _function ="CreatedLiquidityVault(address, string)";
+            let interface = liquidityVaultFactory.interface;
+            let tokenId = null;
+            for(let i=0; i< receipt.events.length; i++){
+                if(receipt.events[i].topics[0] == interface.getEventTopic(_function)){
+                    let data = receipt.events[i].data;
+                    let topics = receipt.events[i].topics;
+                    let log = interface.parseLog(
+                    {  data,  topics } );
+                    vaultAddress = log.args.contractAddress;
+                }
+            }
+
+            expect(await liquidityVaultFactory.totalCreatedContracts()).to.be.eq(1);
+            expect((await liquidityVaultFactory.getContracts(0)).contractAddress).to.be.eq(vaultAddress);
+            expect((await liquidityVaultFactory.lastestCreated()).contractAddress).to.be.eq(vaultAddress);
+
+        });
+    });
+
+
+    it("create LiquidityVaultProxy ", async function () {
         const LiquidityVaultProxy = await ethers.getContractFactory("LiquidityVaultProxy");
         let LiquidityVaultProxyDeployed = await LiquidityVaultProxy.deploy();
         let tx = await LiquidityVaultProxyDeployed.deployed();
         // console.log('tx',tx.deployTransaction.hash);
         // console.log("LiquidityVaultProxy deployed to:", LiquidityVaultProxyDeployed.address);
-
 
         liquidityVaultProxy =  await ethers.getContractAt("LiquidityVaultProxy", LiquidityVaultProxyDeployed.address);
 
@@ -261,6 +335,19 @@ describe("LiquidityVault", function () {
             ).to.be.revertedWith("already set");
         });
 
+        it("     change vault ", async function () {
+
+            liquidityVault = await ethers.getContractAt("LiquidityVault", vaultAddress);
+            liquidityVaultProxy =  await ethers.getContractAt("LiquidityVaultProxy", vaultAddress);
+            expect(await liquidityVaultProxy.name()).to.be.equal(poolInfo.name);
+            expect(await liquidityVaultProxy.token()).to.be.equal(poolInfo.allocateToken.address);
+            expect(await liquidityVaultProxy.isAdmin(poolInfo.admin.address)).to.be.equal(true);
+            expect(await liquidityVaultProxy.initialTosPrice()).to.be.equal(price.tos);
+            expect(await liquidityVaultProxy.initialTokenPrice()).to.be.equal(price.projectToken);
+            expect(await liquidityVaultProxy.implementation()).to.be.equal(liquidityVaultLogic);
+
+        });
+
         it("1-9. setProxyPause : when not admin, fail", async function () {
 
             await expect(
@@ -271,6 +358,8 @@ describe("LiquidityVault", function () {
         it("1-9. setProxyPause ", async function () {
 
             await liquidityVaultProxy.connect(poolInfo.admin).setProxyPause(true);
+            expect(await liquidityVaultProxy.pauseProxy()).to.be.equal(true);
+
         });
 
         it("1-9. setProxyPause : can\'t exceute logic function ", async function () {

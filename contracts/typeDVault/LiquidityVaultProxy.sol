@@ -5,6 +5,7 @@ pragma solidity ^0.8.4;
 import "./LiquidityVaultStorage.sol";
 import "../common/AccessiblePlusCommon.sol";
 import "./ProxyBase.sol";
+import "hardhat/console.sol";
 
 contract LiquidityVaultProxy is
     LiquidityVaultStorage, AccessiblePlusCommon,
@@ -63,6 +64,7 @@ contract LiquidityVaultProxy is
     /// @dev fallback function , execute on undefined function call
     function _fallback() internal {
         address _impl = _implementation();
+
         require(
             _impl != address(0) && !pauseProxy,
             "LiquidityVaultProxy: impl OR proxy is false"
