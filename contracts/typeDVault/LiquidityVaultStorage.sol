@@ -52,7 +52,10 @@ contract LiquidityVaultStorage  {
     uint256[] public claimAmounts;
     uint256[] public addAmounts;
 
-
     bool public pauseProxy;
+
+    mapping(uint256 => address) public proxyImplementation;
+    mapping(address => bool) public aliveImplementation;
+    mapping(bytes4 => address) public selectorImplementation;
 
 }

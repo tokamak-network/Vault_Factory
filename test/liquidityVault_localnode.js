@@ -49,7 +49,7 @@ describe("LiquidityVault", function () {
 
     let tokenA, liquidityVaultFactory, liquidityVaultLogic,  liquidityVault, liquidityVaultProxy, provider;
     let uniswapV3Factory, uniswapV3Pool ;
-    let deployedUniswapV3 , tosToken , vaultAddress;
+    let deployedUniswapV3 , tosToken , vaultAddress, testLogicAddress;
 
     let tosInfo={
         name: "TOS",
@@ -276,19 +276,96 @@ describe("LiquidityVault", function () {
             await liquidityVaultProxy.connect(user2).transferAdmin(user1.address);
         });
 
-        it("1-4. upgradeTo : when not admin, fail", async function () {
-            await expect(liquidityVaultProxy.connect(user2).upgradeTo(liquidityVaultLogic)).to.be.revertedWith("Accessible: Caller is not an admin");
+        it("1-4. setImplementation2 : when not admin, fail", async function () {
+            await expect(liquidityVaultProxy.connect(user2).setImplementation2(liquidityVaultLogic,0, true)).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
-        it("1-4/5. upgradeTo", async function () {
+        it("1-4/5. setImplementation2", async function () {
 
-            let tx = await liquidityVaultProxy.connect(poolInfo.admin).upgradeTo(
-                liquidityVaultLogic
+            let tx = await liquidityVaultProxy.connect(poolInfo.admin).setImplementation2(
+                liquidityVaultLogic, 0, true
             );
-            //console.log('upgradeTo tx',tx.hash );
 
             await tx.wait();
         });
+
+        it("1-10/11. setAliveImplementation2 : Only Admin ", async function () {
+
+            const TestLogic = await ethers.getContractFactory("TestLogic");
+            let testLogicDeployed = await TestLogic.deploy();
+            await testLogicDeployed.deployed();
+            testLogicAddress = testLogicDeployed.address ;
+
+            let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
+            let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
+
+            await expect(
+              liquidityVaultProxy.connect(user2).setSelectorImplementations2(
+                [_func1, _func2],
+                testLogicAddress )
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+            await expect(
+              liquidityVaultProxy.connect(user2).setAliveImplementation2(
+                    testLogicAddress, false
+                )
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+
+        it("1-5/10/11/12/13. setAliveImplementation2", async function () {
+
+            const TestLogic = await ethers.getContractFactory("TestLogic");
+            let testLogicDeployed = await TestLogic.deploy();
+            await testLogicDeployed.deployed();
+            testLogicAddress = testLogicDeployed.address ;
+
+            let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
+            let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
+
+            let tx = await liquidityVaultProxy.connect(poolInfo.admin).setImplementation2(
+                testLogicAddress, 1, true
+            );
+
+            await tx.wait();
+
+            await liquidityVaultProxy.connect(poolInfo.admin).setSelectorImplementations2(
+                [_func1, _func2],
+                testLogicAddress
+            );
+
+            await tx.wait();
+
+            expect(await liquidityVaultProxy.implementation2(1)).to.be.eq(testLogicAddress);
+            expect(await liquidityVaultProxy.getSelectorImplementation2(_func1)).to.be.eq(testLogicAddress);
+            expect(await liquidityVaultProxy.getSelectorImplementation2(_func2)).to.be.eq(testLogicAddress);
+
+            const TestLogicContract = await ethers.getContractAt("TestLogic", liquidityVaultProxy.address);
+
+            let a = ethers.BigNumber.from("1");
+            let b = ethers.BigNumber.from("2");
+
+            let add = await TestLogicContract.sayAdd(a, b);
+            expect(add).to.be.eq(a.add(b));
+
+            let mul = await TestLogicContract.sayMul(a, b);
+            expect(mul).to.be.eq(a.mul(b));
+
+            tx = await liquidityVaultProxy.connect(poolInfo.admin).setAliveImplementation2(
+                testLogicAddress, false
+            );
+
+            await tx.wait();
+
+            await expect(
+                TestLogicContract.sayAdd(a, b)
+            ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
+
+            await expect(
+                TestLogicContract.sayMul(a, b)
+            ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
+
+        });
+
 
         it("1-6. setBaseInfoProxy : when not admin, fail", async function () {
 
@@ -344,7 +421,7 @@ describe("LiquidityVault", function () {
             expect(await liquidityVaultProxy.isAdmin(poolInfo.admin.address)).to.be.equal(true);
             expect(await liquidityVaultProxy.initialTosPrice()).to.be.equal(price.tos);
             expect(await liquidityVaultProxy.initialTokenPrice()).to.be.equal(price.projectToken);
-            expect(await liquidityVaultProxy.implementation()).to.be.equal(liquidityVaultLogic);
+            expect(await liquidityVaultProxy.implementation2(0)).to.be.equal(liquidityVaultLogic);
 
         });
 
@@ -944,46 +1021,6 @@ describe("LiquidityVault", function () {
             expect(await tokenA.balanceOf(liquidityVault.address)).to.be.lt(preTokenBalance);
         });
 
-        /*
-        it("3-9. mint  ", async function () {
-
-            let minTick = getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM])  ;
-            let maxTick = getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]) ;
-
-            let slot0 = await uniswapV3Pool.slot0();
-            let targetTickInterval = Math.floor(price.targetPriceInterval / price.tickPrice);
-
-            let lowerTick = slot0.tick - getTick(100 , TICK_SPACINGS[FeeAmount.MEDIUM]);
-
-            //slot0.tick - Math.floor(targetTickInterval);
-            //let upperTick = slot0.tick + Math.floor(targetTickInterval);
-            let upperTick = slot0.tick + getTick(100 , TICK_SPACINGS[FeeAmount.MEDIUM]);
-
-
-            console.log(' slot0.tick ', slot0.tick , 'lowerTick  ', lowerTick, "upperTick ", upperTick);
-            console.log(' minTick ', minTick , ' maxTick ', maxTick );
-
-
-            let round = await liquidityVault.currentRound();
-            expect(round).to.be.gt(ethers.BigNumber.from("0"));
-            let calculateClaimAmount = await liquidityVault.calculateClaimAmount(round);
-            expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
-
-            let tosAmount = ethers.BigNumber.from("2500000000000000000");
-            let tokenAmount = ethers.BigNumber.from("10000000000000000000");
-
-
-            let tick1 = lowerTick  ;
-            let tick2 = upperTick ;
-
-            let getSqrtRatioAtTick1 = await liquidityVault.getSqrtRatioAtTick(tick1);
-            console.log('tick1', tick1, getSqrtRatioAtTick1, getSqrtRatioAtTick1 ** 2 / 2 ** 192 );
-            let getSqrtRatioAtTick2 = await liquidityVault.getSqrtRatioAtTick(tick2);
-            console.log('tick2', tick2, getSqrtRatioAtTick2, getSqrtRatioAtTick2 ** 2 / 2 ** 192);
-
-            await liquidityVault.connect(user2).mintToken(tick1, tick2, tosAmount, tokenAmount) ;
-        });
-        */
         it("     TOS transfer to LiquidityVault", async function () {
             let tosAmount = ethers.BigNumber.from("2500000000000000000");
 

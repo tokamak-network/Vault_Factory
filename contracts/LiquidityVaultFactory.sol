@@ -91,7 +91,7 @@ contract LiquidityVaultFactory is AccessibleCommon, ILiquidityVaultFactory{
         );
 
         _proxy.addAdmin(upgradeAdmin);
-        _proxy.upgradeTo(vaultLogic);
+        _proxy.setImplementation2(vaultLogic, 0, true);
 
         _proxy.setBaseInfoProxy(_name, _token, _admin, tosPrice, tokenPrice);
 

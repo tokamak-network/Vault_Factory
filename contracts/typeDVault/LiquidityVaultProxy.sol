@@ -1,29 +1,21 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-//import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "./LiquidityVaultStorage.sol";
 import "../common/AccessiblePlusCommon.sol";
-import "./ProxyBase.sol";
 import "hardhat/console.sol";
 
 contract LiquidityVaultProxy is
-    LiquidityVaultStorage, AccessiblePlusCommon,
-    ProxyBase
+    LiquidityVaultStorage, AccessiblePlusCommon
 
 {
     event Upgraded(address indexed implementation);
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
     constructor () {
-        assert(
-            IMPLEMENTATION_SLOT ==
-                bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)
-        );
-
         owner = msg.sender;
         tickIntervalMinimum = 0;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
@@ -37,19 +29,109 @@ contract LiquidityVaultProxy is
         pauseProxy = _pause;
     }
 
-    /// @notice Set implementation contract
-    /// @param impl New implementation contract address
-    function upgradeTo(address impl) public  onlyOwner {
-        require(impl != address(0), "ERC721Proxy: input is zero");
-        require(_implementation() != impl, "ERC721Proxy: same");
-        _setImplementation(impl);
-        emit Upgraded(impl);
+    /// @dev view implementation address of the proxy[index]
+    /// @param _index index of proxy
+    /// @return address of the implementation
+    function implementation2(uint256 _index) external view returns (address) {
+        return _implementation2(_index);
     }
 
-    /// @dev returns the implementation
-    function implementation() public view  returns (address) {
-        return _implementation();
+    /// @dev set the implementation address and status of the proxy[index]
+    /// @param newImplementation Address of the new implementation.
+    /// @param _index index
+    /// @param _alive _alive
+    function setImplementation2(
+        address newImplementation,
+        uint256 _index,
+        bool _alive
+    ) external onlyOwner {
+        _setImplementation2(newImplementation, _index, _alive);
     }
+
+    /// @dev set alive status of implementation
+    /// @param newImplementation Address of the new implementation.
+    /// @param _alive alive status
+    function setAliveImplementation2(address newImplementation, bool _alive)
+        public
+        onlyOwner
+    {
+        _setAliveImplementation2(newImplementation, _alive);
+    }
+
+    /// @dev set selectors of Implementation
+    /// @param _selectors being added selectors
+    /// @param _imp implementation address
+    function setSelectorImplementations2(
+        bytes4[] calldata _selectors,
+        address _imp
+    ) public onlyOwner {
+        require(
+            _selectors.length > 0,
+            "LiquidityVaultProxy: _selectors's size is zero"
+        );
+        require(aliveImplementation[_imp], "LiquidityVaultProxy: _imp is not alive");
+
+        for (uint256 i = 0; i < _selectors.length; i++) {
+            require(
+                selectorImplementation[_selectors[i]] != _imp,
+                "LiquidityVaultProxy: same imp"
+            );
+            selectorImplementation[_selectors[i]] = _imp;
+        }
+    }
+
+    /// @dev set the implementation address and status of the proxy[index]
+    /// @param newImplementation Address of the new implementation.
+    /// @param _index index of proxy
+    /// @param _alive alive status
+    function _setImplementation2(
+        address newImplementation,
+        uint256 _index,
+        bool _alive
+    ) internal {
+        require(
+            Address.isContract(newImplementation),
+            "LiquidityVaultProxy: Cannot set a proxy implementation to a non-contract address"
+        );
+        if (_alive) proxyImplementation[_index] = newImplementation;
+        _setAliveImplementation2(newImplementation, _alive);
+    }
+
+    /// @dev set alive status of implementation
+    /// @param newImplementation Address of the new implementation.
+    /// @param _alive alive status
+    function _setAliveImplementation2(address newImplementation, bool _alive)
+        internal
+    {
+        aliveImplementation[newImplementation] = _alive;
+    }
+
+    /// @dev view implementation address of the proxy[index]
+    /// @param _index index of proxy
+    /// @return impl address of the implementation
+    function _implementation2(uint256 _index)
+        internal
+        view
+        returns (address impl)
+    {
+        return proxyImplementation[_index];
+    }
+
+    /// @dev view implementation address of selector of function
+    /// @param _selector selector of function
+    /// @return impl address of the implementation
+    function getSelectorImplementation2(bytes4 _selector)
+        public
+        view
+        returns (address impl)
+    {
+        if (selectorImplementation[_selector] == address(0))
+            return proxyImplementation[0];
+        else if (aliveImplementation[selectorImplementation[_selector]])
+            return selectorImplementation[_selector];
+        else return proxyImplementation[0];
+    }
+
 
     /// @dev receive ether
     receive() external payable {
@@ -63,7 +145,7 @@ contract LiquidityVaultProxy is
 
     /// @dev fallback function , execute on undefined function call
     function _fallback() internal {
-        address _impl = _implementation();
+        address _impl = getSelectorImplementation2(msg.sig);
 
         require(
             _impl != address(0) && !pauseProxy,
