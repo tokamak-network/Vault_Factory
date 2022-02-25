@@ -45,11 +45,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
 
     ///@dev constructor
     constructor() {
-        // owner = msg.sender;
-        // _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
-        // _setupRole(PROJECT_ADMIN_ROLE, owner);
         tickIntervalMinimum = 0;
-
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -67,11 +63,6 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         if(!isAdmin(_owner)){
             _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
-        // if(_owner != owner){
-        //     owner = _owner;
-        //     _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
-        //     _setupRole(PROJECT_ADMIN_ROLE, owner);
-        // }
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -159,6 +150,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         WTONTOSPool = IUniswapV3Pool(wtonTosPool);
 
     }
+
 
     /// @inheritdoc ILiquidityVaultAction
     function setTokens(
@@ -548,5 +540,4 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
 
         emit WithdrawalInVault(msg.sender, _token, _account, _amount);
     }
-
 }
