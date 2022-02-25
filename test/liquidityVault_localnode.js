@@ -154,6 +154,71 @@ describe("LiquidityVault", function () {
         poolInfo.allocateToken = tokenA;
     });
 
+
+    describe("Deploy UniswapV3 Contracts ", function () {
+        it("deployedUniswapV3Contracts", async function () {
+            deployedUniswapV3 = await deployedUniswapV3Contracts();
+
+            //console.log('deployedUniswapV3.coreFactory',deployedUniswapV3.coreFactory);
+
+            uniswapInfo.poolfactory = deployedUniswapV3.coreFactory.address;
+            uniswapInfo.npm = deployedUniswapV3.nftPositionManager.address;
+            uniswapInfo.swapRouter = deployedUniswapV3.swapRouter.address;
+            uniswapInfo.NonfungibleTokenPositionDescriptor = deployedUniswapV3.nftDescriptor.address;
+            uniswapInfo.poolfactory = deployedUniswapV3.coreFactory.address;
+
+        });
+
+        it("deploy TOS", async function () {
+
+            const contract = await (
+                await ethers.getContractFactory(
+                    TOSToken.abi,
+                    TOSToken.bytecode
+                )
+            ).deploy(tosInfo.name, tosInfo.symbol, tosInfo.version);
+            deployed = await contract.deployed();
+            tosToken = await ethers.getContractAt(TOSToken.abi, contract.address);
+            tosInfo.contract = tosToken;
+            tosInfo.admin = admin1;
+            await tosToken.connect(tosInfo.admin).mint(tosInfo.admin.address, tosInfo.totalSupply);
+
+            expect(await tosToken.balanceOf(admin1.address)).to.be.eq(tosInfo.totalSupply);
+
+            uniswapInfo.tos = tosToken.address;
+        });
+
+         it("deploy TEST address", async function () {
+
+             const contract = await (
+                await ethers.getContractFactory(
+                    TOSToken.abi,
+                    TOSToken.bytecode
+                )
+            ).deploy(tosInfo.name, tosInfo.symbol, tosInfo.version);
+            deployed = await contract.deployed();
+            let testTemp = await ethers.getContractAt(TOSToken.abi, contract.address);
+
+            uniswapInfo.wethUsdcPool = testTemp.address;
+            uniswapInfo.wtonWethPool = testTemp.address;
+            uniswapInfo.wtonTosPool = testTemp.address;
+            uniswapInfo.wton = testTemp.address;
+
+         });
+        /*
+        it("createPool", async function () {
+            let tx = await deployedUniswapV3.coreFactory.connect(admin1).createPool(
+                uniswapInfo.tos,
+                poolInfo.allocateToken.address,
+                3000
+            );
+
+            await tx.wait();
+            console.log(tx);
+        });
+        */
+    });
+
     it("create LiquidityVault Logic", async function () {
         const LiquidityVault = await ethers.getContractFactory("LiquidityVault");
         let LiquidityVaultLogicDeployed = await LiquidityVault.deploy();
@@ -206,6 +271,49 @@ describe("LiquidityVault", function () {
             expect(await liquidityVaultFactory.upgradeAdmin()).to.be.eq(proxyAdmin.address);
         });
 
+        it("0-7. setUniswapInfoNTokens : when not admin, fail ", async function () {
+
+
+            await expect(
+                liquidityVaultFactory.connect(user2).setUniswapInfoNTokens(
+                    [uniswapInfo.poolfactory,
+                    uniswapInfo.npm,
+                    uniswapInfo.swapRouter],
+                    [uniswapInfo.wethUsdcPool,
+                    uniswapInfo.wtonWethPool,
+                    uniswapInfo.wtonTosPool],
+                    [uniswapInfo.wton,
+                    uniswapInfo.tos],
+                    ethers.BigNumber.from("3000")
+                )
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+
+        it("0-7. setUniswapInfoNTokens ", async function () {
+
+            await liquidityVaultFactory.connect(admin1).setUniswapInfoNTokens(
+                [uniswapInfo.poolfactory,
+                uniswapInfo.npm,
+                uniswapInfo.swapRouter],
+                [uniswapInfo.wethUsdcPool,
+                uniswapInfo.wtonWethPool,
+                uniswapInfo.wtonTosPool],
+                [uniswapInfo.wton,
+                uniswapInfo.tos],
+                ethers.BigNumber.from("3000")
+                );
+            expect(await liquidityVaultFactory.uniswapV3Factory()).to.be.eq(uniswapInfo.poolfactory);
+            expect(await liquidityVaultFactory.nonfungiblePositionManager()).to.be.eq(uniswapInfo.npm);
+            expect(await liquidityVaultFactory.swapRouter()).to.be.eq(uniswapInfo.swapRouter);
+            expect(await liquidityVaultFactory.wethUsdcPool()).to.be.eq(uniswapInfo.wethUsdcPool);
+            expect(await liquidityVaultFactory.wtonWethPool()).to.be.eq(uniswapInfo.wtonWethPool);
+            expect(await liquidityVaultFactory.wtonTosPool()).to.be.eq(uniswapInfo.wtonTosPool);
+            expect(await liquidityVaultFactory.wton()).to.be.eq(uniswapInfo.wton);
+            expect(await liquidityVaultFactory.tos()).to.be.eq(uniswapInfo.tos);
+            expect(await liquidityVaultFactory.fee()).to.be.eq(ethers.BigNumber.from("3000"));
+        });
+
         it("0-3/4/5/6. create : LiquidityVaultProxy ", async function () {
 
             let tx = await liquidityVaultFactory.create(
@@ -240,6 +348,35 @@ describe("LiquidityVault", function () {
             expect(await VaultContract.isAdmin(poolInfo.admin.address)).to.be.eq(true);
             expect(await VaultContract.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
             expect(await VaultContract.isAdmin(proxyAdmin.address)).to.be.eq(false);
+
+
+            expect(await liquidityVaultFactory.uniswapV3Factory()).to.be.eq(
+                await VaultContract.UniswapV3Factory()
+            );
+            expect(await liquidityVaultFactory.nonfungiblePositionManager()).to.be.eq(
+                await VaultContract.NonfungiblePositionManager()
+            );
+            expect(await liquidityVaultFactory.swapRouter()).to.be.eq(
+                 await VaultContract.SwapRouter()
+            );
+            expect(await liquidityVaultFactory.wethUsdcPool()).to.be.eq(
+                 await VaultContract.WETHUSDCPool()
+            );
+            expect(await liquidityVaultFactory.wtonWethPool()).to.be.eq(
+                 await VaultContract.WTONWETHPool()
+            );
+            expect(await liquidityVaultFactory.wtonTosPool()).to.be.eq(
+                 await VaultContract.WTONTOSPool()
+            );
+            expect(await liquidityVaultFactory.wton()).to.be.eq(
+                 await VaultContract.WTON()
+            );
+            expect(await liquidityVaultFactory.tos()).to.be.eq(
+                 await VaultContract.TOS()
+            );
+            expect(await liquidityVaultFactory.fee()).to.be.eq(
+                 await VaultContract.fee()
+            );
 
         });
     });
@@ -530,60 +667,17 @@ describe("LiquidityVault", function () {
 
     });
 
-    describe("Deploy UniswapV3 Contracts ", function () {
-        it("deployedUniswapV3Contracts", async function () {
-            deployedUniswapV3 = await deployedUniswapV3Contracts();
-
-            //console.log('deployedUniswapV3.coreFactory',deployedUniswapV3.coreFactory);
-
-            uniswapInfo.poolfactory = deployedUniswapV3.coreFactory.address;
-            uniswapInfo.npm = deployedUniswapV3.nftPositionManager.address;
-            uniswapInfo.swapRouter = deployedUniswapV3.swapRouter.address;
-            uniswapInfo.NonfungibleTokenPositionDescriptor = deployedUniswapV3.nftDescriptor.address;
-            uniswapInfo.poolfactory = deployedUniswapV3.coreFactory.address;
-
-        });
-
-        it("deploy TOS", async function () {
-
-            const contract = await (
-                await ethers.getContractFactory(
-                    TOSToken.abi,
-                    TOSToken.bytecode
-                )
-            ).deploy(tosInfo.name, tosInfo.symbol, tosInfo.version);
-            deployed = await contract.deployed();
-            tosToken = await ethers.getContractAt(TOSToken.abi, contract.address);
-            tosInfo.contract = tosToken;
-            tosInfo.admin = admin1;
-            await tosToken.connect(tosInfo.admin).mint(tosInfo.admin.address, tosInfo.totalSupply);
-
-            expect(await tosToken.balanceOf(admin1.address)).to.be.eq(tosInfo.totalSupply);
-
-            uniswapInfo.tos = tosToken.address;
-        });
-        /*
-        it("createPool", async function () {
-            let tx = await deployedUniswapV3.coreFactory.connect(admin1).createPool(
-                uniswapInfo.tos,
-                poolInfo.allocateToken.address,
-                3000
-            );
-
-            await tx.wait();
-            console.log(tx);
-        });
-        */
-    });
 
     describe("LiquidityVault : Only Admin ", function () {
 
+        /*
         it("3-1. setPool : when not set uniswap infos, fail ", async function () {
             await expect(
                liquidityVault.setPool()
              ).to.be.revertedWith("Vault: before setUniswap");
 
         });
+        */
 
         it("2-1. setUniswapInfo : when not admin, fail", async function () {
 
@@ -593,20 +687,46 @@ describe("LiquidityVault", function () {
                     uniswapInfo.npm,
                     uniswapInfo.swapRouter
                 )
-             ).to.be.revertedWith("Accessible: Caller is not an admin");
+             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
-        it("2-1. setUniswapInfo  ", async function () {
-
-            await liquidityVault.connect(poolInfo.admin).setUniswapInfo(
-                uniswapInfo.poolfactory,
-                uniswapInfo.npm,
-                uniswapInfo.swapRouter
-            );
+        it("2-1. setUniswapInfo : Fail if address is 0 or equal to existing address ", async function () {
+            await expect(
+                liquidityVault.connect(proxyAdmin).setUniswapInfo(
+                    uniswapInfo.poolfactory,
+                    uniswapInfo.npm,
+                    uniswapInfo.swapRouter
+                )
+            ).to.be.revertedWith("zero or same UniswapV3Factory");
 
             expect(await liquidityVault.UniswapV3Factory()).to.be.eq(uniswapInfo.poolfactory);
             expect(await liquidityVault.NonfungiblePositionManager()).to.be.eq(uniswapInfo.npm);
             expect(await liquidityVault.SwapRouter()).to.be.eq(uniswapInfo.swapRouter);
+
+        });
+
+        it("2-1. setUniswapInfo  ", async function () {
+
+            await liquidityVault.connect(proxyAdmin).setUniswapInfo(
+                    uniswapInfo.tos,
+                    uniswapInfo.tos,
+                    uniswapInfo.tos
+                );
+
+            expect(await liquidityVault.UniswapV3Factory()).to.be.eq(uniswapInfo.tos);
+            expect(await liquidityVault.NonfungiblePositionManager()).to.be.eq(uniswapInfo.tos);
+            expect(await liquidityVault.SwapRouter()).to.be.eq(uniswapInfo.tos);
+
+            await liquidityVault.connect(proxyAdmin).setUniswapInfo(
+                    uniswapInfo.poolfactory,
+                    uniswapInfo.npm,
+                    uniswapInfo.swapRouter
+                ) ;
+
+            expect(await liquidityVault.UniswapV3Factory()).to.be.eq(uniswapInfo.poolfactory);
+            expect(await liquidityVault.NonfungiblePositionManager()).to.be.eq(uniswapInfo.npm);
+            expect(await liquidityVault.SwapRouter()).to.be.eq(uniswapInfo.swapRouter);
+
 
         });
 
@@ -618,12 +738,32 @@ describe("LiquidityVault", function () {
                     uniswapInfo.tos,
                     uniswapInfo._fee
                 )
-             ).to.be.revertedWith("Accessible: Caller is not an admin");
+             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+
+        it("2-2. setTokens : Fail if address is 0 or equal to existing address", async function () {
+
+            await expect(
+                liquidityVault.connect(proxyAdmin).setTokens(
+                    uniswapInfo.wton,
+                    uniswapInfo.tos,
+                    uniswapInfo._fee
+                )
+             ).to.be.revertedWith("same wton");
         });
 
         it("2-2. setTokens  ", async function () {
 
-            await liquidityVault.connect(poolInfo.admin).setTokens(
+            await liquidityVault.connect(proxyAdmin).setTokens(
+                    uniswapInfo.swapRouter,
+                    uniswapInfo.swapRouter,
+                    uniswapInfo._fee
+                );
+
+            expect((await liquidityVault.WTON()).toLowerCase()).to.be.eq(uniswapInfo.swapRouter.toLowerCase());
+            expect((await liquidityVault.TOS()).toLowerCase()).to.be.eq(uniswapInfo.swapRouter.toLowerCase());
+
+            await liquidityVault.connect(proxyAdmin).setTokens(
                     uniswapInfo.wton,
                     uniswapInfo.tos,
                     uniswapInfo._fee

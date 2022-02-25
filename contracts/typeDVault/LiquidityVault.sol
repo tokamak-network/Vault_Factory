@@ -129,11 +129,11 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         address swapRouter
         )
         external override
-        onlyOwner
+        onlyProxyOwner
     {
-        require(poolfactory != address(0) && poolfactory != address(UniswapV3Factory), "same factory");
-        require(npm != address(0) && npm != address(NonfungiblePositionManager), "same npm");
-        require(swapRouter != address(0) && swapRouter != address(SwapRouter), "same swapRouter");
+        require(poolfactory != address(0) && poolfactory != address(UniswapV3Factory), "zero or same UniswapV3Factory");
+        require(npm != address(0) && npm != address(NonfungiblePositionManager), "zero or same npm");
+        require(swapRouter != address(0) && swapRouter != address(SwapRouter), "zero or same swapRouter");
 
         UniswapV3Factory = IUniswapV3Factory(poolfactory);
         NonfungiblePositionManager = INonfungiblePositionManager(npm);
@@ -147,7 +147,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             address wtonTosPool
         )
         external override
-        onlyOwner
+        onlyProxyOwner
     {
         require(wethUsdcPool != address(0) && wethUsdcPool != address(WETHUSDCPool), "same wethUsdcPool");
         require(wtonWethPool != address(0) && wtonWethPool != address(WTONWETHPool), "same wtonWethPool");
@@ -167,7 +167,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             uint24 _fee
         )
         external override
-        onlyOwner
+        onlyProxyOwner
     {
         require(wton != address(0) && wton != address(WTON), "same wton");
         require(tos != address(0) && tos != address(TOS), "same tos");

@@ -22,6 +22,19 @@ interface ILiquidityVaultFactory {
     )   external;
 
 
+    /// @dev set unoswap address , token address and pools addresses
+    /// @param addrs [uniswapV3Factory, nonfungiblePositionManager, swapRouter]
+    /// @param pools  [wethUsdcPool, wtonWethPool, wtonTosPool]
+    /// @param tokens  [wton, tos]
+    /// @param _fee the pool's fee
+    function setUniswapInfoNTokens(
+        address[3] calldata addrs,
+        address[3] calldata pools,
+        address[2] calldata tokens,
+        uint24 _fee
+    )   external;
+
+
     /// @dev view the upgradeAdmin address
     /// @param admin  the upgradeAdmin address
     function upgradeAdmin() external view returns (address admin);

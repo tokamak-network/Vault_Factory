@@ -188,17 +188,13 @@ contract LiquidityVaultProxy is
         uint256 tokenPrice
     ) external onlyOwner  {
         require(bytes(name).length == 0,"already set");
+
         name = _name;
         token = IERC20(_token);
 
         if(!isAdmin(_owner)){
             _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
-        // if(_owner != owner){
-        //     owner = _owner;
-        //     _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
-        //     _setupRole(PROJECT_ADMIN_ROLE, owner);
-        // }
 
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;
