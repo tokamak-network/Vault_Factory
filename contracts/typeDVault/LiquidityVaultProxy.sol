@@ -2,12 +2,13 @@
 pragma solidity ^0.8.4;
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+
 import "./LiquidityVaultStorage.sol";
-import "../common/AccessiblePlusCommon.sol";
+import "../common/ProxyAccessCommon.sol";
 import "hardhat/console.sol";
 
 contract LiquidityVaultProxy is
-    LiquidityVaultStorage, AccessiblePlusCommon
+    LiquidityVaultStorage, ProxyAccessCommon
 
 {
     event Upgraded(address indexed implementation);
@@ -16,10 +17,13 @@ contract LiquidityVaultProxy is
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
     constructor () {
-        owner = msg.sender;
+        //owner = msg.sender;
         tickIntervalMinimum = 0;
-        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, owner);
+
+        _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
+        _setupRole(PROJECT_ADMIN_ROLE, msg.sender);
+        // _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
     }
 
@@ -44,7 +48,7 @@ contract LiquidityVaultProxy is
         address newImplementation,
         uint256 _index,
         bool _alive
-    ) external onlyOwner {
+    ) external onlyProxyOwner {
         _setImplementation2(newImplementation, _index, _alive);
     }
 
@@ -53,7 +57,7 @@ contract LiquidityVaultProxy is
     /// @param _alive alive status
     function setAliveImplementation2(address newImplementation, bool _alive)
         public
-        onlyOwner
+        onlyProxyOwner
     {
         _setAliveImplementation2(newImplementation, _alive);
     }
@@ -64,7 +68,7 @@ contract LiquidityVaultProxy is
     function setSelectorImplementations2(
         bytes4[] calldata _selectors,
         address _imp
-    ) public onlyOwner {
+    ) public onlyProxyOwner {
         require(
             _selectors.length > 0,
             "LiquidityVaultProxy: _selectors's size is zero"
@@ -187,11 +191,14 @@ contract LiquidityVaultProxy is
         name = _name;
         token = IERC20(_token);
 
-        if(_owner != owner){
-            owner = _owner;
-            _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-            _setupRole(ADMIN_ROLE, owner);
+        if(!isAdmin(_owner)){
+            _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
+        // if(_owner != owner){
+        //     owner = _owner;
+        //     _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
+        //     _setupRole(PROJECT_ADMIN_ROLE, owner);
+        // }
 
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;

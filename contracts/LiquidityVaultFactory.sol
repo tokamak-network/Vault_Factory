@@ -90,12 +90,13 @@ contract LiquidityVaultFactory is AccessibleCommon, ILiquidityVaultFactory{
             "LiquidityVaultProxy zero"
         );
 
-        _proxy.addAdmin(upgradeAdmin);
+        _proxy.addProxyAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
 
         _proxy.setBaseInfoProxy(_name, _token, _admin, tosPrice, tokenPrice);
 
-        _proxy.removeAdmin(address(this));
+        _proxy.removeProxyAdmin();
+        _proxy.removeAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;

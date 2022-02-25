@@ -13,11 +13,11 @@ import "../libraries/TickMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "../common/AccessiblePlusCommon.sol";
+import "../common/ProxyAccessCommon.sol";
 import "./LiquidityVaultStorage.sol";
 import "hardhat/console.sol";
 
-contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon, ILiquidityVaultEvent, ILiquidityVaultAction {
+contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityVaultEvent, ILiquidityVaultAction {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -45,9 +45,9 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon, ILiquidi
 
     ///@dev constructor
     constructor() {
-        owner = msg.sender;
-        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, owner);
+        // owner = msg.sender;
+        // _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
+        // _setupRole(PROJECT_ADMIN_ROLE, owner);
         tickIntervalMinimum = 0;
 
     }
@@ -64,12 +64,14 @@ contract LiquidityVault is LiquidityVaultStorage, AccessiblePlusCommon, ILiquidi
         //require(bytes(name).length == 0,"already set");
         name = _name;
         token = IERC20(_token);
-
-        if(_owner != owner){
-            owner = _owner;
-            _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-            _setupRole(ADMIN_ROLE, owner);
+        if(!isAdmin(_owner)){
+            _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
+        // if(_owner != owner){
+        //     owner = _owner;
+        //     _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
+        //     _setupRole(PROJECT_ADMIN_ROLE, owner);
+        // }
     }
 
     /// @inheritdoc ILiquidityVaultAction

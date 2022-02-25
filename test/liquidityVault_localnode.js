@@ -129,7 +129,7 @@ describe("LiquidityVault", function () {
 
     before(async function () {
         accounts = await ethers.getSigners();
-        [admin1, admin2, user1, user2, minter1, minter2 ] = accounts;
+        [admin1, admin2, user1, user2, minter1, minter2, proxyAdmin, proxyAdmin2 ] = accounts;
         //console.log('admin1',admin1.address);
 
         provider = ethers.provider;
@@ -195,16 +195,15 @@ describe("LiquidityVault", function () {
         it("0-2. setUpgradeAdmin : when not admin, fail ", async function () {
 
             await expect(
-                liquidityVaultFactory.connect(user2).setUpgradeAdmin(admin2.address)
+                liquidityVaultFactory.connect(user2).setUpgradeAdmin(proxyAdmin.address)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
 
         it("0-2. setUpgradeAdmin ", async function () {
 
-            await liquidityVaultFactory.connect(admin1).setUpgradeAdmin(admin2.address);
-
-            expect(await liquidityVaultFactory.upgradeAdmin()).to.be.eq(admin2.address);
+            await liquidityVaultFactory.connect(admin1).setUpgradeAdmin(proxyAdmin.address);
+            expect(await liquidityVaultFactory.upgradeAdmin()).to.be.eq(proxyAdmin.address);
         });
 
         it("0-3/4/5/6. create : LiquidityVaultProxy ", async function () {
@@ -235,6 +234,13 @@ describe("LiquidityVault", function () {
             expect((await liquidityVaultFactory.getContracts(0)).contractAddress).to.be.eq(vaultAddress);
             expect((await liquidityVaultFactory.lastestCreated()).contractAddress).to.be.eq(vaultAddress);
 
+
+            let VaultContract = await ethers.getContractAt("LiquidityVaultProxy", vaultAddress);
+            expect(await VaultContract.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            expect(await VaultContract.isAdmin(poolInfo.admin.address)).to.be.eq(true);
+            expect(await VaultContract.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
+            expect(await VaultContract.isAdmin(proxyAdmin.address)).to.be.eq(false);
+
         });
     });
 
@@ -255,7 +261,6 @@ describe("LiquidityVault", function () {
 
     describe("LiquidityVaultProxy : Only Admin ", function () {
 
-
         it("1-1. addAdmin : when not admin, fail", async function () {
             await expect(liquidityVaultProxy.connect(user2).addAdmin(user2.address)).to.be.revertedWith("Accessible: Caller is not an admin");
         });
@@ -263,21 +268,26 @@ describe("LiquidityVault", function () {
             await liquidityVaultProxy.connect(poolInfo.admin).addAdmin(user2.address);
         });
         it("1-2. removeAdmin : when not self-admin, fail", async function () {
-            await expect(liquidityVaultProxy.connect(poolInfo.admin).removeAdmin(user2.address)).to.be.revertedWith("AccessControl: can only renounce roles for self");
+            await expect(liquidityVaultProxy.connect(user1).removeAdmin()).to.be.revertedWith("Accessible: Caller is not an admin");
         });
         it("1-2. removeAdmin ", async function () {
-            await liquidityVaultProxy.connect(user2).removeAdmin(user2.address);
+            await liquidityVaultProxy.connect(user2).removeAdmin();
         });
         it("1-3. transferAdmin : when not admin, fail ", async function () {
             await expect(liquidityVaultProxy.connect(user2).transferAdmin(user1.address)).to.be.revertedWith("Accessible: Caller is not an admin");
         });
+
         it("1-3. transferAdmin ", async function () {
             await liquidityVaultProxy.connect(poolInfo.admin).addAdmin(user2.address);
+
+            expect(await liquidityVaultProxy.isAdmin(user2.address)).to.be.eq(true);
+
             await liquidityVaultProxy.connect(user2).transferAdmin(user1.address);
         });
 
-        it("1-4. setImplementation2 : when not admin, fail", async function () {
-            await expect(liquidityVaultProxy.connect(user2).setImplementation2(liquidityVaultLogic,0, true)).to.be.revertedWith("Accessible: Caller is not an admin");
+        it("1-4. setImplementation2 : when not proxy admin, fail", async function () {
+            await expect(liquidityVaultProxy.connect(user1).setImplementation2(liquidityVaultLogic,0, true))
+            .to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("1-4/5. setImplementation2", async function () {
@@ -289,7 +299,7 @@ describe("LiquidityVault", function () {
             await tx.wait();
         });
 
-        it("1-10/11. setAliveImplementation2 : Only Admin ", async function () {
+        it("1-10/11. setAliveImplementation2 : Only proxy admin ", async function () {
 
             const TestLogic = await ethers.getContractFactory("TestLogic");
             let testLogicDeployed = await TestLogic.deploy();
@@ -299,17 +309,20 @@ describe("LiquidityVault", function () {
             let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
             let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
 
-            await expect(
-              liquidityVaultProxy.connect(user2).setSelectorImplementations2(
-                [_func1, _func2],
-                testLogicAddress )
-            ).to.be.revertedWith("Accessible: Caller is not an admin");
+            expect(await liquidityVaultProxy.isAdmin(user1.address)).to.be.eq(true);
+            expect(await liquidityVaultProxy.isProxyAdmin(user1.address)).to.be.eq(false);
 
             await expect(
-              liquidityVaultProxy.connect(user2).setAliveImplementation2(
+              liquidityVaultProxy.connect(user1).setSelectorImplementations2(
+                [_func1, _func2],
+                testLogicAddress )
+            ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+
+            await expect(
+              liquidityVaultProxy.connect(user1).setAliveImplementation2(
                     testLogicAddress, false
                 )
-            ).to.be.revertedWith("Accessible: Caller is not an admin");
+            ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("1-5/10/11/12/13. setAliveImplementation2", async function () {
@@ -381,8 +394,8 @@ describe("LiquidityVault", function () {
         });
 
         it("1-7. setBaseInfoProxy", async function () {
-
-            let tx = await liquidityVaultProxy.connect(poolInfo.admin).setBaseInfoProxy(
+            expect(await liquidityVaultProxy.isAdmin(user1.address)).to.be.eq(true);
+            let tx = await liquidityVaultProxy.connect(user1).setBaseInfoProxy(
                 poolInfo.name,
                 poolInfo.allocateToken.address,
                 poolInfo.admin.address,
@@ -423,7 +436,65 @@ describe("LiquidityVault", function () {
             expect(await liquidityVaultProxy.initialTokenPrice()).to.be.equal(price.projectToken);
             expect(await liquidityVaultProxy.implementation2(0)).to.be.equal(liquidityVaultLogic);
 
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+
         });
+
+        it("1-14. addProxyAdmin : when not proxy admin, fail", async function () {
+
+            expect(await liquidityVaultProxy.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
+            await expect(
+                liquidityVaultProxy.connect(poolInfo.admin).addProxyAdmin(proxyAdmin2.address)
+            ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+
+        it("1-14. addProxyAdmin : only proxy admin ", async function () {
+
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await liquidityVaultProxy.connect(proxyAdmin).addProxyAdmin(proxyAdmin2.address);
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(true);
+
+        });
+
+        it("1-15. removeProxyAdmin : when not proxy admin, fail", async function () {
+
+            expect(await liquidityVaultProxy.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
+            await expect(
+                liquidityVaultProxy.connect(poolInfo.admin).removeProxyAdmin()
+            ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+
+        it("1-15. removeProxyAdmin ", async function () {
+
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.eq(true);
+            await liquidityVaultProxy.connect(proxyAdmin2).removeProxyAdmin();
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(false);
+
+        });
+
+        it("1-16. transferProxyAdmin : when not proxy admin, fail", async function () {
+
+            expect(await liquidityVaultProxy.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
+            await expect(
+                liquidityVaultProxy.connect(poolInfo.admin).transferProxyAdmin(proxyAdmin2.address)
+            ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+
+        it("1-16. transferProxyAdmin ", async function () {
+
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await liquidityVaultProxy.connect(proxyAdmin).addProxyAdmin(proxyAdmin2.address);
+
+            await liquidityVaultProxy.connect(proxyAdmin).transferProxyAdmin(proxyAdmin2.address);
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.equal(false);
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(true);
+
+            await liquidityVaultProxy.connect(proxyAdmin2).transferProxyAdmin(proxyAdmin.address);
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.equal(true);
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(false);
+
+        });
+
 
         it("1-9. setProxyPause : when not admin, fail", async function () {
 

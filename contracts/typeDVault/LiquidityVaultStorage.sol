@@ -9,6 +9,7 @@ import "../interfaces/ISwapRouter.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract LiquidityVaultStorage  {
+
     string public name;
 
     IERC20 public token;  // project token
@@ -38,7 +39,6 @@ contract LiquidityVaultStorage  {
     //--
 
     bool public settingCheck;
-    address public owner;
 
     uint256 public totalAllocatedAmount;
 
