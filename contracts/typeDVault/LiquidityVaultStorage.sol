@@ -34,6 +34,7 @@ contract LiquidityVaultStorage  {
     uint160 public initSqrtPriceX96 ;
     uint256 constant INITIAL_PRICE_DIV = 1e18;
     int24 public tickIntervalMinimum;
+    bool public boolReadyToCreatePool;
 
     uint256[] public tokenIds;
     //--

@@ -169,6 +169,7 @@ contract LiquidityVaultFactory is AccessibleCommon, ILiquidityVaultFactory{
         );
 
         _proxy.addProxyAdmin(upgradeAdmin);
+        _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
 
         _proxy.setBaseInfoProxy(
@@ -184,6 +185,7 @@ contract LiquidityVaultFactory is AccessibleCommon, ILiquidityVaultFactory{
         IILiquidityVaultAction(address(_proxy)).setTokens(wton, tos, fee);
 
         _proxy.removeAdmin();
+        _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;

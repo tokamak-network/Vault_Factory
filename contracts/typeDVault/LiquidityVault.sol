@@ -31,6 +31,12 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         _;
     }
 
+    modifier readyToCreatePool() {
+        require(boolReadyToCreatePool, "Vault: not ready to CreatePool");
+        _;
+    }
+
+
     modifier afterSetUniswap() {
         require(
             address(UniswapV3Factory) != address(0)
@@ -63,6 +69,17 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         if(!isAdmin(_owner)){
             _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
+    }
+
+    /// @inheritdoc ILiquidityVaultAction
+    function setBoolReadyToCreatePool(
+        bool _boolReadyToCreatePool
+        )
+        external override
+        onlyOwner
+    {
+        require(boolReadyToCreatePool != _boolReadyToCreatePool, "same boolReadyToCreatePool");
+        boolReadyToCreatePool = _boolReadyToCreatePool;
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -176,9 +193,8 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
 
     /// @inheritdoc ILiquidityVaultAction
     function setPool()
-        public override afterSetUniswap
+        public override afterSetUniswap readyToCreatePool
     {
-
         address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
         if(getPool == address(0)){
             address _pool = UniswapV3Factory.createPool(address(TOS), address(token), fee);
@@ -503,7 +519,9 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         uint128 amount0Max,
         uint128 amount1Max
     )
-        external override returns (uint256 amount0, uint256 amount1)
+        external override
+        nonZeroAddress(address(pool))
+        returns (uint256 amount0, uint256 amount1)
     {
         (
             amount0,

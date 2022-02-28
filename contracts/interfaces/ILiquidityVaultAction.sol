@@ -18,6 +18,14 @@ interface ILiquidityVaultAction {
         )
         external;
 
+    /// @dev set the boolReadyToCreatePool storage
+    /// @param _boolReadyToCreatePool _boolReadyToCreatePool , true if it's ready to CreatePool
+    function setBoolReadyToCreatePool(
+         bool _boolReadyToCreatePool
+        )
+        external;
+
+
     /// @dev setInitialPrice function
     /// @param tosPrice tosPrice
     /// @param tokenPrice tokenPrice

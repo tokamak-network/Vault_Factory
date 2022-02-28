@@ -100,8 +100,8 @@ describe("LiquidityVault", function () {
     } */
 
      let price = {
-        tos: ethers.BigNumber.from("10"),
-        projectToken:  ethers.BigNumber.from("100"),
+        tos: ethers.BigNumber.from("5000"),
+        projectToken:  ethers.BigNumber.from("200"),
         initSqrtPrice: 0,
         initTick: 0,
         targetPriceInterval: 1,
@@ -346,8 +346,9 @@ describe("LiquidityVault", function () {
             let VaultContract = await ethers.getContractAt("LiquidityVaultProxy", vaultAddress);
             expect(await VaultContract.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await VaultContract.isAdmin(poolInfo.admin.address)).to.be.eq(true);
+
             expect(await VaultContract.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
-            expect(await VaultContract.isAdmin(proxyAdmin.address)).to.be.eq(false);
+            expect(await VaultContract.isAdmin(proxyAdmin.address)).to.be.eq(true);
 
 
             expect(await liquidityVaultFactory.uniswapV3Factory()).to.be.eq(
@@ -399,9 +400,12 @@ describe("LiquidityVault", function () {
     describe("LiquidityVaultProxy : Only Admin ", function () {
 
         it("1-1. addAdmin : when not admin, fail", async function () {
-            await expect(liquidityVaultProxy.connect(user2).addAdmin(user2.address)).to.be.revertedWith("Accessible: Caller is not an admin");
+            expect(await liquidityVaultProxy.isProxyAdmin(user2.address)).to.be.eq(false);
+            await expect(liquidityVaultProxy.connect(user2).addAdmin(user2.address)).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
-        it("1-1. addAdmin ", async function () {
+        it("1-1. addAdmin only proxy admin ", async function () {
+            expect(await liquidityVaultProxy.isAdmin(poolInfo.admin.address)).to.be.eq(true);
+            expect(await liquidityVaultProxy.isProxyAdmin(poolInfo.admin.address)).to.be.eq(true);
             await liquidityVaultProxy.connect(poolInfo.admin).addAdmin(user2.address);
         });
         it("1-2. removeAdmin : when not self-admin, fail", async function () {
@@ -478,7 +482,7 @@ describe("LiquidityVault", function () {
 
             await tx.wait();
 
-            await liquidityVaultProxy.connect(poolInfo.admin).setSelectorImplementations2(
+            tx = await liquidityVaultProxy.connect(poolInfo.admin).setSelectorImplementations2(
                 [_func1, _func2],
                 testLogicAddress
             );
@@ -576,6 +580,50 @@ describe("LiquidityVault", function () {
             expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
 
         });
+
+
+        it("1-1. addAdmin : when not proxy admin, fail", async function () {
+            expect(await liquidityVaultProxy.isProxyAdmin(user2.address)).to.be.eq(false);
+            await expect(liquidityVaultProxy.connect(user2).addAdmin(user2.address)).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+        it("1-1. addAdmin : when not proxy  admin, fail ", async function () {
+            expect(await liquidityVaultProxy.isAdmin(poolInfo.admin.address)).to.be.eq(true);
+            expect(await liquidityVaultProxy.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
+            await expect(
+                 liquidityVaultProxy.connect(poolInfo.admin).addAdmin(user2.address)
+                 ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+         it("1-1. addAdmin ", async function () {
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await liquidityVaultProxy.connect(proxyAdmin).addAdmin(user2.address);
+        });
+
+        it("1-2. removeAdmin : when not self-admin, fail", async function () {
+            await expect(liquidityVaultProxy.connect(user1).removeAdmin()).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+        it("1-2. removeAdmin ", async function () {
+            await liquidityVaultProxy.connect(user2).removeAdmin();
+        });
+        it("1-3. transferAdmin : when not admin, fail ", async function () {
+            await expect(liquidityVaultProxy.connect(user2).transferAdmin(user1.address))
+            .to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+
+        it("1-2. addAdmin   ", async function () {
+            expect(await liquidityVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await liquidityVaultProxy.connect(proxyAdmin).addAdmin(user2.address);
+        });
+
+        it("1-3. transferAdmin ", async function () {
+
+            expect(await liquidityVaultProxy.isAdmin(user2.address)).to.be.eq(true);
+
+            await liquidityVaultProxy.connect(user2).transferAdmin(user1.address);
+
+            expect(await liquidityVaultProxy.isAdmin(user2.address)).to.be.eq(false);
+            expect(await liquidityVaultProxy.isAdmin(user1.address)).to.be.eq(true);
+        });
+
 
         it("1-14. addProxyAdmin : when not proxy admin, fail", async function () {
 
@@ -865,6 +913,38 @@ describe("LiquidityVault", function () {
     });
 
     describe("LiquidityVault : Can Anybody ", function () {
+
+        it("3-1. setPool : fail when boolReadyToCreatePool is false ", async function () {
+            expect(await liquidityVault.boolReadyToCreatePool()).to.be.eq(false);
+
+            await expect(
+                liquidityVault.setPool()
+             ).to.be.revertedWith("Vault: not ready to CreatePool");
+
+        });
+        it("2-11. setBoolReadyToCreatePool : fail when caller is not admin ", async function () {
+            expect(await liquidityVault.isAdmin(user2.address)).to.be.eq(false);
+
+            await expect(
+                liquidityVault.connect(user2).setBoolReadyToCreatePool(true)
+             ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+        it("2-11. setBoolReadyToCreatePool  ", async function () {
+            expect(await liquidityVault.isAdmin(poolInfo.admin.address)).to.be.eq(true);
+
+            await liquidityVault.connect(poolInfo.admin).setBoolReadyToCreatePool(true);
+
+            expect(await liquidityVault.boolReadyToCreatePool()).to.be.eq(true);
+        });
+
+        it("2-11. setBoolReadyToCreatePool : fail when values are same ", async function () {
+            expect(await liquidityVault.isAdmin(poolInfo.admin.address)).to.be.eq(true);
+            expect(await liquidityVault.boolReadyToCreatePool()).to.be.eq(true);
+            await expect(
+                liquidityVault.connect(poolInfo.admin).setBoolReadyToCreatePool(true)
+             ).to.be.revertedWith("same boolReadyToCreatePool");
+        });
 
         it("3-2. setPool  ", async function () {
             await liquidityVault.setPool();
@@ -1523,7 +1603,9 @@ describe("LiquidityVault", function () {
 
             position = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[1]);
             let slot01 = await uniswapV3Pool.slot0();
-            // console.log('slot01', slot01)
+            // console.log('tosToken', tosToken.address)
+            // console.log('poolInfo.token0', poolInfo.token0)
+
             // console.log('position', position)
 
             expect(position.tokensOwed0.add(position.tokensOwed1)).to.be.gt(ethers.BigNumber.from("0"));
@@ -1592,7 +1674,7 @@ describe("LiquidityVault", function () {
         it("3-11. mint : If you have an amount that you can mint  ", async function () {
 
             let tokenBalance = await tokenA.balanceOf(liquidityVault.address);
-
+            //console.log('tokenBalance',tokenBalance);
             if(tokenBalance.gt(ethers.BigNumber.from("0"))){
                 let tosAmount = poolInfo.claimAmounts[0].mul(price.projectToken).div(price.tos);
                 await tosToken.connect(tosInfo.admin).mint(liquidityVault.address, tosAmount);
@@ -1602,8 +1684,23 @@ describe("LiquidityVault", function () {
                 let preTokenBalance = await tokenA.balanceOf(liquidityVault.address);
 
                 let round = await liquidityVault.currentRound();
+                //console.log('round',round);
+
                 expect(round).to.be.gt(ethers.BigNumber.from("0"));
                 let calculateClaimAmount = await liquidityVault.availableUseAmount(round);
+                //console.log('calculateClaimAmount',calculateClaimAmount);
+                if(calculateClaimAmount.eq(ethers.BigNumber.from("0"))){
+                    let block = await ethers.provider.getBlock();
+                    let passTime = poolInfo.claimTimes[3] - block.timestamp +10 ;
+                    //console.log('passTime',poolInfo.claimTimes[3], block.timestamp , passTime);
+                    ethers.provider.send("evm_increaseTime", [passTime])
+                    ethers.provider.send("evm_mine")      // mine the next block
+
+                    round = await liquidityVault.currentRound();
+                    //console.log('round',round);
+                    calculateClaimAmount = await liquidityVault.availableUseAmount(round);
+                    //console.log('calculateClaimAmount',calculateClaimAmount);
+                }
                 expect(calculateClaimAmount).to.be.gt(ethers.BigNumber.from("0"));
 
                 let tokenAmount = calculateClaimAmount;
@@ -1620,7 +1717,7 @@ describe("LiquidityVault", function () {
                     lowerTick = (base-1) * TICK_SPACINGS[FeeAmount.MEDIUM];
                     upperTick = (base+1) * TICK_SPACINGS[FeeAmount.MEDIUM]
 
-            // }
+                // }
                 //console.log('lowerTick',lowerTick,'upperTick',upperTick );
                 let tx = await liquidityVault.connect(user2).mintToken(lowerTick, upperTick, preTosBalance, tokenAmount) ;
 
@@ -1656,6 +1753,14 @@ describe("LiquidityVault", function () {
                 console.log("token is zero balance ");
             }
         });
+
+        // it("      pass blocks", async function () {
+        //     let block = await ethers.provider.getBlock();
+        //     let passTime = poolInfo.claimTimes[1] - block.timestamp +10 ;
+
+        //     ethers.provider.send("evm_increaseTime", [3000])
+        //     ethers.provider.send("evm_mine")      // mine the next block
+        // });
 
 
     });

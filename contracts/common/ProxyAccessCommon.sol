@@ -46,7 +46,7 @@ contract ProxyAccessCommon is AccessControl {
 
     /// @dev add admin
     /// @param account  address to add
-    function addAdmin(address account) public virtual onlyOwner {
+    function addAdmin(address account) public virtual onlyProxyOwner {
         grantRole(PROJECT_ADMIN_ROLE, account);
     }
 
