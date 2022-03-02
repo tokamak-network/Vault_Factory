@@ -247,7 +247,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             ))
         );
 
-        return (pool, token0, token1);
+        //return (pool, token0, token1);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -452,7 +452,6 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             require(amount1Desired <= amount, "exceed to claimable amount");
             checkBalance(amount0Desired, amount1Desired);
         }
-
 
         uint256 tokenId_ = tokenId;
         uint256 amount0Desired_ = amount0Desired;
