@@ -10,7 +10,7 @@ import "../interfaces/ILiquidityVaultAction.sol";
 
 import "../libraries/TickMath.sol";
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+//import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "../common/ProxyAccessCommon.sol";
@@ -19,7 +19,7 @@ import "hardhat/console.sol";
 
 contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityVaultEvent, ILiquidityVaultAction {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
+    //using SafeMath for uint256;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
@@ -63,7 +63,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         external override
         onlyOwner
     {
-        //require(bytes(name).length == 0,"already set");
+        require(bytes(name).length == 0,"already set");
         name = _name;
         token = IERC20(_token);
         if(!isAdmin(_owner)){
@@ -352,11 +352,10 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         uint256 curRound = currentRound();
         uint256 amount = availableUseAmount(curRound);
 
-
         require(tokenUseAmount <= amount, "exceed to claimable amount");
         require(amount > 0, "claimable token is zero");
 
-        require(tokenUseAmount > 0, "tokenUseAmount is zero");
+       // require(tokenUseAmount > 0, "tokenUseAmount is zero");
 
         uint256 tosBalance =  TOS.balanceOf(address(this));
         require(tosBalance >= tosUseAmount && tosUseAmount > 0, "tos balance is zero");

@@ -4,20 +4,18 @@ pragma solidity ^0.8.4;
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import "../interfaces/IProxyEvent.sol";
-import "./LiquidityVaultStorage.sol";
+import "./RewardProgramVaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 
-contract LiquidityVaultProxy is
-    LiquidityVaultStorage, ProxyAccessCommon, IProxyEvent
+contract RewardProgramVaultProxy is
+    RewardProgramVaultStorage, ProxyAccessCommon, IProxyEvent
 {
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
     constructor () {
-        tickIntervalMinimum = 0;
-
         _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
         _setupRole(PROJECT_ADMIN_ROLE, msg.sender);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -68,14 +66,14 @@ contract LiquidityVaultProxy is
     ) public onlyProxyOwner {
         require(
             _selectors.length > 0,
-            "LiquidityVaultProxy: _selectors's size is zero"
+            "RewardProgramVaultProxy: _selectors's size is zero"
         );
-        require(aliveImplementation[_imp], "LiquidityVaultProxy: _imp is not alive");
+        require(aliveImplementation[_imp], "RewardProgramVaultProxy: _imp is not alive");
 
         for (uint256 i = 0; i < _selectors.length; i++) {
             require(
                 selectorImplementation[_selectors[i]] != _imp,
-                "LiquidityVaultProxy: same imp"
+                "RewardProgramVaultProxy: same imp"
             );
             selectorImplementation[_selectors[i]] = _imp;
             emit SetSelectorImplementation(_selectors[i], _imp);
@@ -93,7 +91,7 @@ contract LiquidityVaultProxy is
     ) internal {
         require(
             Address.isContract(newImplementation),
-            "LiquidityVaultProxy: Cannot set a proxy implementation to a non-contract address"
+            "RewardProgramVaultProxy: Cannot set a proxy implementation to a non-contract address"
         );
         if (_alive) proxyImplementation[_index] = newImplementation;
         _setAliveImplementation2(newImplementation, _alive);
@@ -152,7 +150,7 @@ contract LiquidityVaultProxy is
 
         require(
             _impl != address(0) && !pauseProxy,
-            "LiquidityVaultProxy: impl OR proxy is false"
+            "RewardProgramVaultProxy: impl OR proxy is false"
         );
 
         assembly {
@@ -182,21 +180,27 @@ contract LiquidityVaultProxy is
     function setBaseInfoProxy(
         string memory _name,
         address _token,
+        address _pool,
+        address _staker,
         address _owner,
-        uint256 tosPrice,
-        uint256 tokenPrice
+        uint256 _startWaitTime,
+        uint256 _programDuration
     ) external onlyOwner  {
-
         require(bytes(name).length == 0,"already set");
+        require(_startWaitTime > 60, "_startWaitTime is less than 60");
+        require(_programDuration > 0, "_programDuration is zero");
 
         name = _name;
-        token = IERC20(_token);
+        token = IERC20Minimal(_token);
+        pool = IUniswapV3Pool(_pool);
+        staker = IUniswapV3Staker(_staker);
+
+        startWaitTime = _startWaitTime;
+        programDuration = _programDuration;
 
         if(!isAdmin(_owner)){
             _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
 
-        initialTosPrice = tosPrice;
-        initialTokenPrice = tokenPrice;
     }
 }
