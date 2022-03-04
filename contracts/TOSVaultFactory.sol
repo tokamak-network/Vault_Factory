@@ -52,7 +52,7 @@ contract TOSVaultFactory is AccessibleCommon {
     {
         require(bytes(_name).length > 0,"name is empty");
 
-        TOSVault TVault = new TOSVault(_name,_token,_owner,dividedPoolProxy,owner);
+        TOSVault TVault = new TOSVault(_name, _token, _owner, dividedPoolProxy, owner);
 
         require(
             address(TVault) != address(0),

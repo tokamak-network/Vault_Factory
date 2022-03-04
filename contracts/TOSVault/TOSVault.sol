@@ -93,29 +93,28 @@ contract TOSVault is AccessiblePlusCommon {
     }
 
     function currentRound() public view returns (uint256 round) {
+        if(block.timestamp < claimTimes[0]){
+            round = 0;
+        }
+        if (block.timestamp > claimTimes[totalClaimCounts-1]) {
+            round = totalClaimCounts;
+        }
         for(uint256 i = totalClaimCounts; i > 0; i--) {
-            if(block.timestamp < claimTimes[0]){
-                round = 0;
-            } else if(block.timestamp < claimTimes[i-1] && i != 0) {
+            if(block.timestamp < claimTimes[i-1]) {
                 round = i-1;
-            } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
-                round = totalClaimCounts;
             }
         }
     }
 
     function calculClaimAmount(uint256 _round) public view returns (uint256 amount) {
+        if (totalClaimCounts == _round) {
+            amount = totalAllocatedAmount - totalClaimsAmount;
+        } 
         uint256 expectedClaimAmount;
-        for(uint256 i = 0; i < _round; i++) {
+        for (uint256 i = 0; i < _round; i++) {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
         }
-        if(_round == 1 ) {
-            amount = claimAmounts[0];
-        } else if(totalClaimCounts == _round) {
-            amount = totalAllocatedAmount - totalClaimsAmount;
-        } else {
-            amount = expectedClaimAmount - totalClaimsAmount;
-        }        
+        amount = expectedClaimAmount - totalClaimsAmount;
     }
 
     function approve() external {
