@@ -422,20 +422,18 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
         emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
     }
 
+    function tickRange(uint256 tokenId) internal view returns (int24 tick, int24 tickLower, int24 tickUpper) {
+        (, tick,,,,,) =  pool.slot0();
+        (,,,,, tickLower, tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
+    }
 
     function shouldInRange(uint256 tokenId) internal view {
-
-        (,int24 tick,,,,,) =  pool.slot0();
-        (,,,,, int24 tickLower, int24 tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
-
+        (int24 tick, int24 tickLower, int24 tickUpper) =  tickRange(tokenId);
         require(tickLower < tick && tick < tickUpper, "tick is out of range");
     }
 
     function shouldOutOfRange(uint256 tokenId) internal view {
-
-        (,int24 tick,,,,,) =  pool.slot0();
-        (,,,,, int24 tickLower, int24 tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
-
+        (int24 tick, int24 tickLower, int24 tickUpper) =  tickRange(tokenId);
         require(tick < tickLower ||  tickUpper < tick
             , "tick is not out of range");
     }
@@ -470,7 +468,6 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
             require(amount1Desired <= amount, "exceed to claimable amount");
             checkBalance(amount0Desired, amount1Desired);
         }
-
 
         uint256 tokenId_ = tokenId;
         uint256 amount0Desired_ = amount0Desired;
