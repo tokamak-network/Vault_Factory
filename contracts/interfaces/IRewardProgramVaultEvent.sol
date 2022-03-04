@@ -8,20 +8,6 @@ import "./IUniswapV3Pool.sol";
 /// @title IRewardProgramVaultEvent
 interface IRewardProgramVaultEvent {
 
-    /// @dev An event emitted when a project token is used in the vault, or when the mint, liquidity increase function is called.
-    /// @param tokenId tokenId
-    /// @param amount Amount of project token used
-    /// @param totalClaimsAmount  totalClaimsAmount
-    event Claimed(uint256 indexed tokenId, uint256 amount, uint256 totalClaimsAmount);
-
-
-    /// @dev Emitted when call withdraw function. If the total allocated amount is all claimed, the remaining token balance can be transferred to the account by the owner.
-    /// @param caller caller address
-    /// @param tokenAddress token address
-    /// @param to account
-    /// @param amount amount
-    event WithdrawalInVault(address caller, address tokenAddress, address to, uint256 amount);
-
 
     /// @dev Emitted when call initialize function. set claim information.
     /// @param _totalAllocatedAmount total allocated amount
@@ -33,9 +19,8 @@ interface IRewardProgramVaultEvent {
         uint256[] _claimTimes,
         uint256[] _claimAmounts);
 
-
     /// @notice Event emitted when a liquidity mining incentive has been created
-    /// @param index program index
+    /// @param idx program index
     /// @param rewardToken The token being distributed as a reward
     /// @param pool The Uniswap V3 pool
     /// @param startTime The time when the incentive program begins
@@ -43,9 +28,9 @@ interface IRewardProgramVaultEvent {
     /// @param refundee The address which receives any remaining reward tokens after the end time
     /// @param reward The amount of reward tokens to be distributed
     event IncentiveCreatedByRewardProgram(
-        uint256 index,
-        IERC20Minimal indexed rewardToken,
-        IUniswapV3Pool indexed pool,
+        uint256 idx,
+        address indexed rewardToken,
+        address indexed pool,
         uint256 startTime,
         uint256 endTime,
         address refundee,

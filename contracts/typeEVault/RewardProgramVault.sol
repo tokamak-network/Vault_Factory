@@ -7,15 +7,12 @@ import "../interfaces/IUniswapV3Staker.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "../common/ProxyAccessCommon.sol";
 import "./RewardProgramVaultStorage.sol";
+import "../proxy/VaultProxy.sol";
+
 import "hardhat/console.sol";
 
-contract RewardProgramVault is
-    RewardProgramVaultStorage,
-    ProxyAccessCommon,
-    IRewardProgramVaultEvent,
-    IRewardProgramVaultAction
+contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAccessCommon, IRewardProgramVaultEvent, IRewardProgramVaultAction
 {
     using SafeERC20 for IERC20;
     //using SafeMath for uint256;
@@ -35,18 +32,21 @@ contract RewardProgramVault is
     }
 
     /// @inheritdoc IRewardProgramVaultAction
-    function changeToken(address _token) external override onlyOwner nonZeroAddress(_token) {
+    function changeToken(address _token) external override onlyProxyOwner nonZeroAddress(_token) {
         require(totalClaimCounts == 0, "already set claim info, cannot change token.");
+        require(address(token) != _token, "same address");
         token = IERC20Minimal(_token);
     }
 
     /// @inheritdoc IRewardProgramVaultAction
-    function changeStaker(address _staker) external override onlyOwner nonZeroAddress(_staker) {
+    function changeStaker(address _staker) external override onlyProxyOwner nonZeroAddress(_staker) {
+        require(address(staker) != _staker, "same address");
         staker = IUniswapV3Staker(_staker);
     }
 
     /// @inheritdoc IRewardProgramVaultAction
-    function changePool(address _pool) external override onlyOwner nonZeroAddress(_pool) {
+    function changePool(address _pool) external override onlyProxyOwner nonZeroAddress(_pool) {
+        require(address(pool) != _pool, "same address");
         pool = IUniswapV3Pool(_pool);
     }
 
@@ -69,21 +69,23 @@ contract RewardProgramVault is
 
     ) external override onlyOwner {
 
-        require(totalClaimCounts == 0 || block.timestamp < claimTimes[0], "already set");
+        require(totalClaimCounts == 0 ||
+            (claimTimes.length > 0 && block.timestamp < claimTimes[0]) , "already set");
+
+        require(_claimCounts > 0 && _claimTimes.length == _claimCounts && _claimAmounts.length == _claimCounts, "wrong claim data");
+
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
 
         for(uint256 i = 0; i < _claimCounts; i++) {
+
             if(claimTimes.length <= i)  claimTimes.push(_claimTimes[i]);
             else claimTimes[i] = _claimTimes[i];
-             //console.log("claimTimes['%s'] : '%s', _claimTimes[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
-            if(claimTimes.length <= i) claimAmounts.push(_claimAmounts[i]);
-            else claimAmounts[i]= _claimAmounts[i];
-            //console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
 
-            if(addAmounts.length <= i)  addAmounts.push(0);
-            else addAmounts[i] = 0;
+            if(claimAmounts.length <= i) claimAmounts.push(_claimAmounts[i]);
+            else claimAmounts[i]= _claimAmounts[i];
+
         }
 
         emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
@@ -107,35 +109,39 @@ contract RewardProgramVault is
         uint256 _totalClaimCounts,
         uint256[] memory _claimTimes,
         uint256[] memory _claimAmounts,
-        uint256 _totalClaimsAmount,
-        uint256[] memory _addAmounts
+        uint256 _totalClaimsAmount
         ) {
 
-        return (totalClaimCounts, claimTimes, claimAmounts, totalClaimsAmount, addAmounts) ;
+        return (totalClaimCounts, claimTimes, claimAmounts, totalClaimsAmount) ;
     }
 
     /// @inheritdoc IRewardProgramVaultAction
     function availableUseAmount(uint256 _round) public view override returns (uint256 amount) {
-        uint256 expectedClaimAmount;
-        for(uint256 i = 0; i < _round; i++) {
-           expectedClaimAmount = expectedClaimAmount + claimAmounts[i] + addAmounts[i];
+
+        if(_round == 0 || claimAmounts.length < _round) amount = 0;
+        else {
+            uint256 curBalance = token.balanceOf(address(this));
+            uint256 expectedRemainAmount = 0;
+            for(uint256 i = _round; i < claimAmounts.length; i++)
+                expectedRemainAmount += claimAmounts[i];
+
+            if(curBalance > expectedRemainAmount) amount = curBalance - expectedRemainAmount;
+            else amount = 0;
         }
-        if(_round == 1 ) {
-            amount = claimAmounts[0] - totalClaimsAmount;
-        } else if(totalClaimCounts == _round) {
-            amount = totalAllocatedAmount - totalClaimsAmount;
-        } else {
-            amount = expectedClaimAmount - totalClaimsAmount;
-        }
+
     }
 
     function createIncentive(IUniswapV3Staker.IncentiveKey memory key, uint256 reward) internal  {
+
+        if(token.allowance(address(this), address(staker)) < reward) token.approve(address(staker), totalAllocatedAmount);
+
         staker.createIncentive(key, reward);
+
         uint256 idx = totalProgramCount;
         programs[idx] = IncentiveProgram(key, reward);
         totalProgramCount++;
 
-        emit IncentiveCreatedByRewardProgram(idx, key.rewardToken, key.pool, key.startTime, key.endTime, key.refundee, reward);
+        emit IncentiveCreatedByRewardProgram(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward);
     }
 
     /// @inheritdoc IRewardProgramVaultAction
@@ -143,12 +149,13 @@ contract RewardProgramVault is
         public override
         nonZeroAddress(address(pool))
     {
-        require(block.timestamp > claimTimes[0], "Vault: not started yet");
+        //require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
-        nowClaimRound = currentRound();
-        uint256 amount = availableUseAmount(nowClaimRound);
-        require(amount > 0, "claimable token is zero");
+        uint256 round = currentRound();
+        uint256 amount = availableUseAmount(round);
 
+        require(amount > 0, "no claimable amount");
+        nowClaimRound = round;
         createIncentive(IUniswapV3Staker.IncentiveKey(
             token,
             pool,

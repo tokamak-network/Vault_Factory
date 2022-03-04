@@ -239,7 +239,8 @@ interface ILiquidityVaultAction {
 
     function getSqrtRatioAtTick(int24 tick) external pure returns (uint160);
     function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24) ;
+    /*
     function MIN_SQRT_RATIO() external pure returns (uint160) ;
     function MAX_SQRT_RATIO() external pure returns (uint160) ;
-
+    */
 }

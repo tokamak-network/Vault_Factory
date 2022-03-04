@@ -51,13 +51,11 @@ interface IRewardProgramVaultAction {
     /// @return _claimTimes Claimable start time of each round
     /// @return _claimAmounts Amount allocated for each round of claims
     /// @return _totalClaimsAmount Total Claimed Quantity
-    /// @return _addAmounts Added amount (fee)
     function getClaimInfo() external view returns (
         uint256 _totalClaimCounts,
         uint256[] memory _claimTimes,
         uint256[] memory _claimAmounts,
-        uint256 _totalClaimsAmount,
-        uint256[] memory _addAmounts
+        uint256 _totalClaimsAmount
         )  ;
 
 
