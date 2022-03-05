@@ -8,20 +8,6 @@ interface ILiquidityVaultFactory {
 
     /// ###### only admin ######
 
-    /// @dev designate an admin to upgrade the vault logic later.
-    /// @param addr the upgradeAdmin address
-    function setUpgradeAdmin(
-        address addr
-    )   external;
-
-
-    /// @dev set the logic address
-    /// @param _logic  the logic address
-    function setLogic(
-        address _logic
-    )   external;
-
-
     /// @dev set unoswap address , token address and pools addresses
     /// @param addrs [uniswapV3Factory, nonfungiblePositionManager, swapRouter]
     /// @param pools  [wethUsdcPool, wtonWethPool, wtonTosPool]
@@ -33,17 +19,6 @@ interface ILiquidityVaultFactory {
         address[2] calldata tokens,
         uint24 _fee
     )   external;
-
-
-    /// @dev view the upgradeAdmin address
-    /// @param admin  the upgradeAdmin address
-    function upgradeAdmin() external view returns (address admin);
-
-
-    /// @dev view the logic address
-    /// @param logic the logic address
-    function vaultLogic() external view returns (address logic);
-
 
 
     /// ### anybody can use
@@ -64,22 +39,4 @@ interface ILiquidityVaultFactory {
     )
         external
         returns (address);
-
-
-    /// @dev Last generated contract information
-    /// @return contractAddress the address created
-    /// @return name name
-    function lastestCreated() external view returns (address contractAddress, string memory name);
-
-
-    /// @dev Contract information stored in the index
-    /// @return contractAddress the vault address
-    /// @return name name
-    function getContracts(uint256 _index) external view returns (address contractAddress, string memory name);
-
-    /// @dev the number of total created contracts
-    /// @return total  total count
-    function totalCreatedContracts() external view returns (uint256 total);
-
-
 }

@@ -9,16 +9,17 @@ import "../interfaces/ILiquidityVaultEvent.sol";
 import "../interfaces/ILiquidityVaultAction.sol";
 
 import "../libraries/TickMath.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./LiquidityVaultStorage.sol";
 
 import "../proxy/VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
-import "./LiquidityVaultStorage.sol";
-import "hardhat/console.sol";
 
-contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityVaultEvent, ILiquidityVaultAction {
+//import "hardhat/console.sol";
+
+contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommon, ILiquidityVaultEvent, ILiquidityVaultAction
+{
     using SafeERC20 for IERC20;
 
     modifier nonZeroAddress(address _addr) {
@@ -66,7 +67,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         external override
         onlyOwner beforeSetReadyToCreatePool
     {
-        //require(bytes(name).length == 0,"already set");
+        require(bytes(name).length == 0,"already set");
         name = _name;
         token = IERC20(_token);
         if(!isAdmin(_owner)){
@@ -129,18 +130,28 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         external override onlyOwner afterSetUniswap
     {
 
+        require(totalClaimCounts == 0 ||
+            (claimTimes.length > 0 && block.timestamp < claimTimes[0]) , "already set");
+
+        require(_claimCounts > 0 && _claimTimes.length == _claimCounts && _claimAmounts.length == _claimCounts, "wrong claim data");
+
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
-        uint256 i = 0;
-        for(i = 0; i < _claimCounts; i++) {
-            claimTimes.push(_claimTimes[i]);
-            //console.log("claimTimes['%s'] : '%s', _claimTimes[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
-            claimAmounts.push(_claimAmounts[i]);
-            //console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
 
-            addAmounts.push(0);
+        for(uint256 i = 0; i < _claimCounts; i++) {
+
+            if(claimTimes.length <= i)  claimTimes.push(_claimTimes[i]);
+            else claimTimes[i] = _claimTimes[i];
+
+            if(claimAmounts.length <= i) claimAmounts.push(_claimAmounts[i]);
+            else claimAmounts[i]= _claimAmounts[i];
+
+            if(addAmounts.length <= i)  addAmounts.push(0);
+            else addAmounts[i] = 0;
         }
+
+        emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -245,6 +256,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
     function computePoolAddress(address tokenA, address tokenB, uint24 _fee)
         public view override returns (address pool, address token0, address token1)
     {
+
         bytes32  POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
         token0 = tokenA;
@@ -254,7 +266,11 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             token0 = tokenB;
             token1 = tokenA;
         }
-        require(token0 < token1);
+
+        // pool = PoolAddress.computeAddress(address(UniswapV3Factory),
+        // PoolAddress.PoolKey(tokenA, tokenB, _fee));
+
+        //require(token0 < token1);
         pool = address( uint160(
             uint256(
                 keccak256(
@@ -268,7 +284,6 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             ))
         );
 
-        //return (pool, token0, token1);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -319,7 +334,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
     function getTickAtSqrtRatio(uint160 sqrtPriceX96) public pure  override returns (int24) {
         return TickMath.getTickAtSqrtRatio(sqrtPriceX96);
     }
-
+    /*
     function MIN_SQRT_RATIO() external pure override returns (uint160) {
         return TickMath.MIN_SQRT_RATIO;
     }
@@ -327,7 +342,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
     function MAX_SQRT_RATIO() external pure override returns (uint160) {
         return TickMath.MAX_SQRT_RATIO;
     }
-
+    */
     /// @inheritdoc ILiquidityVaultAction
     function approveERC20(address token, address to, uint256 amount)
         public override
@@ -373,11 +388,10 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         uint256 curRound = currentRound();
         uint256 amount = availableUseAmount(curRound);
 
-
         require(tokenUseAmount <= amount, "exceed to claimable amount");
         require(amount > 0, "claimable token is zero");
 
-        require(tokenUseAmount > 0, "tokenUseAmount is zero");
+       // require(tokenUseAmount > 0, "tokenUseAmount is zero");
 
         uint256 tosBalance =  TOS.balanceOf(address(this));
         require(tosBalance >= tosUseAmount && tosUseAmount > 0, "tos balance is zero");
@@ -425,20 +439,18 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
     }
 
+    function tickRange(uint256 tokenId) internal view returns (int24 tick, int24 tickLower, int24 tickUpper) {
+        (, tick,,,,,) =  pool.slot0();
+        (,,,,, tickLower, tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
+    }
 
     function shouldInRange(uint256 tokenId) internal view {
-
-        (,int24 tick,,,,,) =  pool.slot0();
-        (,,,,, int24 tickLower, int24 tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
-
+        (int24 tick, int24 tickLower, int24 tickUpper) =  tickRange(tokenId);
         require(tickLower < tick && tick < tickUpper, "tick is out of range");
     }
 
     function shouldOutOfRange(uint256 tokenId) internal view {
-
-        (,int24 tick,,,,,) =  pool.slot0();
-        (,,,,, int24 tickLower, int24 tickUpper,,,,,) = NonfungiblePositionManager.positions(tokenId);
-
+        (int24 tick, int24 tickLower, int24 tickUpper) =  tickRange(tokenId);
         require(tick < tickLower ||  tickUpper < tick
             , "tick is not out of range");
     }
