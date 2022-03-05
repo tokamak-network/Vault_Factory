@@ -51,6 +51,18 @@ interface ILiquidityVaultEvent {
     event ChangedToken(address token);
 
 
+    /// @dev Set Pool
+    /// @param pool  pool address
+    /// @param token0  token0 address
+    /// @param token1  token1 address
+    event SetPool(address pool, address token0, address token1);
+
+
+    /// @dev pool initialize with initial price
+    /// @param inSqrtPriceX96  project token address
+    event SetPoolInitialized(uint160 inSqrtPriceX96);
+
+
     /// @dev Emitted when call initialize function. set claim information., Available only to admin
     /// @param _totalAllocatedAmount total allocated amount
     /// @param _claimCounts total claim Counts

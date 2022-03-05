@@ -240,6 +240,8 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
         if(initSqrtPriceX96 > 0){
             setPoolInitialize(initSqrtPriceX96);
         }
+
+        emit SetPool(address(pool), token0Address, token1Address);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -249,6 +251,8 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
         (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
         if(sqrtPriceX96 == 0){
             pool.initialize(inSqrtPriceX96);
+
+            emit SetPoolInitialized(inSqrtPriceX96);
         }
     }
 
