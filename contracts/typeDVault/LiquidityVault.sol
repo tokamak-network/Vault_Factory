@@ -9,17 +9,17 @@ import "../interfaces/ILiquidityVaultEvent.sol";
 import "../interfaces/ILiquidityVaultAction.sol";
 
 import "../libraries/TickMath.sol";
-
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
+import "./LiquidityVaultStorage.sol";
+
+import "../proxy/VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 import "./LiquidityVaultStorage.sol";
 import "hardhat/console.sol";
 
 contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityVaultEvent, ILiquidityVaultAction {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
@@ -36,6 +36,10 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         _;
     }
 
+    modifier beforeSetReadyToCreatePool() {
+        require(!boolReadyToCreatePool, "Vault: already ready to CreatePool");
+        _;
+    }
 
     modifier afterSetUniswap() {
         require(
@@ -51,7 +55,6 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
 
     ///@dev constructor
     constructor() {
-        tickIntervalMinimum = 0;
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -61,7 +64,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         address _owner
         )
         external override
-        onlyOwner
+        onlyOwner beforeSetReadyToCreatePool
     {
         //require(bytes(name).length == 0,"already set");
         name = _name;
@@ -69,6 +72,8 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         if(!isAdmin(_owner)){
             _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
+
+        emit SetBaseInfo(_name, _token, _owner);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -80,6 +85,8 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
     {
         require(boolReadyToCreatePool != _boolReadyToCreatePool, "same boolReadyToCreatePool");
         boolReadyToCreatePool = _boolReadyToCreatePool;
+
+        emit SetBoolReadyToCreatePool(_boolReadyToCreatePool);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -89,11 +96,13 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         uint160 initSqrtPrice
         )
         external override
-        onlyOwner
+        onlyOwner beforeSetReadyToCreatePool
     {
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;
         initSqrtPriceX96 = initSqrtPrice;
+
+        emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -105,6 +114,8 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
     {
         require(_interval > 0 , "zero _interval");
         tickIntervalMinimum = _interval;
+
+        emit SetTickIntervalMinimum(_interval);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -114,7 +125,9 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
 
-    ) external override onlyOwner afterSetUniswap {
+    )
+        external override onlyOwner afterSetUniswap
+    {
 
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
@@ -146,6 +159,8 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         UniswapV3Factory = IUniswapV3Factory(poolfactory);
         NonfungiblePositionManager = INonfungiblePositionManager(npm);
         SwapRouter = ISwapRouter(swapRouter);
+
+        emit SetUniswapInfo(poolfactory, npm, swapRouter);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -166,6 +181,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         WTONWETHPool = IUniswapV3Pool(wtonWethPool);
         WTONTOSPool = IUniswapV3Pool(wtonTosPool);
 
+        emit SetPoolInfo(wethUsdcPool, wtonWethPool, wtonTosPool);
     }
 
 
@@ -176,7 +192,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
             uint24 _fee
         )
         external override
-        onlyProxyOwner
+        onlyProxyOwner beforeSetReadyToCreatePool
     {
         require(wton != address(0) && wton != address(WTON), "same wton");
         require(tos != address(0) && tos != address(TOS), "same tos");
@@ -184,11 +200,16 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
         WTON = IERC20(wton);
         TOS = IERC20(tos);
         fee = _fee;
+
+        emit SetTokens(wton, tos, _fee);
     }
 
     /// @inheritdoc ILiquidityVaultAction
-    function changeToken(address _token) external override onlyOwner {
+    function changeToken(address _token) external override onlyOwner beforeSetReadyToCreatePool
+    {
         token = IERC20(_token);
+
+        emit ChangedToken(_token);
     }
 
     /// @inheritdoc ILiquidityVaultAction
@@ -212,7 +233,7 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
 
     /// @inheritdoc ILiquidityVaultAction
     function setPoolInitialize(uint160 inSqrtPriceX96)
-        public nonZeroAddress(address(pool)) override
+        public nonZeroAddress(address(pool)) override readyToCreatePool
     {
         (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
         if(sqrtPriceX96 == 0){
@@ -332,14 +353,14 @@ contract LiquidityVault is LiquidityVaultStorage, ProxyAccessCommon, ILiquidityV
 
     /// @inheritdoc ILiquidityVaultAction
     function mint(int24 tickLower, int24 tickUpper)
-        external override
+        external override readyToCreatePool
     {
         mintToken(tickLower, tickUpper,  TOS.balanceOf(address(this)),  token.balanceOf(address(this))/totalClaimCounts );
     }
 
     /// @inheritdoc ILiquidityVaultAction
     function mintToken(int24 tickLower, int24 tickUpper, uint256 tosUseAmount, uint256 tokenUseAmount)
-        public override
+        public override readyToCreatePool
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)

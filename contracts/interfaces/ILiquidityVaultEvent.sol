@@ -3,6 +3,65 @@ pragma solidity ^0.8.4;
 
 interface ILiquidityVaultEvent {
 
+    /// @dev Set BaseInfo, Available only to admin
+    /// @param name name
+    /// @param token the allocated token address
+    /// @param owner  admin address
+    event SetBaseInfo(string name, address token, address owner);
+
+    /// @dev Set BoolReadyToCreatePool, Available only to admin
+    /// @param boolReadyToCreatePool the flag about ready to create pool
+    event SetBoolReadyToCreatePool(bool boolReadyToCreatePool);
+
+    /// @dev Set initial price, Available only to admin
+    /// @param tosPrice the tos price
+    /// @param tokenPrice the token price
+    /// @param initSqrtPrice  initSqrtPrice value
+    event SetInitialPrice(uint256 tosPrice, uint256 tokenPrice, uint160 initSqrtPrice);
+
+
+    /// @dev Set the minimum tickInterval, Available only to admin
+    /// @param interval  interval
+    event SetTickIntervalMinimum(int24 interval);
+
+
+    /// @dev Set the uniswap info, Available only to proxy admin
+    /// @param poolfactory  UniswapV3Factory address
+    /// @param npm  NonfungiblePositionManager address
+    /// @param swapRouter  swapRouter address
+    event SetUniswapInfo(address poolfactory, address npm, address swapRouter);
+
+
+    /// @dev Set pool's address, Available only to proxy admin
+    /// @param wethUsdcPool  WETH-USDC Pool address
+    /// @param wtonWethPool  WTON-WETH Pool address
+    /// @param wtonTosPool  WTON-TOS Pool address
+    event SetPoolInfo(address wethUsdcPool, address wtonWethPool, address wtonTosPool);
+
+
+    /// @dev Set token address, Available only to proxy admin
+    /// @param wton  WTON address
+    /// @param tos  TOS address
+    /// @param fee   Pool fee
+    event SetTokens(address wton, address tos, uint24 fee);
+
+
+    /// @dev change the project token address, Available only to admin
+    /// @param token  project token address
+    event ChangedToken(address token);
+
+
+    /// @dev Emitted when call initialize function. set claim information., Available only to admin
+    /// @param _totalAllocatedAmount total allocated amount
+    /// @param _claimCounts total claim Counts
+    /// @param _claimTimes claimTime must be in ascending order from smallest to largest
+    /// @param _claimAmounts The sum of _claimAmounts must equal _totalAllocatedAmount .
+    event Initialized(uint256 _totalAllocatedAmount,
+        uint256 _claimCounts,
+        uint256[] _claimTimes,
+        uint256[] _claimAmounts);
+
+
     /// @dev An event emitted when a project token is used in the vault, or when the mint, liquidity increase function is called.
     /// @param tokenId tokenId
     /// @param amount Amount of project token used
@@ -31,16 +90,6 @@ interface ILiquidityVaultEvent {
     /// @param amount amount
     event WithdrawalInVault(address caller, address tokenAddress, address to, uint256 amount);
 
-
-    /// @dev Emitted when call initialize function. set claim information.
-    /// @param _totalAllocatedAmount total allocated amount
-    /// @param _claimCounts total claim Counts
-    /// @param _claimTimes claimTime must be in ascending order from smallest to largest
-    /// @param _claimAmounts The sum of _claimAmounts must equal _totalAllocatedAmount .
-    event Initialized(uint256 _totalAllocatedAmount,
-        uint256 _claimCounts,
-        uint256[] _claimTimes,
-        uint256[] _claimAmounts);
 
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted

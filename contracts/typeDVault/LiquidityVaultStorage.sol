@@ -37,20 +37,6 @@ contract LiquidityVaultStorage  {
     bool public boolReadyToCreatePool;
 
     uint256[] public tokenIds;
-    //--
-
-    bool public settingCheck;
-
-    uint256 public totalAllocatedAmount;
-
-    uint256 public totalClaimCounts;
-
-    uint256 public nowClaimRound = 0;
-
-    uint256 public totalClaimsAmount;
-
-    uint256[] public claimTimes;
-    uint256[] public claimAmounts;
     uint256[] public addAmounts;
 
     bool public pauseProxy;
