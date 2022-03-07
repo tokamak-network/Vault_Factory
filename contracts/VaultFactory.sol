@@ -37,6 +37,7 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
 
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, msg.sender);
+        upgradeAdmin = msg.sender;
     }
 
     /// @inheritdoc IVaultFactory
