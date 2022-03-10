@@ -15,7 +15,6 @@ import "hardhat/console.sol";
 contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAccessCommon, IRewardProgramVaultEvent, IRewardProgramVaultAction
 {
     using SafeERC20 for IERC20;
-    //using SafeMath for uint256;
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
@@ -95,11 +94,11 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
     function currentRound() public view override returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
             if(block.timestamp < claimTimes[0]){
-                round = 0;
+                return round = 0;
             } else if(block.timestamp < claimTimes[i-1] && i != 0) {
-                round = i-1;
+                return round = i-1;
             } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
-                round = totalClaimCounts;
+                return round = totalClaimCounts;
             }
         }
     }
@@ -135,18 +134,19 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         if(token.allowance(address(this), address(staker)) < reward) token.approve(address(staker), totalAllocatedAmount);
 
-        staker.createIncentive(key, reward);
-
+        totalClaimsAmount += reward;
         uint256 idx = totalProgramCount;
         programs[idx] = IncentiveProgram(key, reward);
         totalProgramCount++;
+
+        staker.createIncentive(key, reward);
 
         emit IncentiveCreatedByRewardProgram(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward);
     }
 
     /// @inheritdoc IRewardProgramVaultAction
     function createProgram()
-        public override
+        public override nonReentrant
         nonZeroAddress(address(pool))
     {
         //require(block.timestamp > claimTimes[0], "Vault: not started yet");
@@ -156,6 +156,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         require(amount > 0, "no claimable amount");
         nowClaimRound = round;
+
         createIncentive(IUniswapV3Staker.IncentiveKey(
             token,
             pool,
@@ -165,7 +166,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             ),
             amount
         );
-        totalClaimsAmount += amount;
+
     }
 
 }

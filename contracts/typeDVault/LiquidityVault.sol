@@ -294,11 +294,11 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
     function currentRound() public view override returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
             if(block.timestamp < claimTimes[0]){
-                round = 0;
+                return round = 0;
             } else if(block.timestamp < claimTimes[i-1] && i != 0) {
-                round = i-1;
+                return round = i-1;
             } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
-                round = totalClaimCounts;
+                return round = totalClaimCounts;
             }
         }
     }
@@ -317,15 +317,16 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
 
     /// @inheritdoc ILiquidityVaultAction
     function availableUseAmount(uint256 _round) public view override returns (uint256 amount) {
-        uint256 expectedClaimAmount;
-        for(uint256 i = 0; i < _round; i++) {
-           expectedClaimAmount = expectedClaimAmount + claimAmounts[i] + addAmounts[i];
-        }
+
         if(_round == 1 ) {
             amount = claimAmounts[0] - totalClaimsAmount;
         } else if(totalClaimCounts == _round) {
             amount = totalAllocatedAmount - totalClaimsAmount;
         } else {
+            uint256 expectedClaimAmount;
+            for(uint256 i = 0; i < _round; i++) {
+                expectedClaimAmount = expectedClaimAmount + claimAmounts[i] + addAmounts[i];
+            }
             amount = expectedClaimAmount - totalClaimsAmount;
         }
     }
@@ -379,7 +380,7 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
 
     /// @inheritdoc ILiquidityVaultAction
     function mintToken(int24 tickLower, int24 tickUpper, uint256 tosUseAmount, uint256 tokenUseAmount)
-        public override readyToCreatePool
+        public override readyToCreatePool nonReentrant
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
@@ -394,8 +395,6 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
 
         require(tokenUseAmount <= amount, "exceed to claimable amount");
         require(amount > 0, "claimable token is zero");
-
-       // require(tokenUseAmount > 0, "tokenUseAmount is zero");
 
         uint256 tosBalance =  TOS.balanceOf(address(this));
         require(tosBalance >= tosUseAmount && tosUseAmount > 0, "tos balance is zero");
@@ -470,6 +469,7 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
+        nonReentrant
         returns (uint128 liquidity, uint256 amount0, uint256 amount1)
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
@@ -523,6 +523,7 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
+        nonReentrant
         returns (
             uint256 amount0,
             uint256 amount1
@@ -541,6 +542,7 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
 
         if(token0Address == address(token) && amount0 > 0){
             totalClaimsAmount = totalClaimsAmount - amount0;
+            emit Claimed(tokenId, amount0, totalClaimsAmount);
         } else if (token1Address == address(token) && amount1 > 0) {
             totalClaimsAmount = totalClaimsAmount - amount1;
             emit Claimed(tokenId, amount1, totalClaimsAmount);
@@ -557,6 +559,7 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
     )
         external override
         nonZeroAddress(address(pool))
+        nonReentrant
         returns (uint256 amount0, uint256 amount1)
     {
         (
@@ -584,7 +587,7 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
 
     /// @inheritdoc ILiquidityVaultAction
     function withdraw(address _token, address _account, uint256 _amount)
-        external override
+        external override nonReentrant
         onlyOwner
     {
         require(totalAllocatedAmount <= totalClaimsAmount, "not closed");

@@ -7,9 +7,9 @@ import "../interfaces/INonfungiblePositionManager.sol";
 import "../interfaces/ISwapRouter.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-
-contract LiquidityVaultStorage {
+contract LiquidityVaultStorage is ReentrancyGuard{
 
     IERC20 public token;  // project token
     IERC20 public WTON;  //  wton token
