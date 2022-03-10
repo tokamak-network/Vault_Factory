@@ -35,6 +35,10 @@ const config: HardhatUserConfig = {
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [ `${process.env.RINKEBY_PRIVATE_KEY}` ]
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

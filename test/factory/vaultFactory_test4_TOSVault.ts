@@ -591,7 +591,7 @@ describe("VaultFactory", () => {
         })
                 
         it("need to duration for check the claimable", async () => {
-            await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time + (86400*8)]);
+            await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time + (86400*10)]);
             await ethers.provider.send('evm_mine');
         
             // await dividedPool.connect(person1).claimBatch([erc20.address]);
