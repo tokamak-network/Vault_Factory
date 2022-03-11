@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./RewardProgramVaultStorage.sol";
 import "../proxy/VaultProxy.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAccessCommon, IRewardProgramVaultEvent, IRewardProgramVaultAction
 {

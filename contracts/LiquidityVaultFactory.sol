@@ -5,7 +5,7 @@ import {LiquidityVaultProxy} from "./typeDVault/LiquidityVaultProxy.sol";
 
 import "./interfaces/ILiquidityVaultFactory.sol";
 import "./VaultFactory.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 interface IILiquidityVaultAction {
 
@@ -127,7 +127,7 @@ contract LiquidityVaultFactory is VaultFactory, ILiquidityVaultFactory {
         IILiquidityVaultAction(address(_proxy)).setTokens(wton, tos, fee);
 
         _proxy.removeAdmin();
-        _proxy.removeProxyAdmin();
+        // _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;

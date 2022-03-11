@@ -49,7 +49,7 @@ describe("InitialLiquidityVault", function () {
 
     let tokenA, initialLiquidityVaultFactory, initialLiquidityVaultLogic,  initialLiquidityVault, initialLiquidityVaultProxy, provider;
     let uniswapV3Factory, uniswapV3Pool ;
-    let deployedUniswapV3 , tosToken , vaultAddress, testLogicAddress;
+    let deployedUniswapV3 , tosToken , vaultAddress, testLogicAddress, testLogicContract;
 
     let tosInfo={
         name: "TOS",
@@ -309,7 +309,6 @@ describe("InitialLiquidityVault", function () {
             expect((await initialLiquidityVaultFactory.getContracts(0)).contractAddress).to.be.eq(vaultAddress);
             expect((await initialLiquidityVaultFactory.lastestCreated()).contractAddress).to.be.eq(vaultAddress);
 
-
             let VaultContract = await ethers.getContractAt("InitialLiquidityVaultProxy", vaultAddress);
             expect(await VaultContract.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await VaultContract.isAdmin(poolInfo.admin.address)).to.be.eq(true);
@@ -317,21 +316,93 @@ describe("InitialLiquidityVault", function () {
             expect(await VaultContract.isProxyAdmin(poolInfo.admin.address)).to.be.eq(false);
             expect(await VaultContract.isAdmin(proxyAdmin.address)).to.be.eq(true);
 
-
-            expect(await initialLiquidityVaultFactory.uniswapV3Factory()).to.be.eq(
-                await VaultContract.UniswapV3Factory()
-            );
-            expect(await initialLiquidityVaultFactory.nonfungiblePositionManager()).to.be.eq(
-                await VaultContract.NonfungiblePositionManager()
-            );
-            expect(await initialLiquidityVaultFactory.tos()).to.be.eq(
-                 await VaultContract.TOS()
-            );
-            expect(await initialLiquidityVaultFactory.fee()).to.be.eq(
-                 await VaultContract.fee()
-            );
+            expect(await initialLiquidityVaultFactory.uniswapV3Factory()).to.be.eq(await VaultContract.UniswapV3Factory() );
+            expect(await initialLiquidityVaultFactory.nonfungiblePositionManager()).to.be.eq(await VaultContract.NonfungiblePositionManager());
+            expect(await initialLiquidityVaultFactory.tos()).to.be.eq( await VaultContract.TOS());
+            expect(await initialLiquidityVaultFactory.fee()).to.be.eq( await VaultContract.fee());
 
         });
+
+        it("0-8. upgradeContractLogic : when not admin, fail ", async function () {
+            const TestLogic = await ethers.getContractFactory("TestLogic");
+            let testLogicDeployed = await TestLogic.deploy();
+            await testLogicDeployed.deployed();
+            testLogicAddress = testLogicDeployed.address ;
+            testLogicContract = await ethers.getContractAt("TestLogic", testLogicAddress);
+
+            await expect(
+                initialLiquidityVaultFactory.connect(user2).upgradeContractLogic(
+                    vaultAddress, testLogicAddress, 1, true
+                )
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+
+        it("0-9. upgradeContractFunction : when not admin, fail   ", async function () {
+
+            let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
+            let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
+
+            await expect(
+                initialLiquidityVaultFactory.connect(user2).upgradeContractFunction(
+                    vaultAddress, [_func1, _func2], testLogicAddress
+                )
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+
+        it("0-8/9. upgradeContractLogic , upgradeContractFunction  ", async function () {
+
+            let tx = await initialLiquidityVaultFactory.connect(admin1).upgradeContractLogic(
+                    vaultAddress, testLogicAddress, 1, true
+                );
+
+            await tx.wait();
+
+            let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
+            let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
+
+            tx =  await initialLiquidityVaultFactory.connect(admin1).upgradeContractFunction(
+                    vaultAddress, [_func1, _func2], testLogicAddress
+                );
+
+            await tx.wait();
+
+
+            const proxyContract = await ethers.getContractAt("InitialLiquidityVaultProxy", vaultAddress);
+            expect(await proxyContract.implementation2(1)).to.be.eq(testLogicAddress);
+            expect(await proxyContract.getSelectorImplementation2(_func1)).to.be.eq(testLogicAddress);
+            expect(await proxyContract.getSelectorImplementation2(_func2)).to.be.eq(testLogicAddress);
+
+            const TestLogicContract = await ethers.getContractAt("TestLogic", vaultAddress);
+
+            let a = ethers.BigNumber.from("1");
+            let b = ethers.BigNumber.from("2");
+
+            let add = await TestLogicContract.sayAdd(a, b);
+            expect(add).to.be.eq(a.add(b));
+
+            let mul = await TestLogicContract.sayMul(a, b);
+            expect(mul).to.be.eq(a.mul(b));
+
+            tx = await initialLiquidityVaultFactory.connect(admin1).upgradeContractLogic(
+                vaultAddress, testLogicAddress, 1, false
+            );
+
+            await tx.wait();
+
+            await expect(
+                TestLogicContract.sayAdd(a, b)
+            ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
+
+            await expect(
+                TestLogicContract.sayMul(a, b)
+            ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
+
+
+        });
+
+
     });
 
 
@@ -1302,6 +1373,12 @@ describe("InitialLiquidityVault", function () {
             await expect(
                 initialLiquidityVault.connect(user2).collect()
             ).to.be.revertedWith("there is no collectable amount");
+
+        });
+
+        it("3-4. lpToken  ", async function () {
+
+            expect(await initialLiquidityVault.connect(user2).lpToken()).to.be.equal(poolInfo.tokenIds[0]);
 
         });
 
