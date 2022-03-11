@@ -100,8 +100,8 @@ describe("LiquidityVault", function () {
     } */
 
      let price = {
-        tos: ethers.BigNumber.from("5000"),
-        projectToken:  ethers.BigNumber.from("200"),
+        tos: ethers.BigNumber.from("1000"),
+        projectToken:  ethers.BigNumber.from("100"),
         initSqrtPrice: 0,
         initTick: 0,
         targetPriceInterval: 1,

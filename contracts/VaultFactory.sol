@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import "./interfaces/IVaultFactory.sol";
+import "./interfaces/IProxyAction.sol";
 import "./common/AccessibleCommon.sol";
 
 /// @title A factory that creates a Vault
@@ -49,6 +50,31 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
     {
         require(addr != upgradeAdmin, "same addrs");
         upgradeAdmin = addr;
+    }
+
+    /// @inheritdoc IVaultFactory
+    function upgradeContractLogic(
+        address _contract,
+        address _logic,
+        uint256 _index,
+        bool _alive
+    )   external override
+        onlyOwner
+        nonZeroAddress(_contract)
+    {
+        IProxyAction(_contract).setImplementation2(_logic, _index, _alive);
+    }
+
+    /// @inheritdoc IVaultFactory
+    function upgradeContractFunction(
+        address _contract,
+        bytes4[] calldata _selectors,
+        address _imp
+    )   external override
+        onlyOwner
+        nonZeroAddress(_contract)
+    {
+        IProxyAction(_contract).setSelectorImplementations2(_selectors, _imp);
     }
 
 

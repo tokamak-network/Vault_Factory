@@ -260,7 +260,6 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
     function computePoolAddress(address tokenA, address tokenB, uint24 _fee)
         public view override returns (address pool, address token0, address token1)
     {
-
         bytes32  POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
 
         token0 = tokenA;
@@ -292,15 +291,17 @@ contract LiquidityVault is LiquidityVaultStorage, VaultStorage, ProxyAccessCommo
 
     /// @inheritdoc ILiquidityVaultAction
     function currentRound() public view override returns (uint256 round) {
-        for(uint256 i = totalClaimCounts; i > 0; i--) {
-            if(block.timestamp < claimTimes[0]){
-                return round = 0;
-            } else if(block.timestamp < claimTimes[i-1] && i != 0) {
-                return round = i-1;
-            } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
-                return round = totalClaimCounts;
+
+        if(totalClaimCounts == 0 || block.timestamp < claimTimes[0]) round = 0;
+        else if (totalClaimCounts > 0 && block.timestamp >= claimTimes[totalClaimCounts-1])
+            round = totalClaimCounts;
+        else
+            for(uint256 i = 1; i < totalClaimCounts; i++) {
+                if(block.timestamp < claimTimes[i])  {
+                    round = i;
+                    break;
+                }
             }
-        }
     }
 
     /// @inheritdoc ILiquidityVaultAction
