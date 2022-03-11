@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-//import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../interfaces/IERC20Minimal.sol";
 import "../interfaces/IUniswapV3Pool.sol";
 import "../interfaces/IUniswapV3Staker.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract RewardProgramVaultStorage  {
+contract RewardProgramVaultStorage is ReentrancyGuard {
 
     struct IncentiveProgram {
         IUniswapV3Staker.IncentiveKey key;

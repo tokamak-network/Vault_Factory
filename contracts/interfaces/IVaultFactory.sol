@@ -19,6 +19,30 @@ interface IVaultFactory {
     )   external;
 
 
+    /// @dev set the contract's logic
+    /// @param _contract  the contract address
+    /// @param _logic  the logic address
+    /// @param _index  logic index
+    /// @param _alive  alive flag , true or false
+    function upgradeContractLogic(
+        address _contract,
+        address _logic,
+        uint256 _index,
+        bool _alive
+    )   external;
+
+
+    /// @dev set the contract's function's logic
+    /// @param _contract  the contract address
+    /// @param _selectors  function's selectors
+    /// @param _imp  logic  address
+    function upgradeContractFunction(
+        address _contract,
+        bytes4[] calldata _selectors,
+        address _imp
+    )   external;
+
+
     /// @dev view the upgradeAdmin address
     /// @param admin  the upgradeAdmin address
     function upgradeAdmin() external view returns (address admin);

@@ -5,7 +5,7 @@ import {RewardProgramVaultProxy} from "./typeEVault/RewardProgramVaultProxy.sol"
 
 import "./interfaces/IRewardProgramVaultFactory.sol";
 import "./VaultFactory.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 /// @title A factory that creates a Vault
 contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
@@ -68,7 +68,7 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
         );
 
         _proxy.removeAdmin();
-        _proxy.removeProxyAdmin();
+        // _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
