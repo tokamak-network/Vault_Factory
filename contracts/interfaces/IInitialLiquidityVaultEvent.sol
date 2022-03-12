@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-interface ILiquidityVaultEvent {
+interface IInitialLiquidityVaultEvent {
 
     /// @dev Set BaseInfo, Available only to admin
     /// @param name name
@@ -20,30 +20,16 @@ interface ILiquidityVaultEvent {
     event SetInitialPrice(uint256 tosPrice, uint256 tokenPrice, uint160 initSqrtPrice);
 
 
-    /// @dev Set the minimum tickInterval, Available only to admin
-    /// @param interval  interval
-    event SetTickIntervalMinimum(int24 interval);
-
-
     /// @dev Set the uniswap info, Available only to proxy admin
     /// @param poolfactory  UniswapV3Factory address
     /// @param npm  NonfungiblePositionManager address
-    /// @param swapRouter  swapRouter address
-    event SetUniswapInfo(address poolfactory, address npm, address swapRouter);
-
-
-    /// @dev Set pool's address, Available only to proxy admin
-    /// @param wethUsdcPool  WETH-USDC Pool address
-    /// @param wtonWethPool  WTON-WETH Pool address
-    /// @param wtonTosPool  WTON-TOS Pool address
-    event SetPoolInfo(address wethUsdcPool, address wtonWethPool, address wtonTosPool);
-
+    event SetUniswapInfo(address poolfactory, address npm);
 
     /// @dev Set token address, Available only to proxy admin
-    /// @param wton  WTON address
     /// @param tos  TOS address
     /// @param fee   Pool fee
-    event SetTokens(address wton, address tos, uint24 fee);
+    /// @param tickSpacings   tick spacings
+    event SetTokens(address tos, uint24 fee, int24 tickSpacings);
 
 
     /// @dev change the project token address, Available only to admin
@@ -65,20 +51,7 @@ interface ILiquidityVaultEvent {
 
     /// @dev Emitted when call initialize function. set claim information., Available only to admin
     /// @param _totalAllocatedAmount total allocated amount
-    /// @param _claimCounts total claim Counts
-    /// @param _claimTimes claimTime must be in ascending order from smallest to largest
-    /// @param _claimAmounts The sum of _claimAmounts must equal _totalAllocatedAmount .
-    event Initialized(uint256 _totalAllocatedAmount,
-        uint256 _claimCounts,
-        uint256[] _claimTimes,
-        uint256[] _claimAmounts);
-
-
-    /// @dev An event emitted when a project token is used in the vault, or when the mint, liquidity increase function is called.
-    /// @param tokenId tokenId
-    /// @param amount Amount of project token used
-    /// @param totalClaimsAmount  totalClaimsAmount
-    event Claimed(uint256 indexed tokenId, uint256 amount, uint256 totalClaimsAmount);
+    event Initialized(uint256 _totalAllocatedAmount);
 
 
     /// @dev Emitted when call mintToken function. Provide liquidity to uniswap V3 and receive LP tokens.
@@ -110,14 +83,6 @@ interface ILiquidityVaultEvent {
     /// @param amount0 The amount of token0 that was paid for the increase in liquidity
     /// @param amount1 The amount of token1 that was paid for the increase in liquidity
     event IncreaseLiquidityInVault(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
-
-
-    /// @notice Emitted when liquidity is decreased for a position NFT
-    /// @param tokenId The ID of the token for which liquidity was decreased
-    /// @param liquidity The amount by which liquidity for the NFT position was decreased
-    /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
-    /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
-    event DecreaseLiquidityInVault(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
 
 
     /// @notice Emitted when tokens are collected for a position NFT

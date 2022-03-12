@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import "./LiquidityVaultStorage.sol";
+import "./InitialLiquidityVaultStorage.sol";
 import "../proxy/VaultProxy.sol";
 
-contract LiquidityVaultProxy is LiquidityVaultStorage, VaultProxy
+contract InitialLiquidityVaultProxy is InitialLiquidityVaultStorage, VaultProxy
 {
 
     function setBaseInfoProxy(

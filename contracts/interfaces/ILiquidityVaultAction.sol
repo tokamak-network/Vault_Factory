@@ -18,6 +18,14 @@ interface ILiquidityVaultAction {
         )
         external;
 
+    /// @dev set the boolReadyToCreatePool storage
+    /// @param _boolReadyToCreatePool _boolReadyToCreatePool , true if it's ready to CreatePool
+    function setBoolReadyToCreatePool(
+         bool _boolReadyToCreatePool
+        )
+        external;
+
+
     /// @dev setInitialPrice function
     /// @param tosPrice tosPrice
     /// @param tokenPrice tokenPrice
@@ -231,7 +239,8 @@ interface ILiquidityVaultAction {
 
     function getSqrtRatioAtTick(int24 tick) external pure returns (uint160);
     function getTickAtSqrtRatio(uint160 sqrtPriceX96) external pure returns (int24) ;
+    /*
     function MIN_SQRT_RATIO() external pure returns (uint160) ;
     function MAX_SQRT_RATIO() external pure returns (uint160) ;
-
+    */
 }
