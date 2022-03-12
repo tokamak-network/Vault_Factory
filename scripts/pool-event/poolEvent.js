@@ -41,35 +41,36 @@ async function getPoolEvent(poolAddress) {
 
       events.forEach(e=>{
 
-        console.log(e);
+        // console.log(e);
         if(e.event == "Mint" ){
-            console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1);
+            //console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1);
             sumAmount0 = sumAmount0.add(e.args.amount0);
             sumAmount1 = sumAmount1.add(e.args.amount1);
             txCount++;
-
+        /*
         } else if(e.event == "Burn" ){
             console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1);
             sumAmount0 = sumAmount0.sub(e.args.amount0);
             sumAmount1 = sumAmount1.sub(e.args.amount1);
             txCount++;
+            */
         } else if(e.event == "Swap" ){
-            console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1);
+            //console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1);
             sumAmount0 = sumAmount0.add(e.args.amount0);
             sumAmount1 = sumAmount1.add(e.args.amount1);
             txCount++;
         } else if(e.event == "Collect" ){
-            console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1 );
+            //console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1 );
             sumAmount0 = sumAmount0.sub(e.args.amount0);
             sumAmount1 = sumAmount1.sub(e.args.amount1);
             txCount++;
         } else if(e.event == "Flash" ){
-           console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1 );
+           //console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1 );
             sumAmount0 = sumAmount0.sub(e.args.amount0);
             sumAmount1 = sumAmount1.sub(e.args.amount1);
             txCount++;
         } else if(e.event == "collectProtocol" ){
-           console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1 );
+           //console.log("txCount", txCount,e.event, e.blockNumber, e.transactionHash, e.args.amount0, e.args.amount1 );
             sumAmount0 = sumAmount0.sub(e.args.amount0);
             sumAmount1 = sumAmount1.sub(e.args.amount1);
             txCount++;
