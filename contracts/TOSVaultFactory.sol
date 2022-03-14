@@ -1,46 +1,28 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {TOSVault} from "./TOSVault/TOSVault.sol";
+import {TOSVaultProxy} from "./TOSVault/TOSVaultProxy.sol";
 import "./interfaces/ITOSFactory.sol";
-import "./common/AccessibleCommon.sol";
+import "./VaultFactory.sol";
 import "hardhat/console.sol";
 
 /// @title A factory that creates a Vault
-contract TOSVaultFactory is AccessibleCommon { 
+contract TOSVaultFactory is VaultFactory { 
 
     event CreatedTOSVault(address contractAddress, string name);
-
-    modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), "VaultFactory: zero");
-        _;
-    }
-    struct ContractInfo {
-        address contractAddress;
-        string name;
-    }
 
     address public owner;   
 
     /// @dev the fixed address of divided Pool
     address public dividedPoolProxy;
 
-    /// @dev Total number of contracts created
-    uint256 public totalCreatedContracts;
-
-    /// @dev Contract information by index
-    mapping(uint256 => ContractInfo) public createdContracts;
-
-    /// @dev constructor of VaultFactory
-    constructor(
-        address _owner,
+    function setinfo(
         address _dividedPool
-    ) {
-        owner = _owner;
+    ) 
+        external
+        onlyOwner 
+    {
         dividedPoolProxy = _dividedPool;
-        totalCreatedContracts = 0;
-        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, owner);
     }
 
     function create(
@@ -52,19 +34,28 @@ contract TOSVaultFactory is AccessibleCommon {
     {
         require(bytes(_name).length > 0,"name is empty");
 
-        TOSVault TVault = new TOSVault(_name, _token, _owner, dividedPoolProxy, owner);
+        TOSVaultProxy _proxy = new TOSVaultProxy();
 
         require(
-            address(TVault) != address(0),
-            "TVault zero"
+            address(_proxy) != address(0),
+            "proxy zero"
         );
 
-        createdContracts[totalCreatedContracts] = ContractInfo(address(TVault), _name);
+        _proxy.addProxyAdmin(upgradeAdmin);
+        _proxy.addAdmin(upgradeAdmin);
+        _proxy.setImplementation2(vaultLogic, 0, true);
+
+        _proxy.setBaseInfoProxy(_name, _token, _owner, dividedPoolProxy);
+
+        _proxy.removeAdmin();
+        _proxy.removeProxyAdmin();
+
+        createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
 
-        emit CreatedTOSVault(address(TVault), _name);
+        emit CreatedTOSVault(address(_proxy), _name);
 
-        return address(TVault);
+        return address(_proxy);
     } 
 
     function changeDividedPool(
@@ -74,21 +65,5 @@ contract TOSVaultFactory is AccessibleCommon {
         onlyOwner
     {
        dividedPoolProxy = _dividedPool;
-    }
-
-    function lastestCreated() external view returns (address contractAddress, string memory name){
-        if(totalCreatedContracts > 0){
-            return (createdContracts[totalCreatedContracts-1].contractAddress, createdContracts[totalCreatedContracts-1].name);
-        }else {
-            return (address(0), '');
-        }
-    }
-
-    function getContracts(uint256 _index) external view returns (address contractAddress, string memory name){
-        if(_index < totalCreatedContracts){
-            return (createdContracts[_index].contractAddress, createdContracts[_index].name);
-        }else {
-            return (address(0), '');
-        }
     }
 }

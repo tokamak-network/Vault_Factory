@@ -3,32 +3,16 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../common/AccessiblePlusCommon.sol";
+import "../common/ProxyAccessCommon.sol";
 import "../interfaces/ILockTOSDividend.sol";
 
-contract TOSVault is AccessiblePlusCommon {
+import "./TOSVaultStorage.sol";
+import "../proxy/VaultStorage.sol";
+
+
+contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
     using SafeERC20 for IERC20;
-
-    string public name;
-
-    address public token;
-
-    bool public settingCheck;
-    address public owner;
-
-    address public dividiedPool;
-
-    uint256 public totalAllocatedAmount;   
-
-    uint256 public totalClaimCounts;      
-
-    uint256 public nowClaimRound = 0;      
-
-    uint256 public totalClaimsAmount;
-
-    uint256[] public claimTimes;
-    uint256[] public claimAmounts;          
-
+  
     event Claimed(
         address indexed caller,
         uint256 amount,
@@ -46,23 +30,8 @@ contract TOSVault is AccessiblePlusCommon {
     }
 
     ///@dev constructor
-    ///@param _name Vault's name
-    ///@param _token Allocated token address
-    ///@param _owner owner address
-    constructor(
-        string memory _name,
-        address _token,
-        address _owner,
-        address _dividedPool,
-        address _factoryOwner
-    ) {
-        name = _name;
-        token = _token;
-        owner = _owner;
-        dividiedPool = _dividedPool;
-        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, owner);
-        _setupRole(ADMIN_ROLE, _factoryOwner);
+    constructor() {
+
     }
 
     ///@dev initialization function
@@ -85,7 +54,7 @@ contract TOSVault is AccessiblePlusCommon {
             claimAmounts.push(_claimAmounts[i]);
         }
 
-        revokeRole(ADMIN_ROLE, owner);
+        revokeRole(PROJECT_ADMIN_ROLE, owner);
     }
 
     function changeToken(address _token) external onlyOwner {
