@@ -8,12 +8,12 @@ import "./common/AccessibleCommon.sol";
 contract VaultFactory is AccessibleCommon, IVaultFactory {
 
     modifier nonZero(uint256 val) {
-        require(val > 0 , "zero vaule");
+        require(val > 0 , "zero V");
         _;
     }
 
     modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), "VaultFactory: zero");
+        require(_addr != address(0), "zero A");
         _;
     }
 
@@ -37,6 +37,7 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
 
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, msg.sender);
+        upgradeAdmin = msg.sender;
     }
 
     /// @inheritdoc IVaultFactory
@@ -46,7 +47,7 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
         onlyOwner
         nonZeroAddress(addr)
     {
-        require(addr != upgradeAdmin, "same addrs");
+        require(addr != upgradeAdmin, "same addr");
         upgradeAdmin = addr;
     }
 
@@ -58,7 +59,7 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
         nonZeroAddress(_logic)
         onlyOwner
     {
-        require(vaultLogic != _logic, "already set this version");
+        require(vaultLogic != _logic, "already logic");
         vaultLogic = _logic;
     }
 

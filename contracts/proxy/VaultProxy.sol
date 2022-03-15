@@ -4,11 +4,13 @@ pragma solidity ^0.8.4;
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
 import "../interfaces/IProxyEvent.sol";
+import "../interfaces/IProxyAction.sol";
+
 
 import "./VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
-contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent
+contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction
 {
 
     /**
@@ -21,58 +23,48 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent
 
     }
 
-    /// @notice Set pause state
-    /// @param _pause true:pause or false:resume
-    function setProxyPause(bool _pause) external  onlyOwner {
+    /// @inheritdoc IProxyAction
+    function setProxyPause(bool _pause) external override onlyOwner {
         pauseProxy = _pause;
     }
 
-    /// @dev view implementation address of the proxy[index]
-    /// @param _index index of proxy
-    /// @return address of the implementation
-    function implementation2(uint256 _index) external view returns (address) {
+    /// @inheritdoc IProxyAction
+    function implementation2(uint256 _index) external override view returns (address) {
         return _implementation2(_index);
     }
 
-    /// @dev set the implementation address and status of the proxy[index]
-    /// @param newImplementation Address of the new implementation.
-    /// @param _index index
-    /// @param _alive _alive
+    /// @inheritdoc IProxyAction
     function setImplementation2(
         address newImplementation,
         uint256 _index,
         bool _alive
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         _setImplementation2(newImplementation, _index, _alive);
     }
 
-    /// @dev set alive status of implementation
-    /// @param newImplementation Address of the new implementation.
-    /// @param _alive alive status
+    /// @inheritdoc IProxyAction
     function setAliveImplementation2(address newImplementation, bool _alive)
-        public
+        public override
         onlyProxyOwner
     {
         _setAliveImplementation2(newImplementation, _alive);
     }
 
-    /// @dev set selectors of Implementation
-    /// @param _selectors being added selectors
-    /// @param _imp implementation address
+    /// @inheritdoc IProxyAction
     function setSelectorImplementations2(
         bytes4[] calldata _selectors,
         address _imp
-    ) public onlyProxyOwner {
+    ) public override onlyProxyOwner {
         require(
             _selectors.length > 0,
-            "LiquidityVaultProxy: _selectors's size is zero"
+            "Proxy: _selectors's size is zero"
         );
-        require(aliveImplementation[_imp], "LiquidityVaultProxy: _imp is not alive");
+        require(aliveImplementation[_imp], "Proxy: _imp is not alive");
 
         for (uint256 i = 0; i < _selectors.length; i++) {
             require(
                 selectorImplementation[_selectors[i]] != _imp,
-                "LiquidityVaultProxy: same imp"
+                "Proxy: same imp"
             );
             selectorImplementation[_selectors[i]] = _imp;
             emit SetSelectorImplementation(_selectors[i], _imp);
@@ -90,7 +82,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent
     ) internal {
         require(
             Address.isContract(newImplementation),
-            "LiquidityVaultProxy: Cannot set a proxy implementation to a non-contract address"
+            "Proxy: Cannot set a proxy implementation to a non-contract address"
         );
         if (_alive) proxyImplementation[_index] = newImplementation;
         _setAliveImplementation2(newImplementation, _alive);
@@ -117,11 +109,9 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent
         return proxyImplementation[_index];
     }
 
-    /// @dev view implementation address of selector of function
-    /// @param _selector selector of function
-    /// @return impl address of the implementation
+    /// @inheritdoc IProxyAction
     function getSelectorImplementation2(bytes4 _selector)
-        public
+        public override
         view
         returns (address impl)
     {
@@ -135,7 +125,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent
 
     /// @dev receive ether
     receive() external payable {
-        revert("cannot receive Ether");
+        revert("cannot receive");
     }
 
     /// @dev fallback function , execute on undefined function call
@@ -149,7 +139,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent
 
         require(
             _impl != address(0) && !pauseProxy,
-            "LiquidityVaultProxy: impl OR proxy is false"
+            "Proxy: impl OR proxy is false"
         );
 
         assembly {
