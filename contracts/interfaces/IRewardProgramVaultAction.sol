@@ -34,8 +34,7 @@ interface IRewardProgramVaultAction {
 
     /// @dev Set parameters.
     /// @param _startWaitTime  the program startTime is determined added the current block time and _startWaitTime seconds.
-    /// @param _programDuration the program endTime is determined added the startTime and _programDuration seconds.
-    function changeSetting(uint256 _startWaitTime, uint256 _programDuration) external;
+    function changeSetting(uint256 _startWaitTime) external;
 
 
 

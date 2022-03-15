@@ -14,6 +14,13 @@ interface IRewardProgramVaultFactory {
     ) external;
 
 
+    /// @dev set waitStartSeconds
+    /// @param _waitStartSeconds waitStartSeconds
+    function setWaitStartSeconds(
+        uint256 _waitStartSeconds
+    ) external;
+
+
     /// ### anybody can use
 
     /// @dev Create a RewardProgramVaultProxy
@@ -21,19 +28,13 @@ interface IRewardProgramVaultFactory {
     /// @param pool pool address
     /// @param rewardToken  rewardToken address
     /// @param _admin  admin address
-    /// @param waitStartTime  Waiting time before start time (seconds)
-    /// @param programPeriod  Program operation period (seconds)
     /// @return created contract address
     function create(
         string calldata _name,
         address pool,
         address rewardToken,
-        address _admin,
-        uint256 waitStartTime,
-        uint256 programPeriod
+        address _admin
     )
         external
         returns (address);
-
-
 }

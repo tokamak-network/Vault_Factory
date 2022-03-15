@@ -50,13 +50,11 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
     }
 
     /// @inheritdoc IRewardProgramVaultAction
-    function changeSetting(uint256 _startWaitTime, uint256 _programDuration)
+    function changeSetting(uint256 _startWaitTime)
         external override onlyOwner
         nonZero(_startWaitTime)
-        nonZero(_programDuration)
     {
         startWaitTime = _startWaitTime;
-        programDuration = _programDuration;
     }
 
     /// @inheritdoc IRewardProgramVaultAction
@@ -158,6 +156,8 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         require(amount > 0, "no claimable amount");
         nowClaimRound = round;
+        uint256 programDuration = getProgramDuration(nowClaimRound);
+        require(programDuration > 0, "zero duration");
 
         createIncentive(IUniswapV3Staker.IncentiveKey(
             token,
@@ -168,7 +168,19 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             ),
             amount
         );
+    }
 
+    function getProgramDuration(uint256 _round) public view returns (uint256 period){
+
+        if(_round < 1) period = 0;
+        else if(_round == totalClaimCounts) {
+            if(totalClaimCounts == 1) period = 1 days;
+            else {
+                 period = claimTimes[claimTimes.length-1] - claimTimes[claimTimes.length-2];
+            }
+        } else if (_round < claimTimes.length) {
+            period = claimTimes[_round] - claimTimes[_round-1];
+        } else period = 0;
     }
 
 }

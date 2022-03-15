@@ -18,14 +18,12 @@ contract RewardProgramVaultProxy is RewardProgramVaultStorage, VaultProxy
         address _token,
         address _staker,
         address _owner,
-        uint256 _startWaitTime,
-        uint256 _programDuration
+        uint256 _startWaitTime
     ) external onlyOwner  {
         require(bytes(name).length == 0,"already set");
         require(_staker != address(0) && _pool != address(0) && _token != address(0)
                 && _owner != address(0), "zero address");
-        require(_startWaitTime >= 60, "_startWaitTime is less than 60");
-        require(_programDuration > 0, "_programDuration is zero");
+        require(_startWaitTime >= 30, "_startWaitTime is less than 30");
 
         name = _name;
         token = IERC20Minimal(_token);
@@ -33,7 +31,6 @@ contract RewardProgramVaultProxy is RewardProgramVaultStorage, VaultProxy
         staker = IUniswapV3Staker(_staker);
 
         startWaitTime = _startWaitTime;
-        programDuration = _programDuration;
 
         if(!isAdmin(_owner)){
             _setupRole(PROJECT_ADMIN_ROLE, _owner);

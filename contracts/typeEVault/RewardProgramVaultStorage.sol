@@ -21,5 +21,5 @@ contract RewardProgramVaultStorage is ReentrancyGuard {
     mapping(uint256 => IncentiveProgram) public programs;
     uint256 public totalProgramCount;
     uint256 public startWaitTime;
-    uint256 public programDuration;
+    //uint256 public programDuration;
 }
