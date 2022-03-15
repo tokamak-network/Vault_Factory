@@ -18,8 +18,8 @@ contract RewardProgramVaultStorage is ReentrancyGuard {
 
     IUniswapV3Pool public pool;
     IUniswapV3Staker public staker;
+
     mapping(uint256 => IncentiveProgram) public programs;
     uint256 public totalProgramCount;
     uint256 public startWaitTime;
-    //uint256 public programDuration;
 }

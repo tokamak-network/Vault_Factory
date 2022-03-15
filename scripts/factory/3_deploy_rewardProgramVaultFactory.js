@@ -69,6 +69,12 @@ async function main() {
   await tx.wait();
   console.log("setStaker:", tx.hash);
 
+
+  tx = await rewardProgramVaultFactoryContract.connect(deployer).setWaitStartSeconds(ethers.BigNumber.from("60"));
+  await tx.wait();
+  console.log("setWaitStartSeconds:", tx.hash);
+
+
   const RewardProgramVaultAddress = loadDeployed(process.env.NETWORK, "RewardProgramVault");
   tx = await rewardProgramVaultFactoryContract.connect(deployer).setLogic(RewardProgramVaultAddress);
   await tx.wait();
