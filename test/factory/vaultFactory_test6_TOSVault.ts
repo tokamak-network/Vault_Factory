@@ -17,7 +17,11 @@ describe("VaultFactory", () => {
     let typeBVault : any;
     let typeCVault : any;
     let TOSVault : any;
+    let TOSVaultProxy : any;
+    let TOSVaultLogic : any;
     let TOSVault2 : any;
+    let TOSVaultProxy2 : any;
+    let TOSVaultLogic2 : any;
     let dividedPool : any;
     let dividedPool2 : any;
     let vaultAFactory : any;
@@ -238,13 +242,14 @@ describe("VaultFactory", () => {
             tosVaultinfo[0] = info;
             expect(info.name).to.be.equal("ABC");
     
-            TOSVault = await ethers.getContractAt("TOSVaultProxy", info.contractAddress);
-            expect(await TOSVault.isAdmin(deployer.address)).to.be.equal(false);
-            expect(await TOSVault.isAdmin(proxyAdmin.address)).to.be.equal(true);
-            expect(await TOSVault.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
-            expect(await TOSVault.isAdmin(person2.address)).to.be.equal(true);
-            expect(await TOSVault.isProxyAdmin(person2.address)).to.be.eq(false);
-            expect(await TOSVault.dividiedPool()).to.be.equal(dividedPool.address);
+            TOSVaultProxy = await ethers.getContractAt("TOSVaultProxy", info.contractAddress);
+            expect(await TOSVaultProxy.isAdmin(deployer.address)).to.be.equal(false);
+            expect(await TOSVaultProxy.isAdmin(proxyAdmin.address)).to.be.equal(true);
+            expect(await TOSVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            expect(await TOSVaultProxy.isAdmin(person2.address)).to.be.equal(true);
+            expect(await TOSVaultProxy.isProxyAdmin(person2.address)).to.be.eq(false);
+            expect(await TOSVaultProxy.dividiedPool()).to.be.equal(dividedPool.address);
+            TOSVaultLogic = await ethers.getContractAt("TOSVault", info.contractAddress);
         });
 
         it("lastestCreated call from anybody", async () => {
@@ -269,267 +274,268 @@ describe("VaultFactory", () => {
             tosVaultinfo[1] = info;
             expect(info.name).to.be.equal("ABCD");
     
-            TOSVault2 = await ethers.getContractAt("TOSVaultProxy", info.contractAddress);
-            expect(await TOSVault2.isAdmin(proxyAdmin.address)).to.be.equal(true);
-            expect(await TOSVault2.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
-            expect(await TOSVault2.isAdmin(person5.address)).to.be.equal(true);
-            expect(await TOSVault2.isProxyAdmin(person5.address)).to.be.eq(false);
-            expect(await TOSVault2.dividiedPool()).to.be.equal(dividedPool.address);
+            TOSVaultProxy2 = await ethers.getContractAt("TOSVaultProxy", info.contractAddress);
+            expect(await TOSVaultProxy2.isAdmin(proxyAdmin.address)).to.be.equal(true);
+            expect(await TOSVaultProxy2.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            expect(await TOSVaultProxy2.isAdmin(person5.address)).to.be.equal(true);
+            expect(await TOSVaultProxy2.isProxyAdmin(person5.address)).to.be.eq(false);
+            expect(await TOSVaultProxy2.dividiedPool()).to.be.equal(dividedPool.address);
+            TOSVaultLogic2 = await ethers.getContractAt("TOSVault", info.contractAddress);
         });
     })
 
 
 
-    // describe("TOSVault test", async () => {
-    //     it("check name, mock ", async function() {
-    //         expect(await TOSVault.name()).to.equal("ABC");
-    //         expect(await TOSVault.token()).to.equal(erc20.address);
-    //     });
+    describe("TOSVault test", async () => {
+        it("check name, mock ", async function() {
+            expect(await TOSVaultLogic.name()).to.equal("ABC");
+            expect(await TOSVaultLogic.token()).to.equal(erc20.address);
+        });
 
-    //     // it("check token, dividedPool address", async () => {
-    //     //     console.log(await TOSVault.token()) 
-    //     //     console.log(await TOSVault.dividiedPool()) 
-    //     // });
+        // it("check token, dividedPool address", async () => {
+        //     console.log(await TOSVault.token()) 
+        //     console.log(await TOSVault.dividiedPool()) 
+        // });
 
-    //     it("check the initialize before input token", async ()  => {
-    //         let curBlock = await ethers.provider.getBlock();
-    //         claim1Time = curBlock.timestamp + (60*5);
-    //         claim2Time = curBlock.timestamp + (60*8);
-    //         claim3Time = curBlock.timestamp + (60*15);
-    //         claim4Time = curBlock.timestamp + (60*20);
-    //         claim5Time = curBlock.timestamp + (60*23);
-    //         claim6Time = curBlock.timestamp + (60*30);
+        it("check the initialize before input token", async ()  => {
+            let curBlock = await ethers.provider.getBlock();
+            claim1Time = curBlock.timestamp + (60*5);
+            claim2Time = curBlock.timestamp + (60*8);
+            claim3Time = curBlock.timestamp + (60*15);
+            claim4Time = curBlock.timestamp + (60*20);
+            claim5Time = curBlock.timestamp + (60*23);
+            claim6Time = curBlock.timestamp + (60*30);
             
-    //         await expect(TOSVault.connect(person1).initialize(
-    //             totalAmount,
-    //             totalClaim,
-    //             [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-    //             [claim1,claim2,claim3,claim4,claim5,claim6]
-    //         )).to.be.revertedWith("need to input the token");
-    //     })
+            await expect(TOSVaultLogic.connect(person2).initialize(
+                totalAmount,
+                totalClaim,
+                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                [claim1,claim2,claim3,claim4,claim5,claim6]
+            )).to.be.revertedWith("need to input the token");
+        })
         
-    //     it("initialize check the onlyOwner", async () => {
-    //         await erc20.connect(deployer).transfer(TOSVault.address,totalAmount)
+        it("initialize check the onlyOwner", async () => {
+            await erc20.connect(deployer).transfer(TOSVaultLogic.address,totalAmount)
 
-    //         let curBlock = await ethers.provider.getBlock();
-    //         claim1Time = curBlock.timestamp + (60*5);
-    //         claim2Time = curBlock.timestamp + (60*8);
-    //         claim3Time = curBlock.timestamp + (60*15);
-    //         claim4Time = curBlock.timestamp + (60*20);
-    //         claim5Time = curBlock.timestamp + (60*23);
-    //         claim6Time = curBlock.timestamp + (60*30);
+            let curBlock = await ethers.provider.getBlock();
+            claim1Time = curBlock.timestamp + (60*5);
+            claim2Time = curBlock.timestamp + (60*8);
+            claim3Time = curBlock.timestamp + (60*15);
+            claim4Time = curBlock.timestamp + (60*20);
+            claim5Time = curBlock.timestamp + (60*23);
+            claim6Time = curBlock.timestamp + (60*30);
             
-    //         await expect(TOSVault.connect(person5).initialize(
-    //             totalAmount,
-    //             totalClaim,
-    //             [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-    //             [claim1,claim2,claim3,claim4,claim5,claim6]
-    //         )).to.be.revertedWith("Accessible: Caller is not an admin");
-    //     })
+            await expect(TOSVaultLogic.connect(person5).initialize(
+                totalAmount,
+                totalClaim,
+                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                [claim1,claim2,claim3,claim4,claim5,claim6]
+            )).to.be.revertedWith("Accessible: Caller is not an admin");
+        })
 
-    //     it("check the withdraw call from not owner", async () => {
-    //         await expect(TOSVault.connect(person5).withdraw(
-    //             person5.address,
-    //             totalAmount
-    //         )).to.be.revertedWith("Accessible: Caller is not an admin")
-    //     })
+        it("check the withdraw call from not owner", async () => {
+            await expect(TOSVaultLogic.connect(person5).withdraw(
+                person5.address,
+                totalAmount
+            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        })
 
-    //     it("check the withdraw call from owner", async () => {
-    //         let tx = await erc20.balanceOf(person2.address);
-    //         expect(tx).to.be.equal(0);
+        it("check the withdraw call from owner", async () => {
+            let tx = await erc20.balanceOf(person2.address);
+            expect(tx).to.be.equal(0);
 
-    //         await TOSVault.connect(person2).withdraw(
-    //             person2.address,
-    //             totalAmount
-    //         )
+            await TOSVaultLogic.connect(person2).withdraw(
+                person2.address,
+                totalAmount
+            )
 
-    //         let tx2 = await erc20.balanceOf(person2.address);
-    //         expect(tx2).to.be.equal(totalAmount);
+            let tx2 = await erc20.balanceOf(person2.address);
+            expect(tx2).to.be.equal(totalAmount);
 
-    //         await erc20.connect(person2).transfer(TOSVault.address,totalAmount)
-    //     })
+            await erc20.connect(person2).transfer(TOSVaultLogic.address,totalAmount)
+        })
 
-    //     it("check the changeToken call from not owner", async () => {
-    //         await expect(TOSVault.connect(person5).changeToken(
-    //             erc20_1.address
-    //         )).to.be.revertedWith("Accessible: Caller is not an admin")
-    //     })
+        it("check the changeToken call from not owner", async () => {
+            await expect(TOSVaultLogic.connect(person5).changeToken(
+                erc20_1.address
+            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        })
 
-    //     it("check the changeToken call from owner", async () => {
-    //         let tx = await TOSVault.token();
-    //         expect(tx).to.be.equal(erc20.address)
-    //         await TOSVault.connect(person2).changeToken(
-    //             erc20_1.address
-    //         )
-    //         let tx2 = await TOSVault.token();
-    //         expect(tx2).to.be.equal(erc20_1.address)
+        it("check the changeToken call from owner", async () => {
+            let tx = await TOSVaultLogic.token();
+            expect(tx).to.be.equal(erc20.address)
+            await TOSVaultLogic.connect(person2).changeToken(
+                erc20_1.address
+            )
+            let tx2 = await TOSVaultLogic.token();
+            expect(tx2).to.be.equal(erc20_1.address)
 
-    //         await TOSVault.connect(person2).changeToken(
-    //             erc20.address
-    //         )
-    //     })
+            await TOSVaultLogic.connect(person2).changeToken(
+                erc20.address
+            )
+        })
 
-    //     it("check the initialize after input token", async ()  => {
-    //         let curBlock = await ethers.provider.getBlock();
-    //         claim1Time = curBlock.timestamp + (60*5);
-    //         claim2Time = curBlock.timestamp + (60*8);
-    //         claim3Time = curBlock.timestamp + (60*15);
-    //         claim4Time = curBlock.timestamp + (60*20);
-    //         claim5Time = curBlock.timestamp + (60*23);
-    //         claim6Time = curBlock.timestamp + (60*30);
+        it("check the initialize after input token", async ()  => {
+            let curBlock = await ethers.provider.getBlock();
+            claim1Time = curBlock.timestamp + (60*5);
+            claim2Time = curBlock.timestamp + (60*8);
+            claim3Time = curBlock.timestamp + (60*15);
+            claim4Time = curBlock.timestamp + (60*20);
+            claim5Time = curBlock.timestamp + (60*23);
+            claim6Time = curBlock.timestamp + (60*30);
 
-    //         await TOSVault.connect(person2).initialize(
-    //             totalAmount,
-    //             totalClaim,
-    //             [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-    //             [claim1,claim2,claim3,claim4,claim5,claim6]
-    //         );
+            await TOSVaultLogic.connect(person2).initialize(
+                totalAmount,
+                totalClaim,
+                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                [claim1,claim2,claim3,claim4,claim5,claim6]
+            );
 
-    //         expect(await TOSVault.totalAllocatedAmount()).to.equal(totalAmount);
-    //         expect(await TOSVault.totalClaimCounts()).to.equal(totalClaim);
+            expect(await TOSVaultLogic.totalAllocatedAmount()).to.equal(totalAmount);
+            expect(await TOSVaultLogic.totalClaimCounts()).to.equal(totalClaim);
 
-    //         let tx = await TOSVault.claimTimes(0);
-    //         expect(tx).to.equal(claim1Time)
+            let tx = await TOSVaultLogic.claimTimes(0);
+            expect(tx).to.equal(claim1Time)
             
-    //         let tx2 = await TOSVault.claimAmounts(0);
-    //         expect(tx2).to.equal(claim1)
+            let tx2 = await TOSVaultLogic.claimAmounts(0);
+            expect(tx2).to.equal(claim1)
 
-    //         let tx3 = await TOSVault.claimAmounts(3);
-    //         expect(tx3).to.equal(claim4)
+            let tx3 = await TOSVaultLogic.claimAmounts(3);
+            expect(tx3).to.equal(claim4)
 
-    //         let tx4 = await TOSVault.claimAmounts(5);
-    //         expect(tx4).to.equal(claim6)
-    //     })
+            let tx4 = await TOSVaultLogic.claimAmounts(5);
+            expect(tx4).to.equal(claim6)
+        })
 
-    //     it("check the withdraw after setting", async () => {
-    //         await expect(TOSVault.connect(person2).withdraw(
-    //             person2.address,
-    //             totalAmount
-    //         )).to.be.revertedWith("Accessible: Caller is not an admin")
-    //     })
+        it("check the withdraw after setting", async () => {
+            await expect(TOSVaultLogic.connect(person2).withdraw(
+                person2.address,
+                totalAmount
+            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        })
 
-    //     it("check the changeToken after setting", async () => {
-    //         await expect(TOSVault.connect(person2).changeToken(
-    //             erc20_1.address
-    //         )).to.be.revertedWith("Accessible: Caller is not an admin")
-    //     })
+        it("check the changeToken after setting", async () => {
+            await expect(TOSVaultLogic.connect(person2).changeToken(
+                erc20_1.address
+            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        })
 
-    //     it("check the initialize after setting", async () => {
-    //         await expect(TOSVault.connect(person2).initialize(
-    //             totalAmount,
-    //             totalClaim,
-    //             [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
-    //             [claim1,claim2,claim3,claim4,claim5,claim6]
-    //         )).to.be.revertedWith("Accessible: Caller is not an admin")
-    //     })
+        it("check the initialize after setting", async () => {
+            await expect(TOSVaultLogic.connect(person2).initialize(
+                totalAmount,
+                totalClaim,
+                [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
+                [claim1,claim2,claim3,claim4,claim5,claim6]
+            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        })
 
-    //     it("claim call before startTime", async () => {
-    //         await expect(TOSVault.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
-    //     })
+        it("claim call before startTime", async () => {
+            await expect(TOSVaultLogic.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
+        })
 
-    //     it("need the approve", async () => {
-    //         expect(await erc20.allowance(TOSVault.address,dividedPool.address)).to.equal(0);
-    //         // let tx = await erc20.allowance(TOSVault.address,dividedPool.address)
-    //         // console.log("allowance1 :", tx)
-    //         await TOSVault.approve();      
-    //         // let tx2 = await erc20.allowance(TOSVault.address,dividedPool.address)
-    //         // console.log("allowance2 :", tx2)      
-    //         expect(await erc20.allowance(TOSVault.address,dividedPool.address)).to.equal(totalAmount);
-    //     })
+        it("need the approve", async () => {
+            expect(await erc20.allowance(TOSVaultLogic.address,dividedPool.address)).to.equal(0);
+            // let tx = await erc20.allowance(TOSVault.address,dividedPool.address)
+            // console.log("allowance1 :", tx)
+            await TOSVaultLogic.approve();      
+            // let tx2 = await erc20.allowance(TOSVault.address,dividedPool.address)
+            // console.log("allowance2 :", tx2)      
+            expect(await erc20.allowance(TOSVaultLogic.address,dividedPool.address)).to.equal(totalAmount);
+        })
 
-    //     it("check claimable amount is 0", async () => {
-    //         let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
-    //         // console.log(tx)
-    //         expect(tx).to.be.equal(0)
-    //     }).timeout(1000000)
+        it("check claimable amount is 0", async () => {
+            let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
+            // console.log(tx)
+            expect(tx).to.be.equal(0)
+        }).timeout(1000000)
 
-    //     it("anyone can call claim", async () => {
-    //         expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
+        it("anyone can call claim", async () => {
+            expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
     
-    //         await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
-    //         await ethers.provider.send('evm_mine');
+            await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
+            await ethers.provider.send('evm_mine');
 
-    //         let round = await TOSVault.currentRound()
-    //         expect(round).to.equal(1);
-    //         let calculClaimAmount = await TOSVault.calculClaimAmount(1)
-    //         expect(calculClaimAmount).to.be.equal(claim1);
+            let round = await TOSVaultLogic.currentRound()
+            expect(round).to.equal(1);
+            let calculClaimAmount = await TOSVaultLogic.calculClaimAmount(1)
+            expect(calculClaimAmount).to.be.equal(claim1);
             
-    //         await TOSVault.connect(person1).claim();
+            await TOSVaultLogic.connect(person1).claim();
 
-    //         expect(await erc20.balanceOf(dividedPool.address)).to.equal(claim1);
-    //     })
+            expect(await erc20.balanceOf(dividedPool.address)).to.equal(claim1);
+        })
 
         
-    //     it("dividedPool added storage erc20.address", async () => {
-    //         // let address6 = await dividedPool.distributedTokens(9);
-    //         // expect(address6).to.be.equal(erc20.address);
+        it("dividedPool added storage erc20.address", async () => {
+            // let address6 = await dividedPool.distributedTokens(9);
+            // expect(address6).to.be.equal(erc20.address);
         
-    //         let tx2 = await dividedPool.distributions(erc20.address)
-    //         // console.log(tx2);
-    //         expect(tx2.exists).to.be.equal(true);
-    //     })
+            let tx2 = await dividedPool.distributions(erc20.address)
+            // console.log(tx2);
+            expect(tx2.exists).to.be.equal(true);
+        })
             
             
-    //     it("anyone can call claim2", async () => {
-    //         expect(await erc20.balanceOf(dividedPool.address)).to.equal(claim1);
+        it("anyone can call claim2", async () => {
+            expect(await erc20.balanceOf(dividedPool.address)).to.equal(claim1);
         
-    //         await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time]);
-    //         await ethers.provider.send('evm_mine');
+            await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time]);
+            await ethers.provider.send('evm_mine');
         
-    //         let round = await TOSVault.currentRound()
-    //         expect(round).to.equal(2);
-    //         let calculClaimAmount = await TOSVault.calculClaimAmount(2)
-    //         expect(calculClaimAmount).to.be.equal(claim2);
+            let round = await TOSVaultLogic.currentRound()
+            expect(round).to.equal(2);
+            let calculClaimAmount = await TOSVaultLogic.calculClaimAmount(2)
+            expect(calculClaimAmount).to.be.equal(claim2);
         
-    //         await TOSVault.connect(person2).claim();
+            await TOSVaultLogic.connect(person2).claim();
             
         
-    //         let tx = await erc20.balanceOf(dividedPool.address)
-    //         let tx2 = Number(claim1)
-    //         let tx3 = Number(claim2)
-    //         let tx4 = tx2+tx3
+            let tx = await erc20.balanceOf(dividedPool.address)
+            let tx2 = Number(claim1)
+            let tx3 = Number(claim2)
+            let tx4 = tx2+tx3
         
-    //         expect(Number(tx)).to.equal(tx4);
-    //     })
+            expect(Number(tx)).to.equal(tx4);
+        })
                 
-    //     it("need to duration for check the claimable", async () => {
-    //         await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time + (86400*10)]);
-    //         await ethers.provider.send('evm_mine');
+        it("need to duration for check the claimable", async () => {
+            await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time + (86400*10)]);
+            await ethers.provider.send('evm_mine');
         
-    //         // await dividedPool.connect(person1).claimBatch([erc20.address]);
-    //         // expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
-    //     })  
+            // await dividedPool.connect(person1).claimBatch([erc20.address]);
+            // expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
+        })  
                         
-    //     it("check claimable amount is above 0 ", async () => {
-    //         let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
-    //         // console.log(tx)
-    //         expect(tx).to.be.above(0);
-    //     }).timeout(1000000)
+        it("check claimable amount is above 0 ", async () => {
+            let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
+            // console.log(tx)
+            expect(tx).to.be.above(0);
+        }).timeout(1000000)
 
-    //     it("anyone can call claim6", async () => {
-    //         let tx = await erc20.balanceOf(dividedPool.address)
-    //         let claim1A = Number(claim1)
-    //         let claim2A = Number(claim2)
-    //         let tx2 = claim1A+claim2A
-    //         expect(Number(tx)).to.equal(tx2);
+        it("anyone can call claim6", async () => {
+            let tx = await erc20.balanceOf(dividedPool.address)
+            let claim1A = Number(claim1)
+            let claim2A = Number(claim2)
+            let tx2 = claim1A+claim2A
+            expect(Number(tx)).to.equal(tx2);
 
-    //         // await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
-    //         // await ethers.provider.send('evm_mine');
+            // await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
+            // await ethers.provider.send('evm_mine');
 
-    //         let round = await TOSVault.currentRound()
-    //         expect(round).to.equal(6);
+            let round = await TOSVaultLogic.currentRound()
+            expect(round).to.equal(6);
             
-    //         await TOSVault.connect(person3).claim();
+            await TOSVaultLogic.connect(person3).claim();
 
-    //         let claimAfter = await erc20.balanceOf(dividedPool.address)
-    //         let claim3A = Number(claim3)
-    //         let claim4A = Number(claim4)
-    //         let claim5A = Number(claim5)
-    //         let claim6A = Number(claim6)
-    //         let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
+            let claimAfter = await erc20.balanceOf(dividedPool.address)
+            let claim3A = Number(claim3)
+            let claim4A = Number(claim4)
+            let claim5A = Number(claim5)
+            let claim6A = Number(claim6)
+            let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
 
-    //         expect(Number(claimAfter)).to.equal(claimAfterAmount2);
-    //     })
-    // })
+            expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+        })
+    })
 
 })
