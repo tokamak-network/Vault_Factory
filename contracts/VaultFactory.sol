@@ -7,8 +7,6 @@ import "./common/AccessibleCommon.sol";
 /// @title A factory that creates a Vault
 contract VaultFactory is AccessibleCommon, IVaultFactory {
 
-    event CreatedTOSVaultProxy(address contractAddress, string name);
-
     modifier nonZero(uint256 val) {
         require(val > 0 , "zero V");
         _;

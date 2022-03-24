@@ -1,20 +1,22 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {TOSVaultProxy} from "./TosVault/TOSVaultProxy.sol";
-import "./interfaces/ITOSFactory.sol";
+import {TONVaultProxy} from "./tonVault/TONVaultProxy.sol";
+import "./interfaces/ITONFactory.sol";
 import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TOSVaultFactory is VaultFactory, ITOSFactory { 
-    event CreatedTOSVaultProxy(address contractAddress, string name);
+contract TONVaultFactory is VaultFactory, ITONFactory { 
+    event CreatedTONVaultProxy(address contractAddress, string name);
 
     address public owner;   
 
     /// @dev the fixed address of divided Pool
     address public dividedPoolProxy;
 
-    /// @inheritdoc ITOSFactory
+    constructor() {}
+
+    /// @inheritdoc ITONFactory
     function create(
         string calldata _name,
         address _token,
@@ -26,7 +28,7 @@ contract TOSVaultFactory is VaultFactory, ITOSFactory {
     {
         require(bytes(_name).length > 0,"name is empty");
 
-        TOSVaultProxy _proxy = new TOSVaultProxy();
+        TONVaultProxy _proxy = new TONVaultProxy();
 
         require(
             address(_proxy) != address(0),
@@ -49,12 +51,12 @@ contract TOSVaultFactory is VaultFactory, ITOSFactory {
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
 
-        emit CreatedTOSVaultProxy(address(_proxy), _name);
+        emit CreatedTONVaultProxy(address(_proxy), _name);
 
         return address(_proxy);
     } 
 
-    /// @inheritdoc ITOSFactory
+    /// @inheritdoc ITONFactory
     function setinfo(
         address _dividedPool
     ) 
