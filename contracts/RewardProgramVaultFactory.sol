@@ -10,13 +10,6 @@ import "./VaultFactory.sol";
 /// @title A factory that creates a Vault
 contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
 
-
-    // address public uniswapV3Factory;
-    // address public nonfungiblePositionManager;
-    // address public swapRouter;
-    // address public wethUsdcPool;
-    // address public wtonWethPool;
-    // address public wtonTosPool;
     address public staker;
 
     /// @inheritdoc IRewardProgramVaultFactory
@@ -56,6 +49,7 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
         _proxy.addProxyAdmin(upgradeAdmin);
         _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
+        _proxy.setLogEventAddress(logEventAddress, true);
 
         _proxy.setBaseInfoProxy(
             _name,

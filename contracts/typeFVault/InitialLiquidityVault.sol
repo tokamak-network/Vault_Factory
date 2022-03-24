@@ -6,6 +6,7 @@ import "../interfaces/IUniswapV3Pool.sol";
 import "../interfaces/INonfungiblePositionManager.sol";
 import "../interfaces/IInitialLiquidityVaultEvent.sol";
 import "../interfaces/IInitialLiquidityVaultAction.sol";
+import "../interfaces/IEventLog.sol";
 
 import "../libraries/TickMath.sol";
 // import "../libraries/PoolAddress.sol";
@@ -61,6 +62,11 @@ contract InitialLiquidityVault is
     constructor() {
     }
 
+    function LogEvent(string memory _eventName, bytes memory data) internal {
+        if(boolLogEvent)
+            IEventLog(logEventAddress).logEvent("InitialLiquidityVault", _eventName, address(this), data);
+    }
+
     /// @inheritdoc IInitialLiquidityVaultAction
     function setBaseInfo(
         string memory _name,
@@ -77,6 +83,8 @@ contract InitialLiquidityVault is
             _setupRole(PROJECT_ADMIN_ROLE, _owner);
         }
 
+        LogEvent("SetBaseInfo", abi.encode(_name,_token,_owner));
+
         emit SetBaseInfo(_name, _token, _owner);
     }
 
@@ -89,7 +97,7 @@ contract InitialLiquidityVault is
     {
         require(boolReadyToCreatePool != _boolReadyToCreatePool, "same boolReadyToCreatePool");
         boolReadyToCreatePool = _boolReadyToCreatePool;
-
+        LogEvent("SetBoolReadyToCreatePool", abi.encode(_boolReadyToCreatePool));
         emit SetBoolReadyToCreatePool(_boolReadyToCreatePool);
     }
 
@@ -105,7 +113,7 @@ contract InitialLiquidityVault is
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;
         initSqrtPriceX96 = initSqrtPrice;
-
+        LogEvent("SetBoolSetInitialPriceReadyToCreatePool", abi.encode(tosPrice, tokenPrice, initSqrtPrice));
         emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
     }
 
@@ -117,7 +125,7 @@ contract InitialLiquidityVault is
     {
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _totalAllocatedAmount;
-
+        LogEvent("Initialized", abi.encode(_totalAllocatedAmount));
         emit Initialized(_totalAllocatedAmount);
     }
 
@@ -155,6 +163,7 @@ contract InitialLiquidityVault is
         else if(fee == 3000) tickSpacings = 60;
         else if(fee == 10000) tickSpacings = 200;
 
+        LogEvent("SetTokens", abi.encode(tos, _fee, tickSpacings));
         emit SetTokens(tos, _fee, tickSpacings);
     }
 
@@ -162,7 +171,7 @@ contract InitialLiquidityVault is
     function changeToken(address _token) external override onlyOwner beforeSetReadyToCreatePool
     {
         token = IERC20(_token);
-
+        LogEvent("changeToken", abi.encode(_token));
         emit ChangedToken(_token);
     }
 
@@ -183,7 +192,7 @@ contract InitialLiquidityVault is
         if(initSqrtPriceX96 > 0){
             setPoolInitialize(initSqrtPriceX96);
         }
-
+        LogEvent("chaSetPoolngeToken", abi.encode(address(pool), token0Address, token1Address));
         emit SetPool(address(pool), token0Address, token1Address);
     }
 
@@ -194,7 +203,7 @@ contract InitialLiquidityVault is
         (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
         if(sqrtPriceX96 == 0){
             pool.initialize(inSqrtPriceX96);
-
+            LogEvent("SetPoolInitialized", abi.encode(inSqrtPriceX96));
             emit SetPoolInitialized(inSqrtPriceX96);
         }
     }
@@ -305,7 +314,7 @@ contract InitialLiquidityVault is
 
         require(tokenId > 0, "tokenId is zero");
         lpToken = tokenId;
-
+        LogEvent("MintedInVault", abi.encode(msg.sender, tokenId, liquidity, amount0, amount1));
         emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
     }
 
@@ -330,6 +339,7 @@ contract InitialLiquidityVault is
         (uint128 liquidity, uint256 amount0, uint256 amount1) = NonfungiblePositionManager.increaseLiquidity(INonfungiblePositionManager.IncreaseLiquidityParams(
                 lpToken, amount0Desired, amount1Desired, 0, 0, block.timestamp + 100000));
 
+        LogEvent("IncreaseLiquidityInVault", abi.encode(lpToken, liquidity, amount0, amount1));
         emit IncreaseLiquidityInVault(lpToken, liquidity, amount0, amount1);
     }
 
@@ -350,7 +360,7 @@ contract InitialLiquidityVault is
                 lpToken, address(this), tokensOwed0, tokensOwed1
             )
         );
-
+        LogEvent("CollectInVault", abi.encode(lpToken, amount0, amount1));
         emit CollectInVault(lpToken, amount0, amount1);
     }
 
@@ -365,6 +375,7 @@ contract InitialLiquidityVault is
         require(_amount <= IERC20(_token).balanceOf(address(this)), "balance is insufficient");
 
         IERC20(_token).safeTransfer(_account, _amount);
+        LogEvent("WithdrawalInVault", abi.encode(msg.sender, _token, _account, _amount));
         emit WithdrawalInVault(msg.sender, _token, _account, _amount);
     }
 }

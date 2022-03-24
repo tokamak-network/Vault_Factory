@@ -20,7 +20,20 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
         _setupRole(PROJECT_ADMIN_ROLE, msg.sender);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
 
+    /// @inheritdoc IProxyAction
+    function setLogEventAddress(address _addr, bool _boolLogEvent) external override onlyProxyOwner {
+        require(logEventAddress != _addr && _addr != address(0), "same value or zero");
+        logEventAddress = _addr;
+        if(boolLogEvent != _boolLogEvent) boolLogEvent = _boolLogEvent;
+    }
+
+    /// @inheritdoc IProxyAction
+    function setBoolLogEvent(bool _boolLogEvent) external override onlyProxyOwner {
+        require(boolLogEvent != _boolLogEvent, "same value");
+        if(_boolLogEvent) require(logEventAddress != address(0), "zero logEventAddress");
+        boolLogEvent = _boolLogEvent;
     }
 
     /// @inheritdoc IProxyAction

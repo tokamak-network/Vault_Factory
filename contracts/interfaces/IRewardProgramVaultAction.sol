@@ -66,4 +66,10 @@ interface IRewardProgramVaultAction {
 
     /// @dev create reward program
     function createProgram() external;
+
+    /// @dev end reward program
+    /// @param _index _index
+    /// @param tokenIds need to unstake
+    function IncentiveEnded(uint256 _index, uint256[] memory tokenIds) external;
+
 }

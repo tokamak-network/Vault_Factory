@@ -26,6 +26,7 @@ interface IIInitialLiquidityVaultAction {
             uint24 _fee
         )
         external;
+
 }
 
 /// @title A factory that creates a Vault
@@ -80,6 +81,7 @@ contract InitialLiquidityVaultFactory is VaultFactory, IInitialLiquidityVaultFac
         _proxy.addProxyAdmin(upgradeAdmin);
         _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
+        _proxy.setLogEventAddress(logEventAddress, true);
 
         _proxy.setBaseInfoProxy(
             _name,

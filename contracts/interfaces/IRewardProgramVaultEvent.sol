@@ -37,4 +37,20 @@ interface IRewardProgramVaultEvent {
         uint256 reward
     );
 
+    /// @notice Event that can be emitted when a liquidity mining incentive has ended
+    /// @param rewardToken The token being distributed as a reward
+    /// @param pool The Uniswap V3 pool
+    /// @param startTime The time when the incentive program begins
+    /// @param endTime The time when rewards stop accruing
+    /// @param refundee The address which receives any remaining reward tokens after the end time
+    /// @param refund The amount of reward tokens refunded
+    event IncentiveEndedByRewardProgram(
+        address indexed rewardToken,
+        address indexed pool,
+        uint256 startTime,
+        uint256 endTime,
+        address refundee,
+        uint256 refund
+    );
+
 }

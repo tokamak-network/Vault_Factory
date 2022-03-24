@@ -12,6 +12,7 @@ contract RewardProgramVaultStorage is ReentrancyGuard {
     struct IncentiveProgram {
         IUniswapV3Staker.IncentiveKey key;
         uint256 reward;
+        bool end;
     }
 
     IERC20Minimal public token;  // project token

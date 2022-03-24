@@ -43,6 +43,7 @@ interface IILiquidityVaultAction {
             uint24 _fee
         )
         external;
+
 }
 
 /// @title A factory that creates a Vault
@@ -113,6 +114,7 @@ contract LiquidityVaultFactory is VaultFactory, ILiquidityVaultFactory {
         _proxy.addProxyAdmin(upgradeAdmin);
         _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
+        _proxy.setLogEventAddress(logEventAddress, true);
 
         _proxy.setBaseInfoProxy(
             _name,
@@ -125,6 +127,7 @@ contract LiquidityVaultFactory is VaultFactory, ILiquidityVaultFactory {
         IILiquidityVaultAction(address(_proxy)).setUniswapInfo(uniswapV3Factory, nonfungiblePositionManager, swapRouter);
         IILiquidityVaultAction(address(_proxy)).setPoolInfo(wethUsdcPool, wtonWethPool, wtonTosPool);
         IILiquidityVaultAction(address(_proxy)).setTokens(wton, tos, fee);
+
 
         _proxy.removeAdmin();
         // _proxy.removeProxyAdmin();

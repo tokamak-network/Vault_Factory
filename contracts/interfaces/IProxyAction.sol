@@ -7,6 +7,16 @@ interface IProxyAction {
 
     /// onlyProxyOwner
 
+    /// @dev set LogEvent Contract address
+    /// @param _addr logEvent contract address
+    /// @param _boolLogEvent if it's true, logEvent will be set.
+    function setLogEventAddress(address _addr, bool _boolLogEvent) external ;
+
+    /// @dev set whether LogEvent is set
+    /// @param _boolLogEvent if it's true, logEvent will be set.
+    function setBoolLogEvent(bool _boolLogEvent) external ;
+
+
     /// @dev set the implementation address and status of the proxy[index]
     /// @param newImplementation Address of the new implementation.
     /// @param _index index

@@ -4,6 +4,7 @@ pragma solidity ^0.8.4;
 import "../interfaces/IRewardProgramVaultEvent.sol";
 import "../interfaces/IRewardProgramVaultAction.sol";
 import "../interfaces/IUniswapV3Staker.sol";
+import "../interfaces/IEventLog.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -28,6 +29,11 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
     ///@dev constructor
     constructor() {
+    }
+
+    function LogEvent(string memory _eventName, bytes memory data) internal {
+        if(boolLogEvent)
+            IEventLog(logEventAddress).logEvent("RewardProgramVault", _eventName, address(this), data);
     }
 
     /// @inheritdoc IRewardProgramVaultAction
@@ -86,7 +92,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             else claimAmounts[i]= _claimAmounts[i];
 
         }
-
+        LogEvent("Initialized", abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
         emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
     }
 
@@ -138,11 +144,12 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         totalClaimsAmount += reward;
         uint256 idx = totalProgramCount;
-        programs[idx] = IncentiveProgram(key, reward);
+        programs[idx] = IncentiveProgram(key, reward, false);
         totalProgramCount++;
 
         staker.createIncentive(key, reward);
 
+        LogEvent("IncentiveCreatedByRewardProgram", abi.encode(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward));
         emit IncentiveCreatedByRewardProgram(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward);
     }
 
@@ -169,6 +176,34 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             amount
         );
 
+    }
+
+    /// @inheritdoc IRewardProgramVaultAction
+    function IncentiveEnded(uint256 idx, uint256[] memory tokenIds)
+        public override nonReentrant
+        nonZeroAddress(address(pool))
+    {
+        require(totalProgramCount > 0, "no programs");
+        require(idx < totalProgramCount, "invalid index");
+        require(programs[idx].end == false, "already end");
+        programs[idx].end = true;
+        bytes32 incentiveId = keccak256(abi.encode(programs[idx].key));
+
+        ( ,, uint96 numberOfStakes) = staker.incentives(incentiveId);
+
+        if(numberOfStakes > 0)  require(tokenIds.length > 0, "there are stakers.");
+
+        for(uint256 i = 0; i < tokenIds.length; i++){
+            staker.unstakeToken(programs[idx].key, tokenIds[i]);
+        }
+
+        ( ,, uint96 numberOfStakesAfter) = staker.incentives(incentiveId);
+        require(numberOfStakesAfter == 0, "after unstakes, there are stakers.");
+
+        uint256 refund = staker.endIncentive(programs[idx].key);
+
+        LogEvent("IncentiveEndedByRewardProgram", abi.encode(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund));
+        emit IncentiveEndedByRewardProgram(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund);
     }
 
 }

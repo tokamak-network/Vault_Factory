@@ -5,6 +5,12 @@ interface IVaultFactory {
 
     /// ###### only admin ######
 
+
+    /// @dev set LogEvent Contract address
+    /// @param _addr logEvent contract address
+    function setLogEventAddress(address _addr) external ;
+
+
     /// @dev designate an admin to upgrade the vault logic later.
     /// @param addr the upgradeAdmin address
     function setUpgradeAdmin(
