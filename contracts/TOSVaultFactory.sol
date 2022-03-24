@@ -6,30 +6,24 @@ import "./interfaces/ITOSFactory.sol";
 import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TOSVaultFactory is VaultFactory { 
-
-    event CreatedTOSVaultProxy(address contractAddress, string name);
+contract TOSVaultFactory is VaultFactory, ITOSFactory { 
 
     address public owner;   
 
     /// @dev the fixed address of divided Pool
     address public dividedPoolProxy;
 
-    function setinfo(
-        address _dividedPool
-    ) 
-        external
-        onlyOwner 
-    {
-        dividedPoolProxy = _dividedPool;
-    }
+    constructor() {}
 
+    /// @inheritdoc ITOSFactory
     function create(
         string calldata _name,
         address _token,
         address _owner
     )
-        external returns (address)
+        external
+        override
+        returns (address)
     {
         require(bytes(_name).length > 0,"name is empty");
 
@@ -60,4 +54,16 @@ contract TOSVaultFactory is VaultFactory {
 
         return address(_proxy);
     } 
+
+    /// @inheritdoc ITOSFactory
+    function setinfo(
+        address _dividedPool
+    ) 
+        external
+        override
+        onlyOwner 
+    {
+        dividedPoolProxy = _dividedPool;
+    }
+
 }

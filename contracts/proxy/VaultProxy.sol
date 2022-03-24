@@ -9,8 +9,7 @@ import "../interfaces/IProxyAction.sol";
 import "./VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
-contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction
-{
+contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction {
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
@@ -19,7 +18,6 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         _setRoleAdmin(PROJECT_ADMIN_ROLE, PROJECT_ADMIN_ROLE);
         _setupRole(PROJECT_ADMIN_ROLE, msg.sender);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-
     }
 
     /// @inheritdoc IProxyAction
@@ -54,12 +52,6 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         bytes4[] calldata _selectors,
         address _imp
     ) public override onlyProxyOwner {
-        require(
-            _selectors.length > 0,
-            "Proxy: _selectors's size is zero"
-        );
-        require(aliveImplementation[_imp], "Proxy: _imp is not alive");
-
         for (uint256 i = 0; i < _selectors.length; i++) {
             require(
                 selectorImplementation[_selectors[i]] != _imp,
@@ -67,7 +59,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
             );
             selectorImplementation[_selectors[i]] = _imp;
             emit SetSelectorImplementation(_selectors[i], _imp);
-        }
+        }    
     }
 
     /// @dev set the implementation address and status of the proxy[index]
@@ -79,10 +71,6 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         uint256 _index,
         bool _alive
     ) internal {
-        require(
-            Address.isContract(newImplementation),
-            "Proxy: Cannot set a proxy implementation to a non-contract address"
-        );
         if (_alive) proxyImplementation[_index] = newImplementation;
         _setAliveImplementation2(newImplementation, _alive);
     }
@@ -124,7 +112,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
 
     /// @dev receive ether
     receive() external payable {
-        revert("cannot receive");
+        revert("cannot receive Ether");
     }
 
     /// @dev fallback function , execute on undefined function call
@@ -138,7 +126,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
 
         require(
             _impl != address(0) && !pauseProxy,
-            "Proxy: impl OR proxy is false"
+            "Proxy: false"
         );
 
         assembly {

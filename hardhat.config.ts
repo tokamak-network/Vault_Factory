@@ -26,7 +26,7 @@ const config: HardhatUserConfig = {
   solidity: "0.8.4",
   networks: {
     hardhat: {
-      allowUnlimitedContractSize: true,
+      // allowUnlimitedContractSize: true,
       forking: {
         url: "https://eth-rinkeby.alchemyapi.io/v2/HcHq2tP2MKaf_Evx-_YS_t8GLoHfEj-h",
       }

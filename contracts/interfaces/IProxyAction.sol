@@ -31,8 +31,7 @@ interface IProxyAction {
     function setSelectorImplementations2(
         bytes4[] calldata _selectors,
         address _imp
-    ) external  ;
-
+    ) external;
 
 
     /// onlyOwner
@@ -40,7 +39,6 @@ interface IProxyAction {
     /// @notice Set pause state
     /// @param _pause true:pause or false:resume
     function setProxyPause(bool _pause) external ;
-
 
 
     /// anybody
