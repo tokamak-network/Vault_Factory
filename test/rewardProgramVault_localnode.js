@@ -308,6 +308,33 @@ describe("RewardProgramVault", function () {
 
         });
 
+        it("0-8. setWaitStartSeconds : when not admin, fail ", async function () {
+
+            await expect(
+                rewardProgramVaultFactory.connect(user2).setWaitStartSeconds(vaultInfo.waitStartTime)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
+
+
+        it("0-3. create : fail when it's not set WaitStartSeconds ", async function () {
+            await expect(
+                rewardProgramVaultFactory.create(
+                    vaultInfo.name,
+                    vaultInfo.poolAddress,
+                    vaultInfo.allocateToken.address,
+                    vaultInfo.admin.address
+                )
+            ).to.be.revertedWith("zero vaule");
+        });
+
+        it("0-8. setWaitStartSeconds   ", async function () {
+
+            await rewardProgramVaultFactory.connect(admin1).setWaitStartSeconds(vaultInfo.waitStartTime);
+            expect(await rewardProgramVaultFactory.waitStartSeconds()).to.be.eq(vaultInfo.waitStartTime);
+
+        });
+
         it("0-3. create : fail when did'nt set staker ", async function () {
 
             expect(await rewardProgramVaultFactory.staker()).to.be.eq("0x0000000000000000000000000000000000000000");
@@ -316,9 +343,7 @@ describe("RewardProgramVault", function () {
                         vaultInfo.name,
                         vaultInfo.poolAddress,
                         vaultInfo.allocateToken.address,
-                        vaultInfo.admin.address,
-                        vaultInfo.waitStartTime,
-                        vaultInfo.programPeriod
+                        vaultInfo.admin.address
                     )
             ).to.be.revertedWith("zero address");
         });
@@ -335,9 +360,7 @@ describe("RewardProgramVault", function () {
                     vaultInfo.name,
                     vaultInfo.poolAddress,
                     vaultInfo.allocateToken.address,
-                    vaultInfo.admin.address,
-                    vaultInfo.waitStartTime,
-                    vaultInfo.programPeriod
+                    vaultInfo.admin.address
             );
 
             const receipt = await tx.wait();
@@ -513,8 +536,7 @@ describe("RewardProgramVault", function () {
                     vaultInfo.allocateToken.address,
                     uniswapStakerInfo.address,
                     vaultInfo.admin.address,
-                    vaultInfo.waitStartTime,
-                    vaultInfo.programPeriod
+                    vaultInfo.waitStartTime
                 )
             ).to.be.revertedWith("Accessible: Caller is not an admin");
         });
@@ -527,8 +549,7 @@ describe("RewardProgramVault", function () {
                     vaultInfo.allocateToken.address,
                     uniswapStakerInfo.address,
                     vaultInfo.admin.address,
-                    vaultInfo.waitStartTime,
-                    vaultInfo.programPeriod
+                    vaultInfo.waitStartTime
             );
             //console.log('setBaseInfoProxy tx',tx.hash );
             await tx.wait();
@@ -539,7 +560,6 @@ describe("RewardProgramVault", function () {
             expect(await rewardProgramVaultProxy.staker()).to.be.equal(uniswapStakerInfo.address);
             expect(await rewardProgramVaultProxy.isAdmin(vaultInfo.admin.address)).to.be.equal(true);
             expect(await rewardProgramVaultProxy.startWaitTime()).to.be.equal(vaultInfo.waitStartTime);
-            expect(await rewardProgramVaultProxy.programDuration()).to.be.equal(vaultInfo.programPeriod);
         });
 
         it("1-8. setBaseInfoProxy : only once exceute", async function () {
@@ -551,8 +571,7 @@ describe("RewardProgramVault", function () {
                     vaultInfo.allocateToken.address,
                     uniswapStakerInfo.address,
                     vaultInfo.admin.address,
-                    vaultInfo.waitStartTime,
-                    vaultInfo.programPeriod
+                    vaultInfo.waitStartTime
                 )
             ).to.be.revertedWith("already set");
         });
@@ -568,7 +587,6 @@ describe("RewardProgramVault", function () {
             expect(await rewardProgramVaultProxy.staker()).to.be.equal(uniswapStakerInfo.address);
             expect(await rewardProgramVaultProxy.isAdmin(vaultInfo.admin.address)).to.be.equal(true);
             expect(await rewardProgramVaultProxy.startWaitTime()).to.be.equal(vaultInfo.waitStartTime);
-            expect(await rewardProgramVaultProxy.programDuration()).to.be.equal(vaultInfo.programPeriod);
 
             expect(await rewardProgramVaultProxy.implementation2(0)).to.be.equal(rewardProgramVaultLogic);
             expect(await rewardProgramVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
@@ -794,24 +812,22 @@ describe("RewardProgramVault", function () {
 
         it("2-4. changeSetting : when not admin, fail", async function () {
             await expect(
-                rewardProgramVault.connect(user2).changeSetting(vaultInfo.waitStartTime, vaultInfo.programPeriod)
+                rewardProgramVault.connect(user2).changeSetting(vaultInfo.waitStartTime )
              ).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
         it("2-4. changeSetting : when value is zero, fail", async function () {
             await expect(
-                rewardProgramVault.connect(vaultInfo.admin).changeSetting(ethers.BigNumber.from("0"), ethers.BigNumber.from("0"))
+                rewardProgramVault.connect(vaultInfo.admin).changeSetting(ethers.BigNumber.from("0"))
              ).to.be.revertedWith("zero value");
         });
 
         it("2-4. changeSetting ", async function () {
-            await rewardProgramVault.connect(vaultInfo.admin).changeSetting(ethers.BigNumber.from("100"), vaultInfo.programPeriod);
+            await rewardProgramVault.connect(vaultInfo.admin).changeSetting(ethers.BigNumber.from("100") );
             expect(await rewardProgramVaultProxy.startWaitTime()).to.be.equal(ethers.BigNumber.from("100"));
-            expect(await rewardProgramVaultProxy.programDuration()).to.be.equal(vaultInfo.programPeriod);
 
-            await rewardProgramVault.connect(vaultInfo.admin).changeSetting(vaultInfo.waitStartTime, vaultInfo.programPeriod);
+            await rewardProgramVault.connect(vaultInfo.admin).changeSetting(vaultInfo.waitStartTime );
             expect(await rewardProgramVaultProxy.startWaitTime()).to.be.equal(vaultInfo.waitStartTime);
-            expect(await rewardProgramVaultProxy.programDuration()).to.be.equal(vaultInfo.programPeriod);
         });
 
         it("calculate claim variables  ", async function () {
@@ -951,8 +967,20 @@ describe("RewardProgramVault", function () {
             expect(await rewardProgramVault.availableUseAmount(round)).to.be.eq(vaultInfo.claimAmounts[round.toNumber()]);
         });
 
+        it("     claimTimes ", async function () {
+
+            let totalClaimCounts =  await rewardProgramVault.totalClaimCounts();
+            for(let i = 0; i < totalClaimCounts; i++){
+               // let claimTimes =  await rewardProgramVault.claimTimes(i);
+                if(i > 0) expect(await rewardProgramVault.getProgramDuration(i)).to.be.eq(vaultInfo.claimIntervalSeconds);
+            }
+
+            expect(await rewardProgramVault.getProgramDuration(totalClaimCounts)).to.be.eq(vaultInfo.claimIntervalSeconds);
+        });
+
         it("3-4/5. createProgram ", async function () {
             let round = 1;
+
             let totalProgramCount = await rewardProgramVault.totalProgramCount();
 
             let tx = await rewardProgramVault.connect(user2).createProgram();
@@ -1051,7 +1079,6 @@ describe("RewardProgramVault", function () {
 
             let bal = await vaultInfo.allocateToken.balanceOf(rewardProgramVault.address);
             expect(bal).to.be.eq(preBalance.sub(reward));
-
         });
 
     });

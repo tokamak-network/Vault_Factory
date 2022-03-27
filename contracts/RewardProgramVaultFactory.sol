@@ -11,6 +11,19 @@ import "./VaultFactory.sol";
 contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
 
     address public staker;
+    uint256 public waitStartSeconds;
+
+    /// @inheritdoc IRewardProgramVaultFactory
+    function setWaitStartSeconds(
+        uint256 _waitStartSeconds
+    )
+        external override
+        nonZero(_waitStartSeconds)
+        onlyOwner
+    {
+        require(waitStartSeconds != _waitStartSeconds, "same waitStartSeconds");
+        waitStartSeconds = _waitStartSeconds;
+    }
 
     /// @inheritdoc IRewardProgramVaultFactory
     function setStaker(
@@ -30,14 +43,13 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
         string calldata _name,
         address pool,
         address rewardToken,
-        address _admin,
-        uint256 waitStartTime,
-        uint256 programPeriod
+        address _admin
     )
         external override
         nonZeroAddress(upgradeAdmin)
         nonZeroAddress(vaultLogic)
         nonZeroAddress(logEventAddress)
+        nonZero(waitStartSeconds)
         returns (address)
     {
         require(bytes(_name).length > 0,"name is empty");
@@ -60,8 +72,7 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
             rewardToken,
             staker,
             _admin,
-            waitStartTime,
-            programPeriod
+            waitStartSeconds
         );
 
         _proxy.removeAdmin();
