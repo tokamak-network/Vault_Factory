@@ -69,6 +69,11 @@ async function main() {
   await tx.wait();
   console.log("setStaker:", tx.hash);
 
+  const EventLog = loadDeployed(process.env.NETWORK, "EventLog");
+  tx = await rewardProgramVaultFactoryContract.connect(deployer).setLogEventAddress(EventLog);
+  await tx.wait();
+  console.log("setLogEventAddress:", tx.hash);
+
   const RewardProgramVaultAddress = loadDeployed(process.env.NETWORK, "RewardProgramVault");
   tx = await rewardProgramVaultFactoryContract.connect(deployer).setLogic(RewardProgramVaultAddress);
   await tx.wait();

@@ -35,6 +35,9 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
         uint256 programPeriod
     )
         external override
+        nonZeroAddress(upgradeAdmin)
+        nonZeroAddress(vaultLogic)
+        nonZeroAddress(logEventAddress)
         returns (address)
     {
         require(bytes(_name).length > 0,"name is empty");

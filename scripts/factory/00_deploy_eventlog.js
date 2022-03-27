@@ -15,16 +15,16 @@ async function main() {
     address: ""
   }
 
-  const LiquidityVault = await ethers.getContractFactory("LiquidityVault");
-  const liquidityVault  = await LiquidityVault.deploy();
+  const EventLog = await ethers.getContractFactory("EventLog");
+  const eventLog  = await EventLog.deploy();
 
-  let tx0 = await liquidityVault.deployed();
-  console.log("LiquidityVault tx0:", tx0.deployTransaction.hash);
-  console.log("LiquidityVault deployed to:", liquidityVault.address);
+  let tx0 = await eventLog.deployed();
+  console.log("EventLog tx0:", tx0.deployTransaction.hash);
+  console.log("EventLog deployed to:", eventLog.address);
 
   deployInfo = {
-      name: "LiquidityVault",
-      address: liquidityVault.address
+      name: "EventLog",
+      address: eventLog.address
   }
 
   save(process.env.NETWORK, deployInfo);

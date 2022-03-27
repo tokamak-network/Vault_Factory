@@ -4,7 +4,7 @@ pragma solidity ^0.8.4;
 /// @title EventLog
 contract EventLog {
 
-    event LogEvent(string indexed contractName, string indexed eventName, address contractAddress, bytes data);
+    event LogEvent(string indexed contractName, string indexed eventName, address indexed contractAddress, bytes data);
 
     constructor() {
     }
