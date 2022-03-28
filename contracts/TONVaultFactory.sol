@@ -14,8 +14,6 @@ contract TONVaultFactory is VaultFactory, ITONFactory {
     /// @dev the fixed address of divided Pool
     address public dividedPoolProxy;
 
-    constructor() {}
-
     /// @inheritdoc ITONFactory
     function create(
         string calldata _name,
