@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./TONVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
-import "../interfaces/ILockTOSDividend.sol";
+import "../interfaces/ITokenDividendPool.sol";
 import "../proxy/VaultStorage.sol";
 
 
@@ -101,7 +101,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
         require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
-        ILockTOSDividend(dividiedPool).distribute(token, amount);
+        ITokenDividendPool(dividiedPool).distribute(token, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
     }
