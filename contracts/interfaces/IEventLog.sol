@@ -6,13 +6,13 @@ pragma solidity ^0.8.4;
 interface IEventLog {
 
     /// @dev logEvent function
-    /// @param contractName contractName
-    /// @param eventName eventName
+    /// @param contractNameHash contractNameHash
+    /// @param eventNameHash eventNameHash
     /// @param contractAddress contractAddress
     /// @param data data
     function logEvent(
-        string memory contractName,
-        string memory eventName,
+        bytes32 contractNameHash,
+        bytes32 eventNameHash,
         address contractAddress,
         bytes memory data
         )

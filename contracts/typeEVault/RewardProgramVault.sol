@@ -31,9 +31,13 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
     constructor() {
     }
 
-    function LogEvent(string memory _eventName, bytes memory data) internal {
+    function LogEvent(bytes32 _eventName, bytes memory data) internal {
         if(boolLogEvent)
-            IEventLog(logEventAddress).logEvent("RewardProgramVault", _eventName, address(this), data);
+            IEventLog(logEventAddress).logEvent(
+                keccak256("RewardProgramVault"),
+                _eventName,
+                address(this),
+                data);
     }
 
     /// @inheritdoc IRewardProgramVaultAction
@@ -90,7 +94,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             else claimAmounts[i]= _claimAmounts[i];
 
         }
-        LogEvent("Initialized", abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
+        LogEvent(keccak256("Initialized"), abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
         emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
     }
 
@@ -147,7 +151,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         staker.createIncentive(key, reward);
 
-        LogEvent("IncentiveCreatedByRewardProgram", abi.encode(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward));
+        LogEvent(keccak256("IncentiveCreatedByRewardProgram"), abi.encode(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward));
         emit IncentiveCreatedByRewardProgram(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward);
     }
 
@@ -214,7 +218,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         uint256 refund = staker.endIncentive(programs[idx].key);
 
-        LogEvent("IncentiveEndedByRewardProgram", abi.encode(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund));
+        LogEvent(keccak256("IncentiveEndedByRewardProgram"), abi.encode(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund));
         emit IncentiveEndedByRewardProgram(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund);
     }
 

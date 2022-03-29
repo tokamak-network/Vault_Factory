@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {InitialLiquidityVaultProxy} from "./typeFVault/InitialLiquidityVaultProxy.sol";
-
+import "./interfaces/IEventLog.sol";
 import "./interfaces/IInitialLiquidityVaultFactory.sol";
 import "./VaultFactory.sol";
 // import "hardhat/console.sol";
@@ -99,6 +99,13 @@ contract InitialLiquidityVaultFactory is VaultFactory, IInitialLiquidityVaultFac
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
+
+        IEventLog(logEventAddress).logEvent(
+            keccak256("InitialLiquidityVaultFactory"),
+            keccak256("CreatedInitialLiquidityVault"),
+            address(this),
+            abi.encode(address(_proxy), _name));
+
 
         emit CreatedInitialLiquidityVault(address(_proxy), _name);
 

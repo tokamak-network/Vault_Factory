@@ -10,6 +10,8 @@ import "../interfaces/IProxyAction.sol";
 import "./VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
+import "hardhat/console.sol";
+
 contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction
 {
 
@@ -39,6 +41,23 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
     /// @inheritdoc IProxyAction
     function setProxyPause(bool _pause) external override onlyOwner {
         pauseProxy = _pause;
+    }
+
+    /// @dev returns the implementation
+    function implementation() external view returns (address) {
+        return _implementation2(0);
+    }
+
+    /// @notice Set implementation contract
+    /// @param impl New implementation contract address
+    function upgradeTo(address impl) external onlyProxyOwner {
+        require(impl != address(0), "input is zero");
+        require(
+            _implementation2(0) != impl,
+            "The input address is same as the state"
+        );
+        _setImplementation2(impl, 0, true);
+        emit Upgraded(impl);
     }
 
     /// @inheritdoc IProxyAction
@@ -130,8 +149,9 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
     {
         if (selectorImplementation[_selector] == address(0))
             return proxyImplementation[0];
-        else if (aliveImplementation[selectorImplementation[_selector]])
+        else if (aliveImplementation[selectorImplementation[_selector]]){
             return selectorImplementation[_selector];
+        }
         else return proxyImplementation[0];
     }
 

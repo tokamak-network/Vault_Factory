@@ -4,12 +4,12 @@ pragma solidity ^0.8.4;
 /// @title EventLog
 contract EventLog {
 
-    event LogEvent(string indexed contractName, string indexed eventName, address indexed contractAddress, bytes data);
+    event LogEvent(bytes32 indexed contractNameHash, bytes32 indexed eventName, address indexed contractAddress, bytes data);
 
     constructor() {
     }
 
-    function logEvent(string memory contractName, string memory eventName, address contractAddress, bytes memory data) public {
-        emit LogEvent(contractName, eventName, contractAddress, data);
+    function logEvent(bytes32 contractNameHash, bytes32 eventName, address contractAddress, bytes memory data) public {
+        emit LogEvent(contractNameHash, eventName, contractAddress, data);
     }
 }

@@ -42,7 +42,7 @@ let UniswapV3Staker = require('../abis/UniswapV3Staker.json');
 let rewardProgramVaultAddress = "0x7A098f99BE04168B821A3B76EB28Ae44F9fe7E30";
 let tokenAAddress = "0x23c6a6da50904C036C9A7d1f54e5F789ADc68aD6";
 let poolAddress = "0x090EFde9AD3dc88B01143c3C83DbA97714f5306e";
-
+let eventLogAddress = null;
 
 describe("RewardProgramVault", function () {
 
@@ -249,7 +249,12 @@ describe("RewardProgramVault", function () {
         });
 
     });
-
+    it("create EventLog", async function () {
+        const EventLog = await ethers.getContractFactory("EventLog");
+        let EventLogDeployed = await EventLog.deploy();
+        let tx = await EventLogDeployed.deployed();
+        eventLogAddress = EventLogDeployed.address;
+    });
     it("create RewardProgramVault Logic", async function () {
         const RewardProgramVault = await ethers.getContractFactory("RewardProgramVault");
         let RewardProgramVaultLogicDeployed = await RewardProgramVault.deploy();
@@ -316,7 +321,13 @@ describe("RewardProgramVault", function () {
 
         });
 
+        it("0-9. setLogEventAddress : when not admin, fail ", async function () {
 
+            await expect(
+                rewardProgramVaultFactory.connect(user2).setLogEventAddress(eventLogAddress)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
         it("0-3. create : fail when it's not set WaitStartSeconds ", async function () {
             await expect(
                 rewardProgramVaultFactory.create(
@@ -325,7 +336,7 @@ describe("RewardProgramVault", function () {
                     vaultInfo.allocateToken.address,
                     vaultInfo.admin.address
                 )
-            ).to.be.revertedWith("zero vaule");
+            ).to.be.revertedWith("VaultFactory: zero");
         });
 
         it("0-8. setWaitStartSeconds   ", async function () {
@@ -334,7 +345,10 @@ describe("RewardProgramVault", function () {
             expect(await rewardProgramVaultFactory.waitStartSeconds()).to.be.eq(vaultInfo.waitStartTime);
 
         });
-
+        it("0-9. setLogEventAddress   ", async function () {
+            await rewardProgramVaultFactory.connect(admin1).setLogEventAddress(eventLogAddress);
+            expect(await rewardProgramVaultFactory.logEventAddress()).to.be.eq(eventLogAddress);
+        });
         it("0-3. create : fail when did'nt set staker ", async function () {
 
             expect(await rewardProgramVaultFactory.staker()).to.be.eq("0x0000000000000000000000000000000000000000");
@@ -518,12 +532,20 @@ describe("RewardProgramVault", function () {
 
             await expect(
                 TestLogicContract.sayAdd(a, b)
+            ).to.be.reverted ;
+
+            await expect(
+                TestLogicContract.sayMul(a, b)
+            ).to.be.reverted ;
+                /*
+            await expect(
+                TestLogicContract.sayAdd(a, b)
             ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
 
             await expect(
                 TestLogicContract.sayMul(a, b)
             ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
-
+                */
         });
 
 

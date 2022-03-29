@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {RewardProgramVaultProxy} from "./typeEVault/RewardProgramVaultProxy.sol";
-
+import "./interfaces/IEventLog.sol";
 import "./interfaces/IRewardProgramVaultFactory.sol";
 import "./VaultFactory.sol";
 // import "hardhat/console.sol";
@@ -61,6 +61,8 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
             "RewardProgramVaultProxy zero"
         );
 
+        string memory _name1 = _name;
+
         _proxy.addProxyAdmin(upgradeAdmin);
         _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
@@ -81,9 +83,15 @@ contract RewardProgramVaultFactory is VaultFactory, IRewardProgramVaultFactory{
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
 
-        emit CreatedRewardProgramVault(address(_proxy), _name);
+        IEventLog(logEventAddress).logEvent(
+            keccak256("RewardProgramVaultFactory"),
+            keccak256("CreatedRewardProgramVault"),
+            address(this),
+            abi.encode(address(_proxy), _name1));
 
+        emit CreatedRewardProgramVault(address(_proxy), _name1);
         return address(_proxy);
     }
+
 
 }

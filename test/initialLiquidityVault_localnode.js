@@ -42,7 +42,7 @@ let UniswapV3Pool = require('../abis/UniswapV3Pool.json');
 let liquidityVaultAddress = "0x7A098f99BE04168B821A3B76EB28Ae44F9fe7E30";
 let tokenAAddress = "0x23c6a6da50904C036C9A7d1f54e5F789ADc68aD6";
 let poolAddress = "0x090EFde9AD3dc88B01143c3C83DbA97714f5306e";
-
+let eventLogAddress = null;
 
 
 describe("InitialLiquidityVault", function () {
@@ -205,6 +205,13 @@ describe("InitialLiquidityVault", function () {
         */
     });
 
+    it("create EventLog", async function () {
+        const EventLog = await ethers.getContractFactory("EventLog");
+        let EventLogDeployed = await EventLog.deploy();
+        let tx = await EventLogDeployed.deployed();
+        eventLogAddress = EventLogDeployed.address;
+    });
+
     it("create InitialLiquidityVault Logic", async function () {
         const InitialLiquidityVault = await ethers.getContractFactory("InitialLiquidityVault");
         let InitialLiquidityVaultLogicDeployed = await InitialLiquidityVault.deploy();
@@ -267,6 +274,13 @@ describe("InitialLiquidityVault", function () {
 
         });
 
+        it("0-9. setLogEventAddress : when not admin, fail ", async function () {
+
+            await expect(
+                initialLiquidityVaultFactory.connect(user2).setLogEventAddress(eventLogAddress)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+
+        });
         it("0-7. setUniswapInfoNTokens ", async function () {
 
             await initialLiquidityVaultFactory.connect(admin1).setUniswapInfoNTokens(
@@ -279,6 +293,11 @@ describe("InitialLiquidityVault", function () {
             expect(await initialLiquidityVaultFactory.nonfungiblePositionManager()).to.be.eq(uniswapInfo.npm);
             expect(await initialLiquidityVaultFactory.tos()).to.be.eq(uniswapInfo.tos);
             expect(await initialLiquidityVaultFactory.fee()).to.be.eq(ethers.BigNumber.from("3000"));
+        });
+
+        it("0-9. setLogEventAddress   ", async function () {
+            await initialLiquidityVaultFactory.connect(admin1).setLogEventAddress(eventLogAddress);
+            expect(await initialLiquidityVaultFactory.logEventAddress()).to.be.eq(eventLogAddress);
         });
 
         it("0-3/4/5/6. create : InitialLiquidityVaultFactory ", async function () {
@@ -393,12 +412,21 @@ describe("InitialLiquidityVault", function () {
 
             await expect(
                 TestLogicContract.sayAdd(a, b)
+            ).to.be.reverted ;
+
+            await expect(
+                TestLogicContract.sayMul(a, b)
+            ).to.be.reverted ;
+
+            /*
+            await expect(
+                TestLogicContract.sayAdd(a, b)
             ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
 
             await expect(
                 TestLogicContract.sayMul(a, b)
             ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
-
+            */
 
         });
 
@@ -531,6 +559,16 @@ describe("InitialLiquidityVault", function () {
 
             await tx.wait();
 
+
+            await expect(
+                TestLogicContract.sayAdd(a, b)
+            ).to.be.reverted ;
+
+            await expect(
+                TestLogicContract.sayMul(a, b)
+            ).to.be.reverted ;
+
+            /*
             await expect(
                 TestLogicContract.sayAdd(a, b)
             ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
@@ -538,7 +576,7 @@ describe("InitialLiquidityVault", function () {
             await expect(
                 TestLogicContract.sayMul(a, b)
             ).to.be.revertedWith("function selector was not recognized and there's no fallback function");
-
+                */
         });
 
 
