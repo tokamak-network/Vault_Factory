@@ -40,6 +40,8 @@ describe("VaultFactory", () => {
     let erc20 : any;
     let erc20_1 : any;
     let proxyAdmin : any;
+    let eventLogAddress : any;
+
 
     let lockTOSdividedProxy = `0xA1E633C746DA99dceB42D65A59D3e4B5672a6bA1`;
     let lockTOSProxy = `0x5e820954a327Db71dbcad8D7C73B95f08d8f07f1`;
@@ -159,6 +161,13 @@ describe("VaultFactory", () => {
             tosContract = new ethers.Contract( TOSAddress, TOS_ABI, ethers.provider );
             // console.log("tosContract.address : ", tosContract.address);
         })
+
+        it("create EventLog", async function () {
+            const EventLog = await ethers.getContractFactory("EventLog");
+            let EventLogDeployed = await EventLog.deploy();
+            let tx = await EventLogDeployed.deployed();
+            eventLogAddress = EventLogDeployed.address;
+        });
     
         it("deploy TOSVaultFactory ", async function() {
             const VaultFactory = await ethers.getContractFactory("TOSVaultFactory");
@@ -184,11 +193,6 @@ describe("VaultFactory", () => {
             let code = await deployer.provider.getCode(TOSVault.address);
             expect(code).to.not.eq("0x");
         });
-            
-        // it("check the tos balance", async () => {
-        //     let tx = await tosContract.balanceOf(person1.address);
-        //     console.log("person1 tosBalance",tx);
-        // })
     })
 
     describe("vaultFactory", async () => {
@@ -223,6 +227,17 @@ describe("VaultFactory", () => {
         it("setinfo call from admin", async function () {
             await TOSVaultFactory.connect(deployer).setinfo(dividedPool.address);
             expect(await TOSVaultFactory.dividedPoolProxy()).to.be.eq(dividedPool.address);
+        });
+
+        it("setLogEventAddress call from not admin", async function () {
+            await expect(
+                TOSVaultFactory.connect(user1).setLogEventAddress(eventLogAddress)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+
+        it("setLogEventAddress call from admin", async function () {
+            await TOSVaultFactory.connect(deployer).setLogEventAddress(eventLogAddress);
+            expect(await TOSVaultFactory.logEventAddress()).to.be.eq(eventLogAddress);
         });
 
         it("create TOSVaultProxy by deployer", async function() {

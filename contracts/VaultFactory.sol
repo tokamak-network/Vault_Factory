@@ -31,6 +31,9 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
     address public override upgradeAdmin;
     address public override vaultLogic;
 
+    address public logEventAddress;
+
+
     /// @dev constructor of VaultFactory
     constructor() {
         totalCreatedContracts = 0;
@@ -39,6 +42,18 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
         _setupRole(ADMIN_ROLE, msg.sender);
         upgradeAdmin = msg.sender;
     }
+
+    /// @inheritdoc IVaultFactory
+    function setLogEventAddress(
+        address addr
+    )   external override
+        onlyOwner
+        nonZeroAddress(addr)
+    {
+        require(addr != logEventAddress, "same addrs");
+        logEventAddress = addr;
+    }
+    
 
     /// @inheritdoc IVaultFactory
     function setUpgradeAdmin(

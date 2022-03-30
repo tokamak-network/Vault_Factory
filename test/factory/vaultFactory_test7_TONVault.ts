@@ -85,6 +85,8 @@ describe("VaultFactory", () => {
     let snapshot : any;
     let admin : any;
     let depositManager : any;
+    let eventLogAddress : any;
+
 
     let totalClaim = 6
 
@@ -243,6 +245,13 @@ describe("VaultFactory", () => {
             let code = await deployer.provider.getCode(TONVault.address);
             expect(code).to.not.eq("0x");
         });
+
+        it("create EventLog", async function () {
+            const EventLog = await ethers.getContractFactory("EventLog");
+            let EventLogDeployed = await EventLog.deploy();
+            let tx = await EventLogDeployed.deployed();
+            eventLogAddress = EventLogDeployed.address;
+        });
     })
 
     describe("vaultFactory", async () => {
@@ -277,6 +286,17 @@ describe("VaultFactory", () => {
         it("setinfo call from admin", async function () {
             await TONVaultFactory.connect(deployer).setinfo(tokendividendPoolset.address);
             expect(await TONVaultFactory.dividedPoolProxy()).to.be.eq(tokendividendPoolset.address);
+        });
+
+        it("setLogEventAddress call from not admin", async function () {
+            await expect(
+                TONVaultFactory.connect(user1).setLogEventAddress(eventLogAddress)
+            ).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+
+        it("setLogEventAddress call from admin", async function () {
+            await TONVaultFactory.connect(deployer).setLogEventAddress(eventLogAddress);
+            expect(await TONVaultFactory.logEventAddress()).to.be.eq(eventLogAddress);
         });
 
         it("create TONVaultProxy by deployer", async function() {

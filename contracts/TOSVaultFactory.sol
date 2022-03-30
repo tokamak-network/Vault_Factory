@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {TOSVaultProxy} from "./TosVault/TOSVaultProxy.sol";
+import "./interfaces/IEventLog.sol";
 import "./interfaces/ITOSFactory.sol";
 import "./VaultFactory.sol";
 
@@ -48,6 +49,12 @@ contract TOSVaultFactory is VaultFactory, ITOSFactory {
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
+
+        IEventLog(logEventAddress).logEvent(
+            keccak256("TOSVaultFactory"),
+            keccak256("CreatedTOSVaultProxy"),
+            address(this),
+            abi.encode(address(_proxy), _name));
 
         emit CreatedTOSVaultProxy(address(_proxy), _name);
 

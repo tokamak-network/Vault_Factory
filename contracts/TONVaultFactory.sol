@@ -2,6 +2,7 @@
 pragma solidity ^0.8.4;
 
 import {TONVaultProxy} from "./tonVault/TONVaultProxy.sol";
+import "./interfaces/IEventLog.sol";
 import "./interfaces/ITONFactory.sol";
 import "./VaultFactory.sol";
 
@@ -48,6 +49,12 @@ contract TONVaultFactory is VaultFactory, ITONFactory {
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
+
+        IEventLog(logEventAddress).logEvent(
+            keccak256("TONVaultFactory"),
+            keccak256("CreatedTONVaultProxy"),
+            address(this),
+            abi.encode(address(_proxy), _name));
 
         emit CreatedTONVaultProxy(address(_proxy), _name);
 
