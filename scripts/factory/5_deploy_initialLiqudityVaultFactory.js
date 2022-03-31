@@ -49,7 +49,7 @@ async function main() {
     name: "",
     address: ""
   }
-/*
+
   const InitialLiquidityVaultFactory = await ethers.getContractFactory("InitialLiquidityVaultFactory");
   const initialLiquidityVaultFactory  = await InitialLiquidityVaultFactory.deploy();
 
@@ -63,10 +63,8 @@ async function main() {
   }
 
   save(process.env.NETWORK, deployInfo);
-  */
 
-  //const initialLiquidityVaultFactoryContract = await ethers.getContractAt("InitialLiquidityVaultFactory", initialLiquidityVaultFactory.address);
-  const initialLiquidityVaultFactoryContract = await ethers.getContractAt("InitialLiquidityVaultFactory", "0xBb3E39360Df9a024cbf4ABa28e0B8F4421e7525F");
+  const initialLiquidityVaultFactoryContract = await ethers.getContractAt("InitialLiquidityVaultFactory", initialLiquidityVaultFactory.address);
 
   tx = await initialLiquidityVaultFactoryContract.connect(deployer).setUniswapInfoNTokens(
         [uniswapInfo.poolfactory, uniswapInfo.npm],

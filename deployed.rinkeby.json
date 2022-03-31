@@ -4,9 +4,9 @@
   "NonfungiblePositionManager": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   "LiquidityVaultFactory": "0x9e9b98fFFE6b094bE2190D5dF7055DE7BeaDf68e",
   "LiquidityVault": "0x7c964e8067B14dDC65910bD2bfE35306c5eE7dDD",
-  "RewardProgramVault": "0xC365d3d5693eda5E1322bAE81EA9f78E32BbfaeB",
-  "RewardProgramVaultFactory": "0x875e14886046cd000185E6A94293447e9125635A",
-  "InitialLiquidityVault": "0x57d44A8a321c819AEEC79e36c809BABB1E68830D",
-  "InitialLiquidityVaultFactory": "0xBb3E39360Df9a024cbf4ABa28e0B8F4421e7525F",
+  "RewardProgramVault": "0xE855Ba9f2DF8382e375726B12853B867958386C5",
+  "RewardProgramVaultFactory": "0x08cA986A37B28bD00E6fE09819538b3a4F768688",
+  "InitialLiquidityVault": "0x9bd62fAD507D0C2ae35B328d2e1f3eA0296F3D06",
+  "InitialLiquidityVaultFactory": "0x529A38b13EF8d9F12Fd1c28b6c486152ada13300",
   "EventLog": "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
 }
