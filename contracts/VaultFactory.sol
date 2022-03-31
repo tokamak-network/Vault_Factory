@@ -2,18 +2,19 @@
 pragma solidity ^0.8.4;
 
 import "./interfaces/IVaultFactory.sol";
+import "./interfaces/IProxyAction.sol";
 import "./common/AccessibleCommon.sol";
 
 /// @title A factory that creates a Vault
 contract VaultFactory is AccessibleCommon, IVaultFactory {
 
     modifier nonZero(uint256 val) {
-        require(val > 0 , "zero V");
+        require(val > 0 , "zero vaule");
         _;
     }
 
     modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), "zero A");
+        require(_addr != address(0), "VaultFactory: zero");
         _;
     }
 
@@ -32,7 +33,6 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
     address public override vaultLogic;
 
     address public logEventAddress;
-
 
     /// @dev constructor of VaultFactory
     constructor() {
@@ -53,7 +53,6 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
         require(addr != logEventAddress, "same addrs");
         logEventAddress = addr;
     }
-    
 
     /// @inheritdoc IVaultFactory
     function setUpgradeAdmin(
@@ -62,9 +61,35 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
         onlyOwner
         nonZeroAddress(addr)
     {
-        require(addr != upgradeAdmin, "same addr");
+        require(addr != upgradeAdmin, "same addrs");
         upgradeAdmin = addr;
     }
+
+    /// @inheritdoc IVaultFactory
+    function upgradeContractLogic(
+        address _contract,
+        address _logic,
+        uint256 _index,
+        bool _alive
+    )   external override
+        onlyOwner
+        nonZeroAddress(_contract)
+    {
+        IProxyAction(_contract).setImplementation2(_logic, _index, _alive);
+    }
+
+    /// @inheritdoc IVaultFactory
+    function upgradeContractFunction(
+        address _contract,
+        bytes4[] calldata _selectors,
+        address _imp
+    )   external override
+        onlyOwner
+        nonZeroAddress(_contract)
+    {
+        IProxyAction(_contract).setSelectorImplementations2(_selectors, _imp);
+    }
+
 
     /// @inheritdoc IVaultFactory
     function setLogic(
@@ -74,7 +99,7 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
         nonZeroAddress(_logic)
         onlyOwner
     {
-        require(vaultLogic != _logic, "already logic");
+        require(vaultLogic != _logic, "already set this version");
         vaultLogic = _logic;
     }
 
@@ -95,4 +120,6 @@ contract VaultFactory is AccessibleCommon, IVaultFactory {
             return (address(0), "");
         }
     }
+
+
 }

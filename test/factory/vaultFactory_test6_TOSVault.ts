@@ -458,11 +458,11 @@ describe("VaultFactory", () => {
             expect(await erc20.allowance(TOSVaultLogic.address,dividedPool.address)).to.equal(totalAmount);
         })
 
-        it("check claimable amount is 0", async () => {
-            let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
-            // console.log(tx)
-            expect(tx).to.be.equal(0)
-        }).timeout(1000000)
+        // it("check claimable amount is 0", async () => {
+        //     let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
+        //     // console.log(tx)
+        //     expect(tx).to.be.equal(0)
+        // }).timeout(1000000)
 
         it("anyone can call claim", async () => {
             expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
@@ -521,11 +521,11 @@ describe("VaultFactory", () => {
             // expect(await erc20.balanceOf(dividedPool.address)).to.equal(0);
         })  
                         
-        it("check claimable amount is above 0 ", async () => {
-            let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
-            // console.log(tx)
-            expect(tx).to.be.above(0);
-        }).timeout(1000000)
+        // it("check claimable amount is above 0 ", async () => {
+        //     let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
+        //     // console.log(tx)
+        //     expect(tx).to.be.above(0);
+        // }).timeout(1000000)
 
         it("anyone can call claim6", async () => {
             let tx = await erc20.balanceOf(dividedPool.address)

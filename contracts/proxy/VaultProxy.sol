@@ -30,6 +30,17 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         return _implementation2(_index);
     }
 
+    /// @notice Set implementation contract
+    /// @param impl New implementation contract address
+    function upgradeTo(address impl) external onlyProxyOwner {
+        require(impl != address(0), "input is zero");
+        require(
+            _implementation2(0) != impl,
+            "The input address is same as the state"
+        );
+        _setImplementation2(impl, 0, true);
+    }
+
     /// @inheritdoc IProxyAction
     function setImplementation2(
         address newImplementation,
