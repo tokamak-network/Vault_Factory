@@ -423,20 +423,20 @@ describe("VaultFactory", () => {
         })
 
         it("check the withdraw after setting", async () => {
-            await expect(TOSVaultLogic.connect(person2).withdraw(
+            await expect(TOSVaultLogic.connect(person3).withdraw(
                 person2.address,
                 totalAmount
             )).to.be.revertedWith("Accessible: Caller is not an admin")
         })
 
         it("check the changeToken after setting", async () => {
-            await expect(TOSVaultLogic.connect(person2).changeToken(
+            await expect(TOSVaultLogic.connect(person3).changeToken(
                 erc20_1.address
             )).to.be.revertedWith("Accessible: Caller is not an admin")
         })
 
         it("check the initialize after setting", async () => {
-            await expect(TOSVaultLogic.connect(person2).initialize(
+            await expect(TOSVaultLogic.connect(person3).initialize(
                 totalAmount,
                 totalClaim,
                 [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
@@ -447,17 +447,7 @@ describe("VaultFactory", () => {
         it("claim call before startTime", async () => {
             await expect(TOSVaultLogic.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
         })
-
-        it("need the approve", async () => {
-            expect(await erc20.allowance(TOSVaultLogic.address,dividedPool.address)).to.equal(0);
-            // let tx = await erc20.allowance(TOSVault.address,dividedPool.address)
-            // console.log("allowance1 :", tx)
-            await TOSVaultLogic.approve();      
-            // let tx2 = await erc20.allowance(TOSVault.address,dividedPool.address)
-            // console.log("allowance2 :", tx2)      
-            expect(await erc20.allowance(TOSVaultLogic.address,dividedPool.address)).to.equal(totalAmount);
-        })
-
+        
         // it("check claimable amount is 0", async () => {
         //     let tx  = await dividedPool.claimable(stakingAccount,erc20.address);
         //     // console.log(tx)

@@ -3,31 +3,12 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./typeAVaultStorage.sol";
+
 import "../common/AccessiblePlusCommon.sol";
 
-contract typeAVault is AccessiblePlusCommon {
+contract typeAVault is typeAVaultStorage, AccessiblePlusCommon {
     using SafeERC20 for IERC20;
-
-    string public name;
-
-    IERC20 public token;
-
-    bool public diffClaimCheck;
-
-    address public owner;
-
-    uint256 public firstClaimAmount = 0;
-    uint256 public firstClaimTime;         
-
-    uint256 public totalAllocatedAmount;   
-
-    uint256 public startTime;               
-    uint256 public claimPeriodTimes;       
-    uint256 public totalClaimCounts;      
-
-    uint256 public nowClaimRound = 0;      
-
-    uint256 public totalClaimsAmount;          
 
     event Claimed(
         address indexed caller,
@@ -55,7 +36,7 @@ contract typeAVault is AccessiblePlusCommon {
         address _owner
     ) {
         name = _name;
-        token = IERC20(_token);
+        token = _token;
         owner = _owner;
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setupRole(ADMIN_ROLE, _owner);
@@ -66,7 +47,7 @@ contract typeAVault is AccessiblePlusCommon {
         uint256[2] calldata _firstSet,
         bool _check
     ) external onlyOwner {
-        require(_basicSet[0] == token.balanceOf(address(this)), "need to input the token");
+        require(_basicSet[0] == IERC20(token).balanceOf(address(this)), "need to input the token");
         totalAllocatedAmount = _basicSet[0];
         totalClaimCounts = _basicSet[1];
         startTime = _basicSet[2];
@@ -155,11 +136,11 @@ contract typeAVault is AccessiblePlusCommon {
             amount = (amount * count);
         }
 
-        require(token.balanceOf(address(this)) >= amount,"Vault: dont have token");
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
 
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
-        token.safeTransfer(_account, amount);
+        IERC20(token).safeTransfer(_account, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
     }
@@ -168,7 +149,7 @@ contract typeAVault is AccessiblePlusCommon {
         external    
         onlyOwner
     {
-        require(token.balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        token.safeTransfer(_account, _amount);
+        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
+        IERC20(token).safeTransfer(_account, _amount);
     }
 }

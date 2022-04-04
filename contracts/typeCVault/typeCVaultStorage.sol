@@ -2,12 +2,9 @@
 pragma solidity ^0.8.4;
 
 
-contract TOSVaultStorage {
+contract typeCVaultStorage {
     address public token;
 
-    bool public settingCheck;
     address public owner;
-
-    address public dividiedPool;
     bool public set;
 }

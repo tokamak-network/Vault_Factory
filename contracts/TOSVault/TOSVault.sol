@@ -46,7 +46,10 @@ contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external onlyOwner {
-        require(_totalAllocatedAmount == IERC20(token).balanceOf(address(this)), "need to input the token");
+        require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
+        if(settingCheck == true) {
+            require(block.timestamp < _claimTimes[0], "over time");
+        }
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
         uint256 i = 0;
@@ -54,8 +57,8 @@ contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
             claimTimes.push(_claimTimes[i]);
             claimAmounts.push(_claimAmounts[i]);
         }
-
-        revokeRole(PROJECT_ADMIN_ROLE, owner);
+        settingCheck = true;
+        IERC20(token).approve(dividiedPool,totalAllocatedAmount);
     }
 
     function changeToken(address _token) external onlyOwner {
@@ -85,10 +88,6 @@ contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
         }
         amount = expectedClaimAmount - totalClaimsAmount;
-    }
-
-    function approve() external {
-        IERC20(token).approve(dividiedPool,totalAllocatedAmount);
     }
 
     function claim()

@@ -3,29 +3,13 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "../common/AccessiblePlusCommon.sol";
-import "hardhat/console.sol";
+import "./typeCVaultStorage.sol";
 
-contract typeCVault is AccessiblePlusCommon {
+import "../common/ProxyAccessCommon.sol";
+import "../proxy/VaultStorage.sol";
+
+contract typeCVault is typeCVaultStorage, VaultStorage, ProxyAccessCommon {
     using SafeERC20 for IERC20;
-
-    string public name;
-
-    IERC20 public token;
-
-    bool public settingCheck;
-    address public owner;   
-
-    uint256 public totalAllocatedAmount;   
-
-    uint256 public totalClaimCounts;      
-
-    uint256 public nowClaimRound = 0;      
-
-    uint256 public totalClaimsAmount;
-
-    uint256[] public claimTimes;
-    uint256[] public claimAmounts;          
 
     event Claimed(
         address indexed caller,
@@ -43,20 +27,10 @@ contract typeCVault is AccessiblePlusCommon {
         _;
     }
 
+
     ///@dev constructor
-    ///@param _name Vault's name
-    ///@param _token Allocated token address
-    ///@param _owner owner address
-    constructor(
-        string memory _name,
-        address _token,
-        address _owner
-    ) {
-        name = _name;
-        token = IERC20(_token);
-        owner = _owner;
-        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
-        _setupRole(ADMIN_ROLE, owner);
+    constructor() {
+
     }
 
     ///@dev initialization function
@@ -70,24 +44,22 @@ contract typeCVault is AccessiblePlusCommon {
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external onlyOwner {
-        require(_totalAllocatedAmount == token.balanceOf(address(this)), "need to input the token");
+        require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
+        if(set == true) {
+            require(block.timestamp < claimTimes[0], "over time");
+        }
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
         uint256 i = 0;
         for(i = 0; i < _claimCounts; i++) {
             claimTimes.push(_claimTimes[i]);
-            console.log("claimTimes['%s'] : '%s', _claimTimes[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
             claimAmounts.push(_claimAmounts[i]);
-            console.log("claimAmounts['%s'] : '%s', _claimAmounts[i] : '%s'", i, claimTimes[i], _claimTimes[i]);
         }
-
-        _setRoleAdmin(CLAIMER_ROLE, CLAIMER_ROLE);
-        _setupRole(CLAIMER_ROLE, owner);
-        revokeRole(ADMIN_ROLE, owner);
+        set = true;
     }
 
     function changeToken(address _token) external onlyOwner {
-        token = IERC20(_token);
+        token = _token;
     }
 
     function currentRound() public view returns (uint256 round) {
@@ -118,7 +90,7 @@ contract typeCVault is AccessiblePlusCommon {
 
     function claim(address _account)
         external
-        onlyClaimer
+        onlyOwner
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
@@ -127,10 +99,10 @@ contract typeCVault is AccessiblePlusCommon {
 
         uint256 amount = calcalClaimAmount(curRound);
 
-        require(token.balanceOf(address(this)) >= amount,"Vault: dont have token");
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
-        token.safeTransfer(_account, amount);
+        IERC20(token).safeTransfer(_account, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
     }
@@ -139,7 +111,7 @@ contract typeCVault is AccessiblePlusCommon {
         external    
         onlyOwner
     {
-        require(token.balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        token.safeTransfer(_account, _amount);
+        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
+        IERC20(token).safeTransfer(_account, _amount);
     }
 }
