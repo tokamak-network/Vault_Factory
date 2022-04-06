@@ -7,7 +7,7 @@ import "./interfaces/ITypeCVaultFactory.sol";
 import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TypeCVaultFactory is VaultFactory { 
+contract TypeCVaultFactory is VaultFactory, ITypeCVaultFactory { 
 
     event CreatedTypeCVault(address contractAddress, string name);
 
@@ -16,7 +16,9 @@ contract TypeCVaultFactory is VaultFactory {
         address _token,
         address _owner
     )
-        external returns (address)
+        external 
+        override
+        returns (address)
     {
         require(bytes(_name).length > 0,"name is empty");
 

@@ -16,9 +16,4 @@ interface ITypeCVaultFactory {
         external
         returns (address);
 
-    /// @dev Last generated contract information
-    function lastestCreated() external view returns (address contractAddress, string memory name);
-
-    /// @dev Contract information stored in the index
-    function getContracts(uint256 _index) external view returns (address contractAddress, string memory name);
 }
