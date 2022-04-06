@@ -1,73 +1,57 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {typeBVault} from "./typeBVault/typeBVault.sol";
+import {typeBVaultProxy} from "./typeBVault/typeBVaultProxy.sol";
+import "./interfaces/IEventLog.sol";
 import "./interfaces/ITypeBVaultFactory.sol";
-import "./common/AccessibleCommon.sol";
-import "hardhat/console.sol";
+import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TypeBVaultFactory is AccessibleCommon { 
+contract TypeBVaultFactory is VaultFactory, ITypeBVaultFactory { 
 
     event CreatedTypeBVault(address contractAddress, string name);
-
-    modifier nonZeroAddress(address _addr) {
-        require(_addr != address(0), "VaultFactory: zero");
-        _;
-    }
-    struct ContractInfo {
-        address contractAddress;
-        string name;
-    }
-
-    /// @dev Total number of contracts created
-    uint256 public totalCreatedContracts;
-
-    /// @dev Contract information by index
-    mapping(uint256 => ContractInfo) public createdContracts;
-
-    /// @dev constructor of VaultFactory
-    constructor() {
-        totalCreatedContracts = 0;
-    }
 
     function createTypeB(
         string calldata _name,
         address _token,
         address _owner
     )
-        external returns (address)
+        external 
+        override
+        returns (address)
     {
         require(bytes(_name).length > 0,"name is empty");
 
-        typeBVault typeB = new typeBVault(_name,_token,_owner);
+        typeBVaultProxy typeB = new typeBVaultProxy();
 
         require(
             address(typeB) != address(0),
-            "typeC zero"
+            "typeB zero"
         );
+
+        typeB.addProxyAdmin(upgradeAdmin);
+        typeB.addAdmin(upgradeAdmin);
+        typeB.setImplementation2(vaultLogic, 0, true);
+
+        typeB.setBaseInfoProxy(
+            _name,
+            _token,
+            _owner
+        );
+
+        typeB.removeAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(typeB), _name);
         totalCreatedContracts++;
+
+        IEventLog(logEventAddress).logEvent(
+            keccak256("TypeBVaultFactory"),
+            keccak256("CreatedTypeBVault"),
+            address(this),
+            abi.encode(address(typeB), _name));
 
         emit CreatedTypeBVault(address(typeB), _name);
 
         return address(typeB);
     } 
-
-    function lastestCreated() external view returns (address contractAddress, string memory name){
-        if(totalCreatedContracts > 0){
-            return (createdContracts[totalCreatedContracts-1].contractAddress, createdContracts[totalCreatedContracts-1].name);
-        }else {
-            return (address(0), '');
-        }
-    }
-
-    function getContracts(uint256 _index) external view returns (address contractAddress, string memory name){
-        if(_index < totalCreatedContracts){
-            return (createdContracts[_index].contractAddress, createdContracts[_index].name);
-        }else {
-            return (address(0), '');
-        }
-    }
 }
