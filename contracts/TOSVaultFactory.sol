@@ -1,16 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {TOSVaultProxy} from "./TosVault/TOSVaultProxy.sol";
+import {TOSVaultProxy} from "./TOSVault/TOSVaultProxy.sol";
 import "./interfaces/IEventLog.sol";
 import "./interfaces/ITOSFactory.sol";
 import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TOSVaultFactory is VaultFactory, ITOSFactory { 
+contract TOSVaultFactory is VaultFactory, ITOSFactory {
     event CreatedTOSVaultProxy(address contractAddress, string name);
 
-    address public owner;   
+    address public owner;
 
     /// @dev the fixed address of divided Pool
     address public dividedPoolProxy;
@@ -59,15 +59,15 @@ contract TOSVaultFactory is VaultFactory, ITOSFactory {
         emit CreatedTOSVaultProxy(address(_proxy), _name);
 
         return address(_proxy);
-    } 
+    }
 
     /// @inheritdoc ITOSFactory
     function setinfo(
         address _dividedPool
-    ) 
+    )
         external
         override
-        onlyOwner 
+        onlyOwner
     {
         dividedPoolProxy = _dividedPool;
     }
