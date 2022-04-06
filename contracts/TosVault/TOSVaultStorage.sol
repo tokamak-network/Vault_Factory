@@ -9,5 +9,4 @@ contract TOSVaultStorage {
     address public owner;
 
     address public dividiedPool;
-    bool public set;
 }
