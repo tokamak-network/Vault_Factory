@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 
-contract typeAVaultStorage {
+contract TypeAVaultStorage {
     address public token;
 
     bool public diffClaimCheck;

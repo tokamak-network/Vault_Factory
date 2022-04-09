@@ -21,13 +21,13 @@ async function main() {
   await tonVfactory.deployed();
 
   //rinkeby
-  const logicaddr = "0xa77161a5Bba0c7fB4a60f26d7FC65A9f10839978"
+  const logicaddr = "0x9906888eB644B49C6D60ceAE0104108a3D1113Fc"
 
   const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
 
   const eventAddr = "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
 
-  const dividedAddr = "0x3dE5e554a8E0fc8B5D0cf97bBdb5788D0Ba36E25"
+  const dividedAddr = "0x41664a6F1b9F1380a2254b42E858A028d5eAD245"
 
   await tonVfactory.setLogic(
     logicaddr
@@ -39,6 +39,10 @@ async function main() {
 
   await tonVfactory.setLogEventAddress(
     eventAddr
+  )
+
+  await tonVfactory.setinfo(
+    dividedAddr
   )
 
   console.log("finish")

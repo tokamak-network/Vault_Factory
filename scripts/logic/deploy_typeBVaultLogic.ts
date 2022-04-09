@@ -14,37 +14,12 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const TOSFactory = await ethers.getContractFactory("TOSVaultFactory");
-  const tosVfactory = await TOSFactory.deploy();
-  console.log("vaultFactory deployed to:", tosVfactory.address);
+  const vault = await ethers.getContractFactory("TypeBVault");
+  const vaultLogic = await vault.deploy();
+  console.log("vaultLogic deployed to:", vaultLogic.address);
 
-  await tosVfactory.deployed();
-
-  //rinkeby
-  const logicaddr = "0xE2B9FC078d718c0E3A0A79D4FFA34C3CDb383306"
-
-  const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
-
-  const eventAddr = "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
-
-  const dividedAddr = "0x3dE5e554a8E0fc8B5D0cf97bBdb5788D0Ba36E25"
-
-  await tosVfactory.setLogic(
-    logicaddr
-  )
-
-  await tosVfactory.setUpgradeAdmin(
-    upgradeaddr
-  )
-
-  await tosVfactory.setLogEventAddress(
-    eventAddr
-  )
-
-  await tosVfactory.setinfo(
-    dividedAddr
-  )
-
+  await vaultLogic.deployed();
+  
   console.log("finish")
 }
 

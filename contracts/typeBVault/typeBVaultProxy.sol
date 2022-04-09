@@ -1,10 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import "./typeBVaultStorage.sol";
+import "./TypeBVaultStorage.sol";
 import "../proxy/VaultProxy.sol";
 
-contract typeBVaultProxy is typeBVaultStorage, VaultProxy {
+contract TypeBVaultProxy is TypeBVaultStorage, VaultProxy {
 
     function setBaseInfoProxy(
         string memory _name,

@@ -132,7 +132,7 @@ describe("VaultFactory", () => {
     });
 
     it("deploy typeBVault", async () => {
-        const devtypeBVault = await ethers.getContractFactory("typeBVault");
+        const devtypeBVault = await ethers.getContractFactory("TypeBVault");
 
         typeBVault = await devtypeBVault.deploy();
 
@@ -198,13 +198,13 @@ describe("VaultFactory", () => {
             typeBVaultinfo[0] = info;
             expect(info.name).to.be.equal("ABC");
     
-            typeBVaultProxy = await ethers.getContractAt("typeBVaultProxy", info.contractAddress);
+            typeBVaultProxy = await ethers.getContractAt("TypeBVaultProxy", info.contractAddress);
             expect(await typeBVaultProxy.isAdmin(deployer.address)).to.be.equal(false);
             expect(await typeBVaultProxy.isAdmin(proxyAdmin.address)).to.be.equal(true);
             expect(await typeBVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await typeBVaultProxy.isAdmin(person1.address)).to.be.equal(true);
             expect(await typeBVaultProxy.isProxyAdmin(person1.address)).to.be.eq(false);
-            typeBVaultLogic = await ethers.getContractAt("typeBVault", info.contractAddress);
+            typeBVaultLogic = await ethers.getContractAt("TypeBVault", info.contractAddress);
         });
 
         it("lastestCreated call from anybody", async () => {
@@ -229,12 +229,12 @@ describe("VaultFactory", () => {
             typeBVaultinfo[1] = info;
             expect(info.name).to.be.equal("ABCD");
     
-            typeBVaultProxy2 = await ethers.getContractAt("typeBVaultProxy", info.contractAddress);
+            typeBVaultProxy2 = await ethers.getContractAt("TypeBVaultProxy", info.contractAddress);
             expect(await typeBVaultProxy2.isAdmin(proxyAdmin.address)).to.be.equal(true);
             expect(await typeBVaultProxy2.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await typeBVaultProxy2.isAdmin(person5.address)).to.be.equal(true);
             expect(await typeBVaultProxy2.isProxyAdmin(person5.address)).to.be.eq(false);
-            typeBVaultLogic2 = await ethers.getContractAt("typeBVault", info.contractAddress);
+            typeBVaultLogic2 = await ethers.getContractAt("TypeBVault", info.contractAddress);
         });
     })
 

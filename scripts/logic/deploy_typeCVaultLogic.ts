@@ -14,7 +14,7 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const vault = await ethers.getContractFactory("typeCVault");
+  const vault = await ethers.getContractFactory("TypeCVault");
   const vaultLogic = await vault.deploy();
   console.log("vaultLogic deployed to:", vaultLogic.address);
 

@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {TONVaultProxy} from "./tonVault/TONVaultProxy.sol";
+import {TONVaultProxy} from "./TONVault/TONVaultProxy.sol";
 import "./interfaces/IEventLog.sol";
 import "./interfaces/ITONFactory.sol";
 import "./VaultFactory.sol";

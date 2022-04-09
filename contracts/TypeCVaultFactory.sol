@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {typeCVaultProxy} from "./typeCVault/typeCVaultProxy.sol";
+import {TypeCVaultProxy} from "./TypeCVault/TypeCVaultProxy.sol";
 import "./interfaces/IEventLog.sol";
 import "./interfaces/ITypeCVaultFactory.sol";
 import "./VaultFactory.sol";
@@ -22,7 +22,7 @@ contract TypeCVaultFactory is VaultFactory, ITypeCVaultFactory {
     {
         require(bytes(_name).length > 0,"name is empty");
 
-        typeCVaultProxy typeC = new typeCVaultProxy();
+        TypeCVaultProxy typeC = new TypeCVaultProxy();
 
         require(
             address(typeC) != address(0),

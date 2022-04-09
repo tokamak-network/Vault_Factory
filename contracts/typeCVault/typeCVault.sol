@@ -3,12 +3,12 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./typeCVaultStorage.sol";
+import "./TypeCVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
 import "../proxy/VaultStorage.sol";
 
-contract typeCVault is typeCVaultStorage, VaultStorage, ProxyAccessCommon {
+contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
     using SafeERC20 for IERC20;
 
     event Claimed(

@@ -14,35 +14,31 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const TOSFactory = await ethers.getContractFactory("TOSVaultFactory");
-  const tosVfactory = await TOSFactory.deploy();
-  console.log("vaultFactory deployed to:", tosVfactory.address);
+  const typeBFactory = await ethers.getContractFactory("TypeBVaultFactory");
+  const factory = await typeBFactory.deploy();
+  console.log("vaultFactory deployed to:", factory.address);
 
-  await tosVfactory.deployed();
+  await factory.deployed();
 
   //rinkeby
-  const logicaddr = "0xE2B9FC078d718c0E3A0A79D4FFA34C3CDb383306"
+  const logicaddr = "0x085cC18f1328a3C64423AE4231F328CBf47A1d38"
 
   const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
 
   const eventAddr = "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
 
-  const dividedAddr = "0x3dE5e554a8E0fc8B5D0cf97bBdb5788D0Ba36E25"
+  //mainnet
 
-  await tosVfactory.setLogic(
+  await factory.setLogic(
     logicaddr
   )
 
-  await tosVfactory.setUpgradeAdmin(
+  await factory.setUpgradeAdmin(
     upgradeaddr
   )
 
-  await tosVfactory.setLogEventAddress(
+  await factory.setLogEventAddress(
     eventAddr
-  )
-
-  await tosVfactory.setinfo(
-    dividedAddr
   )
 
   console.log("finish")

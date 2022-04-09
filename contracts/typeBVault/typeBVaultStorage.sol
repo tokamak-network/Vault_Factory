@@ -2,7 +2,7 @@
 pragma solidity ^0.8.4;
 
 
-contract typeBVaultStorage {
+contract TypeBVaultStorage {
     address public token;
 
     address public owner;
