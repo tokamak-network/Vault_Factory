@@ -3,14 +3,16 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./TypeCVaultStorage.sol";
+import "./TONVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
+import "../interfaces/ITokenDividendPool.sol";
 import "../proxy/VaultStorage.sol";
 
-contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
-    using SafeERC20 for IERC20;
 
+contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
+    using SafeERC20 for IERC20;
+  
     event Claimed(
         address indexed caller,
         uint256 amount,
@@ -26,7 +28,6 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         require(_value > 0, "Vault: zero value");
         _;
     }
-
 
     ///@dev constructor
     constructor() {
@@ -45,17 +46,17 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         uint256[] calldata _claimAmounts
     ) external onlyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
-        if(set == true) {
-            require(block.timestamp < claimTimes[0], "over time");
-        }
-        totalAllocatedAmount = _totalAllocatedAmount;
+        if(settingCheck == true) {
+            require(block.timestamp < _claimTimes[0], "over time");
+        }        totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
         uint256 i = 0;
         for(i = 0; i < _claimCounts; i++) {
             claimTimes.push(_claimTimes[i]);
             claimAmounts.push(_claimAmounts[i]);
         }
-        set = true;
+        settingCheck = true;
+        IERC20(token).approve(dividiedPool,totalAllocatedAmount);
     }
 
     function changeToken(address _token) external onlyOwner {
@@ -63,46 +64,42 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
     }
 
     function currentRound() public view returns (uint256 round) {
+        if(block.timestamp < claimTimes[0]){
+            round = 0;
+        }
+        if (block.timestamp > claimTimes[totalClaimCounts-1]) {
+            round = totalClaimCounts;
+        }
         for(uint256 i = totalClaimCounts; i > 0; i--) {
-            if(block.timestamp < claimTimes[0]){
-                round = 0;
-            } else if(block.timestamp < claimTimes[i-1] && i != 0) {
+            if(block.timestamp < claimTimes[i-1]) {
                 round = i-1;
-            } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
-                round = totalClaimCounts;
             }
         }
     }
 
-    function calcalClaimAmount(uint256 _round) public view returns (uint256 amount) {
+    function calculClaimAmount(uint256 _round) public view returns (uint256 amount) {
+        if (totalClaimCounts == _round) {
+            amount = totalAllocatedAmount - totalClaimsAmount;
+        } 
         uint256 expectedClaimAmount;
-        for(uint256 i = 0; i < _round; i++) {
+        for (uint256 i = 0; i < _round; i++) {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
         }
-        if(_round == 1 ) {
-            amount = claimAmounts[0];
-        } else if(totalClaimCounts == _round) {
-            amount = totalAllocatedAmount - totalClaimsAmount;
-        } else {
-            amount = expectedClaimAmount - totalClaimsAmount;
-        }        
+        amount = expectedClaimAmount - totalClaimsAmount;
     }
 
-    function claim(address _account)
+    function claim()
         external
-        onlyOwner
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
-
         uint256 curRound = currentRound();
-
-        uint256 amount = calcalClaimAmount(curRound);
+        uint256 amount = calculClaimAmount(curRound);
 
         require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
-        IERC20(token).safeTransfer(_account, amount);
+        ITokenDividendPool(dividiedPool).distribute(token, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
     }

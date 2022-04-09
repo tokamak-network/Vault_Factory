@@ -52,7 +52,6 @@ interface IProxyAction {
     function setProxyPause(bool _pause) external ;
 
 
-
     /// anybody
 
     /// @dev view implementation address of selector of function
@@ -69,5 +68,5 @@ interface IProxyAction {
     /// @return address of the implementation
     function implementation2(uint256 _index) external view returns (address) ;
 
-
 }
+

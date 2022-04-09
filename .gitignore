@@ -10,3 +10,5 @@ backup
 #Hardhat files
 cache
 artifacts
+
+contracts/dummy
