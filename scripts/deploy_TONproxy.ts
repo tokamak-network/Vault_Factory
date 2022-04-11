@@ -14,15 +14,14 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const vault = await ethers.getContractFactory("TOSVault");
-  const vaultLogic = await vault.deploy();
-  console.log("vaultLogic deployed to:", vaultLogic.address);
+  const BFactory = await ethers.getContractFactory("TONVaultProxy");
+  const bfactory = await BFactory.deploy();
 
-  await vaultLogic.deployed();
-  
-  console.log("finish")
+  await bfactory.deployed();
 
-  //npx hardhat verify --contract contracts/TOSVault/TOSVault.sol:TOSVault 0xd608B538f5933924C6bf68a0936a1109f2FDc3CB --network rinkeby
+  console.log("vaultFactory deployed to:", bfactory.address);
+
+  //npx hardhat verify --network rinkeby 0x88200b844c3930e8aA4bDB3dBcFABA3909858ec7 --contract contracts/TONVault/TONVaultProxy.sol:TONVaultProxy
 }
 
 // We recommend this pattern to be able to use async/await everywhere

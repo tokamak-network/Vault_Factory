@@ -10,7 +10,6 @@ import "../interfaces/ILockTOSDividend.sol";
 import "../proxy/VaultStorage.sol";
 
 
-
 contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
     using SafeERC20 for IERC20;
   

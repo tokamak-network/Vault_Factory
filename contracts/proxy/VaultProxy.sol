@@ -9,7 +9,10 @@ import "../interfaces/IProxyAction.sol";
 import "./VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
-contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction {
+import "hardhat/console.sol";
+
+contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction
+{
 
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
@@ -21,13 +24,27 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
     }
 
     /// @inheritdoc IProxyAction
+    function setLogEventAddress(address _addr, bool _boolLogEvent) external override onlyProxyOwner {
+        require(logEventAddress != _addr && _addr != address(0), "same value or zero");
+        logEventAddress = _addr;
+        if(boolLogEvent != _boolLogEvent) boolLogEvent = _boolLogEvent;
+    }
+
+    /// @inheritdoc IProxyAction
+    function setBoolLogEvent(bool _boolLogEvent) external override onlyProxyOwner {
+        require(boolLogEvent != _boolLogEvent, "same value");
+        if(_boolLogEvent) require(logEventAddress != address(0), "zero logEventAddress");
+        boolLogEvent = _boolLogEvent;
+    }
+
+    /// @inheritdoc IProxyAction
     function setProxyPause(bool _pause) external override onlyOwner {
         pauseProxy = _pause;
     }
 
-    /// @inheritdoc IProxyAction
-    function implementation2(uint256 _index) external override view returns (address) {
-        return _implementation2(_index);
+    /// @dev returns the implementation
+    function implementation() external view returns (address) {
+        return _implementation2(0);
     }
 
     /// @notice Set implementation contract
@@ -39,6 +56,12 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
             "The input address is same as the state"
         );
         _setImplementation2(impl, 0, true);
+        emit Upgraded(impl);
+    }
+
+    /// @inheritdoc IProxyAction
+    function implementation2(uint256 _index) external override view returns (address) {
+        return _implementation2(_index);
     }
 
     /// @inheritdoc IProxyAction
@@ -63,14 +86,20 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         bytes4[] calldata _selectors,
         address _imp
     ) public override onlyProxyOwner {
+        require(
+            _selectors.length > 0,
+            "LiquidityVaultProxy: _selectors's size is zero"
+        );
+        require(aliveImplementation[_imp], "LiquidityVaultProxy: _imp is not alive");
+
         for (uint256 i = 0; i < _selectors.length; i++) {
             require(
                 selectorImplementation[_selectors[i]] != _imp,
-                "Proxy: same imp"
+                "LiquidityVaultProxy: same imp"
             );
             selectorImplementation[_selectors[i]] = _imp;
             emit SetSelectorImplementation(_selectors[i], _imp);
-        }    
+        }
     }
 
     /// @dev set the implementation address and status of the proxy[index]
@@ -82,6 +111,10 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         uint256 _index,
         bool _alive
     ) internal {
+        require(
+            Address.isContract(newImplementation),
+            "LiquidityVaultProxy: Cannot set a proxy implementation to a non-contract address"
+        );
         if (_alive) proxyImplementation[_index] = newImplementation;
         _setAliveImplementation2(newImplementation, _alive);
     }
@@ -115,8 +148,9 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
     {
         if (selectorImplementation[_selector] == address(0))
             return proxyImplementation[0];
-        else if (aliveImplementation[selectorImplementation[_selector]])
+        else if (aliveImplementation[selectorImplementation[_selector]]){
             return selectorImplementation[_selector];
+        }
         else return proxyImplementation[0];
     }
 
@@ -137,7 +171,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
 
         require(
             _impl != address(0) && !pauseProxy,
-            "Proxy: false"
+            "LiquidityVaultProxy: impl OR proxy is false"
         );
 
         assembly {
