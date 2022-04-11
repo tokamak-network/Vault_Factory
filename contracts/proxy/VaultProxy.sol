@@ -6,7 +6,6 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "../interfaces/IProxyEvent.sol";
 import "../interfaces/IProxyAction.sol";
 
-
 import "./VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 

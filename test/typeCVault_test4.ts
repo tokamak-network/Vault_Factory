@@ -162,7 +162,7 @@ describe("typeCVault", () => {
         mockToken = await token.deploy("MockToken", "Mock");
 
         const typeCVault = await ethers.getContractFactory("typeCVault");
-        typeCVaultContract = await typeCVault.connect(vaultOwner).deploy("setVault",mockToken.address);
+        typeCVaultContract = await typeCVault.connect(vaultOwner).deploy("setVault",mockToken.address,vaultOwner.address);
         typeCVaultContract.connect(vaultOwner).deployed();
         
         provider = ethers.provider;
@@ -196,7 +196,7 @@ describe("typeCVault", () => {
     
                 await expect(typeCVaultContract.connect(account1).claim(
                     account1.address
-                )).to.be.revertedWith("Accessible: Caller is not an admin");
+                )).to.be.revertedWith("AccessiblePlusCommon: Caller is not a claimer");
             })
     
             it("initialize", async () => {
