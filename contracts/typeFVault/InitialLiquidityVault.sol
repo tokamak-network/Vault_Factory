@@ -62,14 +62,14 @@ contract InitialLiquidityVault is
     constructor() {
     }
 
-    function LogEvent(bytes32 _eventName, bytes memory data) internal {
-        if(boolLogEvent)
-            IEventLog(logEventAddress).logEvent(
-                keccak256("InitialLiquidityVault"),
-                _eventName,
-                address(this),
-                data);
-    }
+    // function LogEvent(bytes32 _eventName, bytes memory data) internal {
+    //     if(boolLogEvent)
+    //         IEventLog(logEventAddress).logEvent(
+    //             keccak256("InitialLiquidityVault"),
+    //             _eventName,
+    //             address(this),
+    //             data);
+    // }
 
     /// @inheritdoc IInitialLiquidityVaultAction
     function setBaseInfo(

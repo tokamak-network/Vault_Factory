@@ -31,14 +31,14 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
     constructor() {
     }
 
-    function LogEvent(bytes32 _eventName, bytes memory data) internal {
-        if(boolLogEvent)
-            IEventLog(logEventAddress).logEvent(
-                keccak256("RewardProgramVault"),
-                _eventName,
-                address(this),
-                data);
-    }
+    // function LogEvent(bytes32 _eventName, bytes memory data) internal {
+    //     if(boolLogEvent)
+    //         IEventLog(logEventAddress).logEvent(
+    //             keccak256("RewardProgramVault"),
+    //             _eventName,
+    //             address(this),
+    //             data);
+    // }
 
     /// @inheritdoc IRewardProgramVaultAction
     function changeToken(address _token) external override onlyProxyOwner nonZeroAddress(_token) {
@@ -76,6 +76,42 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
     ) external override onlyOwner {
 
+        require(!settingCheck, "already set");
+        // require(totalClaimCounts == 0 ||
+        //     (claimTimes.length > 0 && block.timestamp < claimTimes[0]) , "already set");
+
+        require(_claimCounts > 0 && _claimTimes.length == _claimCounts && _claimAmounts.length == _claimCounts, "wrong claim data");
+
+        require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
+        totalAllocatedAmount = _totalAllocatedAmount;
+        totalClaimCounts = _claimCounts;
+
+        uint256 totalAmount = 0;
+        for(uint256 i = 0; i < _claimCounts; i++) {
+
+            if(claimTimes.length <= i)  claimTimes.push(_claimTimes[i]);
+            else claimTimes[i] = _claimTimes[i];
+
+            if(claimAmounts.length <= i) claimAmounts.push(_claimAmounts[i]);
+            else claimAmounts[i]= _claimAmounts[i];
+
+            totalAmount += _claimAmounts[i];
+        }
+
+        require(totalAllocatedAmount == totalAmount, "check the sum of _claimAmounts");
+        settingCheck = true;
+        //LogEvent(keccak256("Initialized"), abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
+        emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
+    }
+
+    function initializeByProxyOwner(
+        uint256 _totalAllocatedAmount,
+        uint256 _claimCounts,
+        uint256[] calldata _claimTimes,
+        uint256[] calldata _claimAmounts
+
+    ) external onlyProxyOwner {
+
         require(totalClaimCounts == 0 ||
             (claimTimes.length > 0 && block.timestamp < claimTimes[0]) , "already set");
 
@@ -85,6 +121,13 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
 
+        uint256 totalAmount = 0;
+
+        for(uint256 j = 0; j < totalClaimCounts; j++) {
+            if(claimTimes.length > 0 ) claimTimes.pop();
+            if(claimAmounts.length > 0 ) claimAmounts.pop();
+        }
+
         for(uint256 i = 0; i < _claimCounts; i++) {
 
             if(claimTimes.length <= i)  claimTimes.push(_claimTimes[i]);
@@ -93,8 +136,12 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             if(claimAmounts.length <= i) claimAmounts.push(_claimAmounts[i]);
             else claimAmounts[i]= _claimAmounts[i];
 
+            totalAmount += _claimAmounts[i];
         }
-        LogEvent(keccak256("Initialized"), abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
+
+        require(totalAllocatedAmount == totalAmount, "check the sum of _claimAmounts");
+        settingCheck = true;
+        //LogEvent(keccak256("Initialized"), abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
         emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
     }
 
@@ -151,7 +198,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         staker.createIncentive(key, reward);
 
-        LogEvent(keccak256("IncentiveCreatedByRewardProgram"), abi.encode(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward));
+        //LogEvent(keccak256("IncentiveCreatedByRewardProgram"), abi.encode(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward));
         emit IncentiveCreatedByRewardProgram(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward);
     }
 
@@ -218,7 +265,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         uint256 refund = staker.endIncentive(programs[idx].key);
 
-        LogEvent(keccak256("IncentiveEndedByRewardProgram"), abi.encode(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund));
+        //LogEvent(keccak256("IncentiveEndedByRewardProgram"), abi.encode(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund));
         emit IncentiveEndedByRewardProgram(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund);
     }
 
