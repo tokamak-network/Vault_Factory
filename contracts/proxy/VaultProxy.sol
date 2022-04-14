@@ -53,7 +53,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
         require(impl != address(0), "input is zero");
         require(
             _implementation2(0) != impl,
-            "The input address is same as the state"
+            "same addr"
         );
         _setImplementation2(impl, 0, true);
         emit Upgraded(impl);
@@ -88,14 +88,14 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
     ) public override onlyProxyOwner {
         require(
             _selectors.length > 0,
-            "LiquidityVaultProxy: _selectors's size is zero"
+            "Proxy: _selectors's size is zero"
         );
-        require(aliveImplementation[_imp], "LiquidityVaultProxy: _imp is not alive");
+        require(aliveImplementation[_imp], "Proxy: _imp is not alive");
 
         for (uint256 i = 0; i < _selectors.length; i++) {
             require(
                 selectorImplementation[_selectors[i]] != _imp,
-                "LiquidityVaultProxy: same imp"
+                "Proxy: same imp"
             );
             selectorImplementation[_selectors[i]] = _imp;
             emit SetSelectorImplementation(_selectors[i], _imp);
@@ -113,7 +113,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
     ) internal {
         require(
             Address.isContract(newImplementation),
-            "LiquidityVaultProxy: Cannot set a proxy implementation to a non-contract address"
+            "Proxy: not contract address"
         );
         if (_alive) proxyImplementation[_index] = newImplementation;
         _setAliveImplementation2(newImplementation, _alive);
@@ -171,7 +171,7 @@ contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyActio
 
         require(
             _impl != address(0) && !pauseProxy,
-            "LiquidityVaultProxy: impl OR proxy is false"
+            "Proxy: impl OR proxy is false"
         );
 
         assembly {
