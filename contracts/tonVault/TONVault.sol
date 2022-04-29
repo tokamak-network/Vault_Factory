@@ -9,6 +9,7 @@ import "../common/ProxyAccessCommon.sol";
 import "../interfaces/ITokenDividendPool.sol";
 import "../proxy/VaultStorage.sol";
 
+import "hardhat/console.sol";
 
 contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
     using SafeERC20 for IERC20;

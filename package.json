@@ -34,5 +34,9 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.2"
+  },
+  "scripts": {
+    "start": "SET NODE_ENV=dev && node server.js",
+    "test": "mocha --timeout 10000"
   }
 }

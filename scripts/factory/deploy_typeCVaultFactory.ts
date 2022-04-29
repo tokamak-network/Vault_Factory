@@ -21,7 +21,8 @@ async function main() {
   await factory.deployed();
 
   //rinkeby
-  const logicaddr = "0x092105c74432a05b03Dc8529f6A51f64C3669F07"
+  // const logicaddr = "0x092105c74432a05b03Dc8529f6A51f64C3669F07"
+  const logicaddr = "0x2ce8D20362bB807AD9912BBe4c586B0904277b6D"
 
   const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
 
