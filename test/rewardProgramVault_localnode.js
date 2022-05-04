@@ -735,7 +735,7 @@ describe("RewardProgramVault", function () {
 
             await expect(
                 rewardProgramVault.currentRound()
-            ).to.be.revertedWith("LiquidityVaultProxy: impl OR proxy is false");
+            ).to.be.revertedWith("Proxy: impl OR proxy is false");
         });
 
         it("1-9. setProxyPause   ", async function () {
@@ -928,13 +928,41 @@ describe("RewardProgramVault", function () {
             expect(sum).to.be.eq(vaultInfo.totalAllocatedAmount);
         });
 
-        it("2-7. initialize   ", async function () {
+        it("2-7. initialize : fail when already set  ", async function () {
 
             let block = await ethers.provider.getBlock();
             let claimInfo = await rewardProgramVault.getClaimInfo();
             expect(block.timestamp).to.be.lt(claimInfo._claimTimes[0]);
 
-            await rewardProgramVault.connect(vaultInfo.admin).initialize(
+            await expect(
+                rewardProgramVault.connect(vaultInfo.admin).initialize(
+                    vaultInfo.totalAllocatedAmount,
+                    ethers.BigNumber.from(""+vaultInfo.claimCounts),
+                    vaultInfo.claimTimes,
+                    vaultInfo.claimAmounts
+                )
+             ).to.be.revertedWith("already set");
+        });
+
+        it("2-7. initializeByProxyOwner : fail when sender is not ProxyOwner", async function () {
+
+            await expect(
+                rewardProgramVault.connect(vaultInfo.admin).initializeByProxyOwner(
+                    vaultInfo.totalAllocatedAmount,
+                    ethers.BigNumber.from(""+vaultInfo.claimCounts),
+                    vaultInfo.claimTimes,
+                    vaultInfo.claimAmounts
+                )
+             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
+        });
+
+        it("2-7. initializeByProxyOwner  by ProxyOwner ", async function () {
+
+            let block = await ethers.provider.getBlock();
+            let claimInfo = await rewardProgramVault.getClaimInfo();
+            expect(block.timestamp).to.be.lt(claimInfo._claimTimes[0]);
+
+            await rewardProgramVault.connect(proxyAdmin).initializeByProxyOwner(
                     vaultInfo.totalAllocatedAmount,
                     ethers.BigNumber.from(""+vaultInfo.claimCounts),
                     vaultInfo.claimTimes,
@@ -954,8 +982,8 @@ describe("RewardProgramVault", function () {
             for(let i=0; i< claimAmounts.length; i++){
                  expect(claimAmounts[i]).to.be.eq(vaultInfo.claimAmounts[i]);
             }
-
         });
+
     });
 
     describe("RewardProgramVault : Can Anybody ", function () {

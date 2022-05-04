@@ -757,7 +757,7 @@ describe("InitialLiquidityVault", function () {
         it("1-9. setProxyPause : can\'t exceute logic function ", async function () {
 
             await expect(initialLiquidityVault.getMinTick()
-            ).to.be.revertedWith("LiquidityVaultProxy: impl OR proxy is false");
+            ).to.be.revertedWith("Proxy: impl OR proxy is false");
         });
 
         it("1-9. setProxyPause   ", async function () {
