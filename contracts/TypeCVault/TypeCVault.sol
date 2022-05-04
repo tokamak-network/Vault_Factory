@@ -1,0 +1,142 @@
+//SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "./TypeCVaultStorage.sol";
+
+import "../common/ProxyAccessCommon.sol";
+import "../proxy/VaultStorage.sol";
+
+contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
+    using SafeERC20 for IERC20;
+
+    event Claimed(
+        address indexed caller,
+        uint256 amount,
+        uint256 totalClaimedAmount
+    );
+
+    modifier nonZeroAddress(address _addr) {
+        require(_addr != address(0), "Vault: zero address");
+        _;
+    }
+
+    modifier nonZero(uint256 _value) {
+        require(_value > 0, "Vault: zero value");
+        _;
+    }
+
+
+    ///@dev constructor
+    constructor() {
+
+    }
+
+    ///@dev initialization function
+    ///@param _totalAllocatedAmount total allocated amount
+    ///@param _claimCounts total claim Counts
+    ///@param _claimTimes each claimTime
+    ///@param _claimAmounts each claimAmount
+    function initialize(
+        uint256 _totalAllocatedAmount,
+        uint256 _claimCounts,
+        uint256[] calldata _claimTimes,
+        uint256[] calldata _claimAmounts
+    ) external onlyOwner {
+        require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
+        require(set != true, "already set");
+
+        totalAllocatedAmount = _totalAllocatedAmount;
+        totalClaimCounts = _claimCounts;
+        uint256 i = 0;
+        uint256 amountCheck = 0;
+        for(i = 0; i < _claimCounts; i++) {
+            claimTimes.push(_claimTimes[i]);
+            claimAmounts.push(_claimAmounts[i]);
+            amountCheck += _claimAmounts[i];
+        }
+        require(_totalAllocatedAmount == amountCheck, "diff totalAmount");
+        set = true;
+    }
+
+    function ownerSetting(
+        uint256 _totalAllocatedAmount,
+        uint256 _claimCounts,
+        uint256[] calldata _claimTimes,
+        uint256[] calldata _claimAmounts
+    ) external onlyProxyOwner {
+        require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
+        
+        totalAllocatedAmount = _totalAllocatedAmount;
+        totalClaimCounts = _claimCounts;
+        uint256 i = 0;
+        uint256 amountCheck = 0;
+        for(i = 0; i < _claimCounts; i++) {
+            claimTimes.push(_claimTimes[i]);
+            claimAmounts.push(_claimAmounts[i]);
+            amountCheck += _claimAmounts[i];
+        }
+        require(_totalAllocatedAmount == amountCheck, "diff totalAmount");
+        set = true;
+    }
+
+    function changeAddr(
+        address _token
+    ) external onlyProxyOwner {
+        token = _token;
+    }
+
+    function currentRound() public view returns (uint256 round) {
+        for(uint256 i = totalClaimCounts; i > 0; i--) {
+            if(block.timestamp < claimTimes[0]){
+                round = 0;
+            } else if(block.timestamp < claimTimes[i-1] && i != 0) {
+                round = i-1;
+            } else if (block.timestamp > claimTimes[totalClaimCounts-1]) {
+                round = totalClaimCounts;
+            }
+        }
+    }
+
+    function calcalClaimAmount(uint256 _round) public view returns (uint256 amount) {
+        uint256 expectedClaimAmount;
+        for(uint256 i = 0; i < _round; i++) {
+           expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
+        }
+        if(_round == 1 ) {
+            amount = claimAmounts[0];
+        } else if(totalClaimCounts == _round) {
+            amount = totalAllocatedAmount - totalClaimsAmount;
+        } else {
+            amount = expectedClaimAmount - totalClaimsAmount;
+        }
+    }
+
+    function claim(address _account)
+        external
+        onlyOwner
+    {
+        require(block.timestamp > claimTimes[0], "Vault: not started yet");
+        require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
+
+        uint256 curRound = currentRound();
+
+        uint256 amount = calcalClaimAmount(curRound);
+
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
+        nowClaimRound = curRound;
+        totalClaimsAmount = totalClaimsAmount + amount;
+        IERC20(token).safeTransfer(_account, amount);
+
+        emit Claimed(msg.sender, amount, totalClaimsAmount);
+    }
+
+    function withdraw(address _account, uint256 _amount)
+        external
+        onlyOwner
+    {
+        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
+        IERC20(token).safeTransfer(_account, _amount);
+    }
+}
