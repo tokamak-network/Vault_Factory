@@ -1,9 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
+import "./common/AccessibleCommon.sol";
+
 import "./interfaces/IVaultFactory.sol";
 import "./interfaces/IProxyAction.sol";
-import "./common/AccessibleCommon.sol";
 
 /// @title A factory that creates a Vault
 contract VaultFactory is AccessibleCommon, IVaultFactory {
