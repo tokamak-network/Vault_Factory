@@ -16,7 +16,7 @@ contract TypeBVault is TypeBVaultStorage, VaultStorage, ProxyAccessCommon {
     }
 
     function claim(address _to, uint256 _amount) external onlyOwner {
-        require(IERC20(token).balanceOf(address(this)) >= _amount, "Vault: insufficent");
+        require(IERC20(token).balanceOf(address(this)) >= _amount, "Vault: insufficient");
         IERC20(token).safeTransfer(_to, _amount);
     }
 
