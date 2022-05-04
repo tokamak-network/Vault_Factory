@@ -1,6 +1,10 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
+import "./LiquidityVaultStorage.sol";
+import "../proxy/VaultStorage.sol";
+import "../common/ProxyAccessCommon.sol";
+
 import "../interfaces/IUniswapV3Factory.sol";
 import "../interfaces/IUniswapV3Pool.sol";
 import "../interfaces/INonfungiblePositionManager.sol";
@@ -9,12 +13,7 @@ import "../interfaces/ILiquidityVaultEvent.sol";
 import "../interfaces/ILiquidityVaultAction.sol";
 
 import "../libraries/TickMath.sol";
-
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "./LiquidityVaultStorage.sol";
-
-import "../proxy/VaultStorage.sol";
-import "../common/ProxyAccessCommon.sol";
 
 //import "hardhat/console.sol";
 

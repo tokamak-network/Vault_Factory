@@ -15,7 +15,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         address indexed caller,
         uint256 amount,
         uint256 totalClaimedAmount
-    );        
+    );
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
@@ -34,7 +34,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
     }
 
     ///@dev initialization function
-    ///@param _totalAllocatedAmount total allocated amount           
+    ///@param _totalAllocatedAmount total allocated amount
     ///@param _claimCounts total claim Counts
     ///@param _claimTimes each claimTime
     ///@param _claimAmounts each claimAmount
@@ -110,7 +110,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
             amount = totalAllocatedAmount - totalClaimsAmount;
         } else {
             amount = expectedClaimAmount - totalClaimsAmount;
-        }        
+        }
     }
 
     function claim(address _account)
@@ -133,7 +133,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
     }
 
     function withdraw(address _account, uint256 _amount)
-        external    
+        external
         onlyOwner
     {
         require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");

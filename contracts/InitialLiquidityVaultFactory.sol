@@ -1,10 +1,12 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
+import "./VaultFactory.sol";
+
 import {InitialLiquidityVaultProxy} from "./typeFVault/InitialLiquidityVaultProxy.sol";
 import "./interfaces/IEventLog.sol";
 import "./interfaces/IInitialLiquidityVaultFactory.sol";
-import "./VaultFactory.sol";
+
 // import "hardhat/console.sol";
 
 interface IIInitialLiquidityVaultAction {

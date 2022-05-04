@@ -1,16 +1,16 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
+
+import "./RewardProgramVaultStorage.sol";
+import "../proxy/VaultProxy.sol";
+
 import "../interfaces/IRewardProgramVaultEvent.sol";
 import "../interfaces/IRewardProgramVaultAction.sol";
 import "../interfaces/IUniswapV3Staker.sol";
 import "../interfaces/IEventLog.sol";
 
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import "./RewardProgramVaultStorage.sol";
-import "../proxy/VaultProxy.sol";
-
 // import "hardhat/console.sol";
 
 contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAccessCommon, IRewardProgramVaultEvent, IRewardProgramVaultAction
@@ -30,15 +30,6 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
     ///@dev constructor
     constructor() {
     }
-
-    // function LogEvent(bytes32 _eventName, bytes memory data) internal {
-    //     if(boolLogEvent)
-    //         IEventLog(logEventAddress).logEvent(
-    //             keccak256("RewardProgramVault"),
-    //             _eventName,
-    //             address(this),
-    //             data);
-    // }
 
     /// @inheritdoc IRewardProgramVaultAction
     function changeToken(address _token) external override onlyProxyOwner nonZeroAddress(_token) {
@@ -100,7 +91,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         require(totalAllocatedAmount == totalAmount, "check the sum of _claimAmounts");
         settingCheck = true;
-        //LogEvent(keccak256("Initialized"), abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
+
         emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
     }
 
@@ -141,7 +132,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         require(totalAllocatedAmount == totalAmount, "check the sum of _claimAmounts");
         settingCheck = true;
-        //LogEvent(keccak256("Initialized"), abi.encode(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts));
+
         emit Initialized(_totalAllocatedAmount, _claimCounts, _claimTimes, _claimAmounts);
     }
 
@@ -198,7 +189,6 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         staker.createIncentive(key, reward);
 
-        //LogEvent(keccak256("IncentiveCreatedByRewardProgram"), abi.encode(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward));
         emit IncentiveCreatedByRewardProgram(idx, address(key.rewardToken), address(key.pool), key.startTime, key.endTime, key.refundee, reward);
     }
 
@@ -265,7 +255,6 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         uint256 refund = staker.endIncentive(programs[idx].key);
 
-        //LogEvent(keccak256("IncentiveEndedByRewardProgram"), abi.encode(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund));
         emit IncentiveEndedByRewardProgram(address(programs[idx].key.rewardToken), address(programs[idx].key.pool), programs[idx].key.startTime, programs[idx].key.endTime, programs[idx].key.refundee, refund);
     }
 

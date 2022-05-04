@@ -7,10 +7,10 @@ import "./interfaces/ITONFactory.sol";
 import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TONVaultFactory is VaultFactory, ITONFactory { 
+contract TONVaultFactory is VaultFactory, ITONFactory {
     event CreatedTONVaultProxy(address contractAddress, string name);
 
-    address public owner;   
+    address public owner;
 
     /// @dev the fixed address of divided Pool
     address public dividedPoolProxy;
@@ -59,15 +59,15 @@ contract TONVaultFactory is VaultFactory, ITONFactory {
         emit CreatedTONVaultProxy(address(_proxy), _name);
 
         return address(_proxy);
-    } 
+    }
 
     /// @inheritdoc ITONFactory
     function setinfo(
         address _dividedPool
-    ) 
+    )
         external
         override
-        onlyOwner 
+        onlyOwner
     {
         dividedPoolProxy = _dividedPool;
     }

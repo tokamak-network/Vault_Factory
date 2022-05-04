@@ -1,13 +1,13 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-
-import "../interfaces/IProxyEvent.sol";
 
 import "./RewardProgramVaultStorage.sol";
 import "../proxy/VaultProxy.sol";
 
+import "../interfaces/IProxyEvent.sol";
+
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 //import "hardhat/console.sol";
 
 contract RewardProgramVaultProxy is RewardProgramVaultStorage, VaultProxy

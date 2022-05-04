@@ -1,10 +1,11 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
+import "./VaultFactory.sol";
+
 import {RewardProgramVaultProxy} from "./typeEVault/RewardProgramVaultProxy.sol";
 import "./interfaces/IEventLog.sol";
 import "./interfaces/IRewardProgramVaultFactory.sol";
-import "./VaultFactory.sol";
 // import "hardhat/console.sol";
 
 /// @title A factory that creates a Vault
