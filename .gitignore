@@ -12,3 +12,5 @@ cache
 artifacts
 
 contracts/dummy
+
+.DS_Store
