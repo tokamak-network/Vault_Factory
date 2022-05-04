@@ -67,6 +67,5 @@ interface IProxyAction {
     /// @param _index index of proxy
     /// @return address of the implementation
     function implementation2(uint256 _index) external view returns (address) ;
-
 }
 

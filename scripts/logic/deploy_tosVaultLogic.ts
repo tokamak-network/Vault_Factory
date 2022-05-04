@@ -21,6 +21,8 @@ async function main() {
   await vaultLogic.deployed();
   
   console.log("finish")
+
+  //npx hardhat verify --contract contracts/TOSVault/TOSVault.sol:TOSVault 0xd608B538f5933924C6bf68a0936a1109f2FDc3CB --network rinkeby
 }
 
 // We recommend this pattern to be able to use async/await everywhere

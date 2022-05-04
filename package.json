@@ -20,7 +20,10 @@
     "prettier": "^2.5.1",
     "prettier-plugin-solidity": "^1.0.0-beta.19",
     "solhint": "^3.3.6",
-    "solidity-coverage": "^0.7.18"
+    "solidity-coverage": "^0.7.18",
+    "ts-node": "^10.7.0",
+    "typechain": "^5.2.0",
+    "typescript": "^4.6.3"
   },
   "dependencies": {
     "@nomiclabs/hardhat-web3": "^2.0.0",

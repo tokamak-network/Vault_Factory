@@ -37,7 +37,16 @@ const config: HardhatUserConfig = {
       // allowUnlimitedContractSize: true,
       forking: {
         url: "https://eth-rinkeby.alchemyapi.io/v2/HcHq2tP2MKaf_Evx-_YS_t8GLoHfEj-h",
-      }
+      },
+    },
+    local: {
+      chainId: 31337,
+      url: `http://127.0.0.1:8545/`,
+      accounts: [
+        `${process.env.PRIVATE_KEY}`,`${process.env.PRIVATE_KEY_2}`,`${process.env.PRIVATE_KEY_3}`,
+        `${process.env.PRIVATE_KEY_4}`,`${process.env.PRIVATE_KEY_5}`,`${process.env.PRIVATE_KEY_6}`,
+        `${process.env.PRIVATE_KEY_7}`,`${process.env.PRIVATE_KEY_8}`,`${process.env.PRIVATE_KEY_9}`,
+        `${process.env.PRIVATE_KEY_10}`, `${process.env.PRIVATE_KEY_11}`, `${process.env.PRIVATE_KEY_12}`],
     },
     ropsten: {
       url: process.env.ROPSTEN_URL || "",

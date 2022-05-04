@@ -14,33 +14,14 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const typeCFactory = await ethers.getContractFactory("TypeCVaultFactory");
-  const factory = await typeCFactory.deploy();
-  console.log("vaultFactory deployed to:", factory.address);
+  const BFactory = await ethers.getContractFactory("TONVaultProxy");
+  const bfactory = await BFactory.deploy();
 
-  await factory.deployed();
+  await bfactory.deployed();
 
-  //rinkeby
-  // const logicaddr = "0x092105c74432a05b03Dc8529f6A51f64C3669F07"
-  const logicaddr = "0x2ce8D20362bB807AD9912BBe4c586B0904277b6D"
+  console.log("vaultFactory deployed to:", bfactory.address);
 
-  const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
-
-  const eventAddr = "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
-
-  await factory.setLogic(
-    logicaddr
-  )
-
-  await factory.setUpgradeAdmin(
-    upgradeaddr
-  )
-
-  await factory.setLogEventAddress(
-    eventAddr
-  )
-
-  console.log("finish")
+  //npx hardhat verify --network rinkeby 0x88200b844c3930e8aA4bDB3dBcFABA3909858ec7 --contract contracts/TONVault/TONVaultProxy.sol:TONVaultProxy
 }
 
 // We recommend this pattern to be able to use async/await everywhere

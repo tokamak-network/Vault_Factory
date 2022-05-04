@@ -1,19 +1,13 @@
-// We require the Hardhat Runtime Environment explicitly here. This is optional
-// but useful for running the script in a standalone fashion through `node <script>`.
-//
-// When running the script with `npx hardhat run <script>` you'll find the Hardhat
-// Runtime Environment's members available in the global scope.
-import { ethers } from "hardhat";
+
+const { ethers } = require("hardhat");
+const save = require("../save_deployed");
+const loadDeployed = require("../load_deployed");
 
 async function main() {
-  // Hardhat always runs the compile task when running scripts with its command
-  // line interface.
-  //
-  // If this script is run directly using `node` you may want to call compile
-  // manually to make sure everything is compiled
-  // await hre.run('compile');
+  let deployer;
 
-  // We get the contract to deploy
+  [deployer] = await ethers.getSigners();
+  
   const TOSFactory = await ethers.getContractFactory("TOSVaultFactory");
   const tosVfactory = await TOSFactory.deploy();
   console.log("vaultFactory deployed to:", tosVfactory.address);
@@ -21,7 +15,7 @@ async function main() {
   await tosVfactory.deployed();
 
   //rinkeby
-  const logicaddr = "0xd608B538f5933924C6bf68a0936a1109f2FDc3CB"
+  const logicaddr = "0xE2B9FC078d718c0E3A0A79D4FFA34C3CDb383306"
 
   const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
 
@@ -46,11 +40,15 @@ async function main() {
   )
 
   console.log("finish")
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });

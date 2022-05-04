@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { any } from "hardhat/internal/core/params/argumentTypes";
 const { ethers, network } = require('hardhat')
 const LockTOSdivided_ABI = require('../../abis/LockTOSdivided_ABI.json');
 const LockTOS_ABI = require('../../abis/LockTOS_ABI.json');
@@ -7,6 +8,7 @@ const ERC20Recorder_ABI = require('../../abis/ERC20Recorder.json');
 const TestERC20_ABI = require('../../abis/TestERC20.json');
 const TokenDividendPool_ABI = require('../../abis/TokenDividendPool.json');
 const TokenDividendPoolProxy_ABI = require('../../abis/TokenDividendPoolProxy.json');
+const AutoCoinageSnapshotABI  = require("../../abis/AutoCoinageSnapshot2.json");
 
 const {
     BigNumber,
@@ -50,6 +52,17 @@ describe("VaultFactory", () => {
     let lockTOSContract : any;
     let tosContract : any;
     let stakingAccount = "0xf0B595d10a92A5a9BC3fFeA7e79f5d266b6035Ea";
+    
+    let autoCoinageSnapshotLogiced = `0x355B5caC705f9A46C979032eaCb6AE284eA0beFE`;
+    let autoCoinageSnapshotProxyed = `0x6E67752D86e7AE04eF8a876eEbeE6E1AFd24629F`;
+    let autoCoinageSnapshoted : any;
+
+    let tokenDividendPoolImpled = `0x9B1865b1BC08d705de74705A27B279Bea9f1368A`;
+    let tokenDividendPoolProxyed = `0x25Ee8A622a80385bA5eE10A1b8B2853704fE8310`;
+    let tokenDividendPoolProxy : any;
+    let tokenDividendPooled : any;
+
+
 
     const BASE_TEN = 10
     const decimals = 18
@@ -129,6 +142,9 @@ describe("VaultFactory", () => {
     before(async function () {
         let accounts = await ethers.getSigners();
         [deployer, user1, person1, person2, person3, person4, person5, person6, dividedPool2, proxyAdmin, admin, depositManager ] = accounts
+        console.log(deployer.address);
+        console.log(person1.address);
+        console.log(person2.address);
         vaultContracts[0].owner = user1;
         vaultContracts[1].owner = person1;
         vaultContracts[2].owner = person2;
@@ -152,64 +168,84 @@ describe("VaultFactory", () => {
             expect(await erc20.symbol()).to.be.equal(erc20Info.symbol);
         });
 
-        it("deploy erc20Recorder", async () => {
-            const contract = await (
-                await ethers.getContractFactory(
-                    ERC20Recorder_ABI.abi,
-                    ERC20Recorder_ABI.bytecode
-                )
-            ).deploy(
-                "tokenRecorder",
-                "TA",
-                deployer.address,
-                depositManager.address
-            );
+        // it("deploy erc20Recorder", async () => {
+        //     const contract = await (
+        //         await ethers.getContractFactory(
+        //             ERC20Recorder_ABI.abi,
+        //             ERC20Recorder_ABI.bytecode
+        //         )
+        //     ).deploy(
+        //         "tokenRecorder",
+        //         "TA",
+        //         deployer.address,
+        //         depositManager.address
+        //     );
 
-            await contract.deployed();
-            erc20Recorder = await ethers.getContractAt(ERC20Recorder_ABI.abi, contract.address);
-            let code = await ethers.provider.getCode(erc20Recorder.address);
-            expect(code).to.not.eq("0x"); 
-        })
+        //     await contract.deployed();
+        //     erc20Recorder = await ethers.getContractAt(ERC20Recorder_ABI.abi, contract.address);
+        //     let code = await ethers.provider.getCode(erc20Recorder.address);
+        //     expect(code).to.not.eq("0x"); 
+        // })
 
-        it("deploy the TokenDividendPoolLogic", async () => {
-            const contract = await (
-                await ethers.getContractFactory(
-                    TokenDividendPool_ABI.abi,
-                    TokenDividendPool_ABI.bytecode
-                )
-            ).deploy();
+        // it("deploy the TokenDividendPoolLogic", async () => {
+        //     const contract = await (
+        //         await ethers.getContractFactory(
+        //             TokenDividendPool_ABI.abi,
+        //             TokenDividendPool_ABI.bytecode
+        //         )
+        //     ).deploy();
 
-            await contract.deployed();
-            tokendividendPool = await ethers.getContractAt(TokenDividendPool_ABI.abi, contract.address);
-            let code = await ethers.provider.getCode(tokendividendPool.address);
-            expect(code).to.not.eq("0x"); 
-        })
+        //     await contract.deployed();
+        //     tokendividendPool = await ethers.getContractAt(TokenDividendPool_ABI.abi, contract.address);
+        //     let code = await ethers.provider.getCode(tokendividendPool.address);
+        //     expect(code).to.not.eq("0x"); 
+        // })
 
-        it("deploy the TokenDividendPoolProxy", async () => {
-            const contract = await (
-                await ethers.getContractFactory(
-                    TokenDividendPoolProxy_ABI.abi,
-                    TokenDividendPoolProxy_ABI.bytecode
-                )
-            ).deploy(
-                tokendividendPool.address,
-                deployer.address
-            );
+        // it("deploy the TokenDividendPoolProxy", async () => {
+        //     const contract = await (
+        //         await ethers.getContractFactory(
+        //             TokenDividendPoolProxy_ABI.abi,
+        //             TokenDividendPoolProxy_ABI.bytecode
+        //         )
+        //     ).deploy(
+        //         tokendividendPool.address,
+        //         deployer.address
+        //     );
 
-            await contract.deployed();
-            tokendividendPoolProxy = await ethers.getContractAt(TokenDividendPoolProxy_ABI.abi, contract.address);
-            await (await tokendividendPoolProxy.initialize(erc20Recorder.address)).wait();
+        //     await contract.deployed();
+        //     tokendividendPoolProxy = await ethers.getContractAt(TokenDividendPoolProxy_ABI.abi, contract.address);
+        //     await (await tokendividendPoolProxy.initialize(erc20Recorder.address)).wait();
 
-            tokendividendPoolset = await ethers.getContractAt(TokenDividendPool_ABI.abi, tokendividendPoolProxy.address);
+        //     tokendividendPoolset = await ethers.getContractAt(TokenDividendPool_ABI.abi, tokendividendPoolProxy.address);
             
-            await (await erc20Recorder.grantRole(erc20Recorder.SNAPSHOT_ROLE(), tokendividendPoolset.address)).wait();
+        //     await (await erc20Recorder.grantRole(erc20Recorder.SNAPSHOT_ROLE(), tokendividendPoolset.address)).wait();
 
-            let code = await ethers.provider.getCode(tokendividendPoolProxy.address);
-            expect(code).to.not.eq("0x"); 
-            let code2 = await ethers.provider.getCode(tokendividendPoolset.address);
-            expect(code2).to.not.eq("0x");
+        //     let code = await ethers.provider.getCode(tokendividendPoolProxy.address);
+        //     expect(code).to.not.eq("0x"); 
+        //     let code2 = await ethers.provider.getCode(tokendividendPoolset.address);
+        //     expect(code2).to.not.eq("0x");
+        // })
 
+
+        it("connect autoCoinageSnaphsot contract (rinkeby)", async () => {
+            autoCoinageSnapshoted = new ethers.Contract( autoCoinageSnapshotProxyed, AutoCoinageSnapshotABI.abi, ethers.provider );
+            // autoCoinageSnapshoted = await ethers.ethers.getContractAt(AutoCoinageSnapshotABI.abi, autoCoinageSnapshotProxyed, ethers.ethers.provider);
+            // console.log(autoCoinageSnapshoted.address);
+            let id = await autoCoinageSnapshoted.snashotAggregatorTotal();
+            console.log("autoCoinageID :", id);
         })
+
+        it("connect dividendPoolProxy Contract (rinkeby)", async () => {
+            tokenDividendPooled = new ethers.Contract( tokenDividendPoolProxyed, TokenDividendPool_ABI.abi, ethers.provider );
+            let tx = await tokenDividendPooled.erc20DividendAddress();
+            console.log("erc20DividendAddress",tx);
+            // await (await tokenDividendPooled.initialize(autoCoinageSnapshoted.address)).wait();
+
+            // console.log(tokenDividendPooled);
+            // tokenDividendPooled = await ethers.ethers.getContractAt(TokenDividendPool_ABI.abi, tokenDividendPoolProxyed, ethers.ethers.provider);
+            // console.log(tokenDividendPooled.address);
+        })
+
 
         it("deploy the TestERC20", async () => {
             const contract = await (
@@ -226,6 +262,7 @@ describe("VaultFactory", () => {
             erc20A = await ethers.getContractAt(TestERC20_ABI.abi, contract.address);
             let code = await ethers.provider.getCode(erc20A.address);
             expect(code).to.not.eq("0x"); 
+            await erc20A.mint(person6.address, claim1);
         })
     
         it("deploy TONVaultFactory ", async function() {
@@ -279,13 +316,13 @@ describe("VaultFactory", () => {
 
         it("setinfo call from not admin", async function () {
             await expect(
-                TONVaultFactory.connect(user1).setinfo(tokendividendPoolset.address)
+                TONVaultFactory.connect(user1).setinfo(tokenDividendPooled.address)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
         it("setinfo call from admin", async function () {
-            await TONVaultFactory.connect(deployer).setinfo(tokendividendPoolset.address);
-            expect(await TONVaultFactory.dividedPoolProxy()).to.be.eq(tokendividendPoolset.address);
+            await TONVaultFactory.connect(deployer).setinfo(tokenDividendPooled.address);
+            expect(await TONVaultFactory.dividedPoolProxy()).to.be.eq(tokenDividendPooled.address);
         });
 
         it("setLogEventAddress call from not admin", async function () {
@@ -322,7 +359,7 @@ describe("VaultFactory", () => {
             expect(await TONVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await TONVaultProxy.isAdmin(person2.address)).to.be.equal(true);
             expect(await TONVaultProxy.isProxyAdmin(person2.address)).to.be.eq(false);
-            expect(await TONVaultProxy.dividiedPool()).to.be.equal(tokendividendPoolset.address);
+            expect(await TONVaultProxy.dividiedPool()).to.be.equal(tokenDividendPooled.address);
             TONVaultLogic = await ethers.getContractAt("TONVault", info.contractAddress);
         });
 
@@ -353,37 +390,37 @@ describe("VaultFactory", () => {
             expect(await TONVaultProxy2.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await TONVaultProxy2.isAdmin(person5.address)).to.be.equal(true);
             expect(await TONVaultProxy2.isProxyAdmin(person5.address)).to.be.eq(false);
-            expect(await TONVaultProxy2.dividiedPool()).to.be.equal(tokendividendPoolset.address);
+            expect(await TONVaultProxy2.dividiedPool()).to.be.equal(tokenDividendPooled.address);
             TONVaultLogic2 = await ethers.getContractAt("TONVault", info.contractAddress);
         });
     })
 
-    describe("makeBalance user", async () => {
-        const makeBalance = async (token : any, user : any, amount : any) => {
-            // empty balance
-            const balance = await token.balanceOf(user.address);
-            await (await token.connect(depositManager).burnFrom(user.address, balance)).wait();
-            expect(await token.balanceOf(user.address)).to.be.eq(0);
+    // describe("makeBalance user", async () => {
+    //     const makeBalance = async (token : any, user : any, amount : any) => {
+    //         // empty balance
+    //         const balance = await token.balanceOf(user.address);
+    //         await (await token.connect(depositManager).burnFrom(user.address, balance)).wait();
+    //         expect(await token.balanceOf(user.address)).to.be.eq(0);
     
-            // send amount
-            await (await token.connect(depositManager).mint(user.address, amount)).wait();
-            expect(await token.balanceOf(user.address)).to.be.eq(amount);
-        };
+    //         // send amount
+    //         await (await token.connect(depositManager).mint(user.address, amount)).wait();
+    //         expect(await token.balanceOf(user.address)).to.be.eq(amount);
+    //     };
 
-        it("should create balances", async () => {
-            const amount1 = 10;
-            await makeBalance(erc20Recorder, person1, amount1);
+    //     it("should create balances", async () => {
+    //         const amount1 = 10;
+    //         await makeBalance(erc20Recorder, person1, amount1);
     
-            const amount2 = 15;
-            await makeBalance(erc20Recorder, person2, amount2);
+    //         const amount2 = 15;
+    //         await makeBalance(erc20Recorder, person2, amount2);
     
-            const amount3 = 25;
-            await makeBalance(erc20Recorder, person3, amount3);
+    //         const amount3 = 25;
+    //         await makeBalance(erc20Recorder, person3, amount3);
     
-            const amount4 = 50;
-            await makeBalance(erc20Recorder, person4, amount4);
-        });
-    })
+    //         const amount4 = 50;
+    //         await makeBalance(erc20Recorder, person4, amount4);
+    //     });
+    // })
 
 
 
@@ -396,6 +433,7 @@ describe("VaultFactory", () => {
 
         it("check the initialize before input token", async ()  => {
             let curBlock = await ethers.provider.getBlock();
+
             claim1Time = curBlock.timestamp + (60*5);
             claim2Time = curBlock.timestamp + (60*8);
             claim3Time = curBlock.timestamp + (60*15);
@@ -453,32 +491,33 @@ describe("VaultFactory", () => {
             await erc20A.connect(person2).transfer(TONVaultLogic.address,totalAmount)
         })
 
-        it("check the changeAddr call from not owner", async () => {
+        it("check the changeAddr call from not Proxyowner", async () => {
             await expect(TONVaultLogic.connect(person5).changeAddr(
                 erc20_1.address,
-                tokendividendPoolset.address
+                tokenDividendPooled.address
             )).to.be.revertedWith("Accessible: Caller is not an proxy admin")
         })
 
-        it("check the changeAddr call from owner", async () => {
+        it("check the changeAddr call from Proxyowner", async () => {
             let tx = await TONVaultLogic.token();
             expect(tx).to.be.equal(erc20A.address)
             await TONVaultLogic.connect(proxyAdmin).changeAddr(
                 erc20_1.address,
-                tokendividendPoolset.address
+                tokenDividendPooled.address
             )
             let tx2 = await TONVaultLogic.token();
             expect(tx2).to.be.equal(erc20_1.address)
 
             await TONVaultLogic.connect(proxyAdmin).changeAddr(
                 erc20A.address,
-                tokendividendPoolset.address
+                tokenDividendPooled.address
             )
         })
 
         it("check the initialize after input token", async ()  => {
             let curBlock = await ethers.provider.getBlock();
-            claim1Time = curBlock.timestamp + (60*5);
+
+            claim1Time = curBlock.timestamp - 10;
             claim2Time = curBlock.timestamp + (60*8);
             claim3Time = curBlock.timestamp + (60*15);
             claim4Time = curBlock.timestamp + (60*20);
@@ -516,140 +555,157 @@ describe("VaultFactory", () => {
         })
 
         it("check the initialize after setting", async () => {
-            await expect(TONVaultLogic.connect(person3).initialize(
+            await expect(TONVaultLogic.connect(person2).initialize(
                 totalAmount,
                 totalClaim,
                 [claim1Time,claim2Time,claim3Time,claim4Time,claim5Time,claim6Time],
                 [claim1,claim2,claim3,claim4,claim5,claim6]
-            )).to.be.revertedWith("Accessible: Caller is not an admin")
+            )).to.be.revertedWith("already set")
         })
 
-        it("claim call before startTime", async () => {
-            await expect(TONVaultLogic.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
-        })
+        // it("claim call before startTime", async () => {
+        //     await expect(TONVaultLogic.connect(person1).claim()).to.be.revertedWith("Vault: not started yet");
+        // })
 
         it("check claimable amount is 0", async () => {
-            let tx  = await tokendividendPoolset.claimable(erc20A.address, person1.address);
+            let tx  = await tokenDividendPooled.claimable(erc20A.address, person1.address);
             expect(tx).to.be.equal(0)
-            let tx2  = await tokendividendPoolset.claimable(erc20A.address, person2.address);
+            let tx2  = await tokenDividendPooled.claimable(erc20A.address, person2.address);
             expect(tx2).to.be.equal(0)
-            let tx3  = await tokendividendPoolset.claimable(erc20A.address, person3.address);
+            let tx3  = await tokenDividendPooled.claimable(erc20A.address, person3.address);
             expect(tx3).to.be.equal(0)
-            let tx4  = await tokendividendPoolset.claimable(erc20A.address, person4.address);
+            let tx4  = await tokenDividendPooled.claimable(erc20A.address, person4.address);
             expect(tx4).to.be.equal(0)
         })
 
-        it("anyone can call claim", async () => {
-            expect(await erc20A.balanceOf(tokendividendPoolset.address)).to.equal(0);
-            await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
-            await ethers.provider.send('evm_mine');
+        // it("anyone can call claim", async () => {
+        //     expect(await erc20A.balanceOf(tokenDividendPooled.address)).to.equal(0);
+        //     // await ethers.provider.send('evm_setNextBlockTimestamp', [claim1Time]);
+        //     // await ethers.provider.send('evm_mine');
+        //     console.log("1")
+        //     let round = await TONVaultLogic.currentRound()
+        //     expect(round).to.equal(1);
+        //     console.log("2")
+        //     let calculClaimAmount = await TONVaultLogic.calculClaimAmount(1)
+        //     expect(calculClaimAmount).to.be.equal(claim1);
+        //     console.log("3")
+        //     let tx = await TONVaultLogic.connect(person1).claim();
+        //     await tx.wait();
+        //     console.log("4")
+        //     expect(await erc20A.balanceOf(tokenDividendPooled.address)).to.equal(claim1);
+        // }).timeout(1000000)
 
-            let round = await TONVaultLogic.currentRound()
-            expect(round).to.equal(1);
-
-            let calculClaimAmount = await TONVaultLogic.calculClaimAmount(1)
-            expect(calculClaimAmount).to.be.equal(claim1);
-
-            await TONVaultLogic.connect(person1).claim();
-            expect(await erc20A.balanceOf(tokendividendPoolset.address)).to.equal(claim1);
+        it("distribute", async () => {
+            console.log("1")
+            expect(await erc20A.balanceOf(person6.address)).to.be.equal(claim1);
+            console.log("2")
+            await ethers.provider.send("hardhat_setBalance", [
+                person6.address,
+                "0x56BC75E2D63100000",
+              ]);
+            console.log("3")
+            await erc20A.connect(person6).approve(tokenDividendPooled.address,claim1)
+            console.log("4")
+            await tokenDividendPooled.connect(person6).distribute(erc20A.address,claim1);
+            console.log("5")
         })
 
         
         it("dividedPool added storage erc20.address", async () => {        
-            let tx2 = await tokendividendPoolset.distributions(erc20A.address)
+            let tx2 = await tokenDividendPooled.distributions(erc20A.address)
             // console.log(tx2)
             expect(tx2.exists).to.be.equal(true);
         })
             
             
-        it("anyone can call claim2", async () => {
-            expect(await erc20A.balanceOf(tokendividendPoolset.address)).to.equal(claim1);
+        // it("anyone can call claim2", async () => {
+        //     expect(await erc20A.balanceOf(tokenDividendPooled.address)).to.equal(claim1);
         
-            await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time]);
-            await ethers.provider.send('evm_mine');
+        //     await ethers.provider.send('evm_setNextBlockTimestamp', [claim2Time]);
+        //     await ethers.provider.send('evm_mine');
         
-            let round = await TONVaultLogic.currentRound()
-            expect(round).to.equal(2);
-            let calculClaimAmount = await TONVaultLogic.calculClaimAmount(2)
-            expect(calculClaimAmount).to.be.equal(claim2);
+        //     let round = await TONVaultLogic.currentRound()
+        //     expect(round).to.equal(2);
+        //     let calculClaimAmount = await TONVaultLogic.calculClaimAmount(2)
+        //     expect(calculClaimAmount).to.be.equal(claim2);
         
-            await TONVaultLogic.connect(person2).claim();
+        //     await TONVaultLogic.connect(person2).claim();
             
-            let tx = await erc20A.balanceOf(tokendividendPoolset.address)
-            let tx2 = Number(claim1)
-            let tx3 = Number(claim2)
-            let tx4 = tx2+tx3
+        //     let tx = await erc20A.balanceOf(tokenDividendPooled.address)
+        //     let tx2 = Number(claim1)
+        //     let tx3 = Number(claim2)
+        //     let tx4 = tx2+tx3
         
-            expect(Number(tx)).to.equal(tx4);
-        })
+        //     expect(Number(tx)).to.equal(tx4);
+        // })
                                         
         it("check claimable amount is above 0 ", async () => {
-            let tx  = await tokendividendPoolset.claimable(erc20A.address, person1.address);
+            let tx  = await tokenDividendPooled.claimable(erc20A.address, person1.address);
             expect(tx).to.be.above(0)
-            let tx2  = await tokendividendPoolset.claimable(erc20A.address, person2.address);
+            let tx2  = await tokenDividendPooled.claimable(erc20A.address, person2.address);
             expect(tx2).to.be.above(0)
-            let tx3  = await tokendividendPoolset.claimable(erc20A.address, person3.address);
-            expect(tx3).to.be.above(0)
-            let tx4  = await tokendividendPoolset.claimable(erc20A.address, person4.address);
-            expect(tx4).to.be.above(0)
+            // let tx3  = await tokendividendPoolset.claimable(erc20A.address, person3.address);
+            // expect(tx3).to.be.above(0)
+            // let tx4  = await tokendividendPoolset.claimable(erc20A.address, person4.address);
+            // expect(tx4).to.be.above(0)
         })
 
-        it("anyone can call claim6", async () => {
-            let tx = await erc20A.balanceOf(tokendividendPoolset.address)
-            let claim1A = Number(claim1)
-            let claim2A = Number(claim2)
-            let tx2 = claim1A+claim2A
-            expect(Number(tx)).to.equal(tx2);
+        // it("anyone can call claim6", async () => {
+        //     let tx = await erc20A.balanceOf(tokendividendPoolset.address)
+        //     let claim1A = Number(claim1)
+        //     let claim2A = Number(claim2)
+        //     let tx2 = claim1A+claim2A
+        //     expect(Number(tx)).to.equal(tx2);
 
-            await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
-            await ethers.provider.send('evm_mine');
+        //     await ethers.provider.send('evm_setNextBlockTimestamp', [claim6Time+10]);
+        //     await ethers.provider.send('evm_mine');
 
-            let round = await TONVaultLogic.currentRound()
-            expect(round).to.equal(6);
+        //     let round = await TONVaultLogic.currentRound()
+        //     expect(round).to.equal(6);
             
-            await TONVaultLogic.connect(person3).claim();
+        //     await TONVaultLogic.connect(person3).claim();
 
-            let claimAfter = await erc20A.balanceOf(tokendividendPoolset.address)
-            let claim3A = Number(claim3)
-            let claim4A = Number(claim4)
-            let claim5A = Number(claim5)
-            let claim6A = Number(claim6)
-            let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
+        //     let claimAfter = await erc20A.balanceOf(tokendividendPoolset.address)
+        //     let claim3A = Number(claim3)
+        //     let claim4A = Number(claim4)
+        //     let claim5A = Number(claim5)
+        //     let claim6A = Number(claim6)
+        //     let claimAfterAmount2 = claim1A+claim2A+claim3A+claim4A+claim5A+claim6A
 
-            expect(Number(claimAfter)).to.equal(claimAfterAmount2);
-        })
+        //     expect(Number(claimAfter)).to.equal(claimAfterAmount2);
+        // })
 
-        it("check the tokenDividedPool claim", async () => {
-            let beforeAmount1 = await erc20A.balanceOf(person1.address);
-            expect(Number(beforeAmount1)).to.be.equal(0);
-            await tokendividendPoolset.connect(person1).claim(erc20A.address);
-            let afterAmount1 = await erc20A.balanceOf(person1.address);
-            // console.log(Number(afterAmount1));
-            expect(Number(afterAmount1)).to.be.above(0);
+        // it("check the tokenDividedPool claim", async () => {
+        //     let beforeAmount1 = await erc20A.balanceOf(person1.address);
+        //     expect(Number(beforeAmount1)).to.be.equal(0);
+        //     await tokendividendPoolset.connect(person1).claim(erc20A.address);
+        //     let afterAmount1 = await erc20A.balanceOf(person1.address);
+        //     // console.log(Number(afterAmount1));
+        //     expect(Number(afterAmount1)).to.be.above(0);
 
-            let beforeAmount2 = await erc20A.balanceOf(person2.address);
-            expect(Number(beforeAmount2)).to.be.equal(0);
-            await tokendividendPoolset.connect(person2).claim(erc20A.address);
-            let afterAmount2 = await erc20A.balanceOf(person2.address);
-            // console.log(Number(afterAmount2));
-            expect(Number(afterAmount2)).to.be.above(Number(afterAmount1));
-
-
-            let beforeAmount3 = await erc20A.balanceOf(person3.address);
-            expect(Number(beforeAmount3)).to.be.equal(0);
-            await tokendividendPoolset.connect(person3).claim(erc20A.address);
-            let afterAmount3 = await erc20A.balanceOf(person3.address);
-            // console.log(Number(afterAmount3));
-            expect(Number(afterAmount3)).to.be.above(Number(afterAmount2));
+        //     let beforeAmount2 = await erc20A.balanceOf(person2.address);
+        //     expect(Number(beforeAmount2)).to.be.equal(0);
+        //     await tokendividendPoolset.connect(person2).claim(erc20A.address);
+        //     let afterAmount2 = await erc20A.balanceOf(person2.address);
+        //     // console.log(Number(afterAmount2));
+        //     expect(Number(afterAmount2)).to.be.above(Number(afterAmount1));
 
 
-            let beforeAmount4 = await erc20A.balanceOf(person4.address);
-            expect(Number(beforeAmount4)).to.be.equal(0);
-            await tokendividendPoolset.connect(person4).claim(erc20A.address);
-            let afterAmount4 = await erc20A.balanceOf(person4.address);
-            // console.log(Number(afterAmount4));
-            expect(Number(afterAmount4)).to.be.above(Number(afterAmount3));
-        })
+        //     let beforeAmount3 = await erc20A.balanceOf(person3.address);
+        //     expect(Number(beforeAmount3)).to.be.equal(0);
+        //     await tokendividendPoolset.connect(person3).claim(erc20A.address);
+        //     let afterAmount3 = await erc20A.balanceOf(person3.address);
+        //     // console.log(Number(afterAmount3));
+        //     expect(Number(afterAmount3)).to.be.above(Number(afterAmount2));
+
+
+        //     let beforeAmount4 = await erc20A.balanceOf(person4.address);
+        //     expect(Number(beforeAmount4)).to.be.equal(0);
+        //     await tokendividendPoolset.connect(person4).claim(erc20A.address);
+        //     let afterAmount4 = await erc20A.balanceOf(person4.address);
+        //     // console.log(Number(afterAmount4));
+        //     expect(Number(afterAmount4)).to.be.above(Number(afterAmount3));
+        // })
     })
 
 })
