@@ -355,6 +355,7 @@ contract InitialLiquidityVault is
         emit CollectInVault(lpToken, amount0, amount1);
     }
 
+    /*
     /// @inheritdoc IInitialLiquidityVaultAction
     function withdraw(address _token, address _account, uint256 _amount)
         external override nonReentrant
@@ -369,4 +370,6 @@ contract InitialLiquidityVault is
 
         emit WithdrawalInVault(msg.sender, _token, _account, _amount);
     }
+    */
+
 }

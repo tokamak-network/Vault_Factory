@@ -79,14 +79,14 @@ interface IInitialLiquidityVaultAction {
     function setPoolInitialize(uint160 inSqrtPriceX96)
         external;
 
-
+    /*
     /// @dev If the total allocated amount is all claimed, the remaining token balance can be transferred to the account by the owner.
     /// @param _token token address
     /// @param _account account
     /// @param _amount amount
     function withdraw(address _token, address _account, uint256 _amount)
         external;
-
+    */
 
 
     /// ####### anyone can use ##########
