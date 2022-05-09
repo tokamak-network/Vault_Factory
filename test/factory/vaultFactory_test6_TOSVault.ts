@@ -348,28 +348,6 @@ describe("VaultFactory", () => {
             )).to.be.revertedWith("Accessible: Caller is not an admin");
         })
 
-        it("check the withdraw call from not owner", async () => {
-            await expect(TOSVaultLogic.connect(person5).withdraw(
-                person5.address,
-                totalAmount
-            )).to.be.revertedWith("Accessible: Caller is not an admin")
-        })
-
-        it("check the withdraw call from owner", async () => {
-            let tx = await erc20.balanceOf(person2.address);
-            expect(tx).to.be.equal(0);
-
-            await TOSVaultLogic.connect(person2).withdraw(
-                person2.address,
-                totalAmount
-            )
-
-            let tx2 = await erc20.balanceOf(person2.address);
-            expect(tx2).to.be.equal(totalAmount);
-
-            await erc20.connect(person2).transfer(TOSVaultLogic.address,totalAmount)
-        })
-
         it("check the changeToken call from not owner", async () => {
             await expect(TOSVaultLogic.connect(person5).changeToken(
                 erc20_1.address
@@ -420,13 +398,6 @@ describe("VaultFactory", () => {
 
             let tx4 = await TOSVaultLogic.claimAmounts(5);
             expect(tx4).to.equal(claim6)
-        })
-
-        it("check the withdraw after setting", async () => {
-            await expect(TOSVaultLogic.connect(person3).withdraw(
-                person2.address,
-                totalAmount
-            )).to.be.revertedWith("Accessible: Caller is not an admin")
         })
 
         it("check the changeToken after setting", async () => {

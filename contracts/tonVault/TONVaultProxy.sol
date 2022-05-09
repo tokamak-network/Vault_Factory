@@ -11,7 +11,7 @@ contract TONVaultProxy is TONVaultStorage, VaultProxy {
         address _token,
         address _owner,
         address _dividedPool
-    ) external onlyOwner {
+    ) external onlyProxyOwner {
         name = _name;
         token = _token;
         owner = _owner;

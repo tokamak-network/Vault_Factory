@@ -6,16 +6,17 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./TypeCVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
+import "../interfaces/ITypeCVault.sol";
 import "../proxy/VaultStorage.sol";
 
-contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
+contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, ITypeCVault {
     using SafeERC20 for IERC20;
 
     event Claimed(
         address indexed caller,
         uint256 amount,
         uint256 totalClaimedAmount
-    );        
+    );
 
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
@@ -34,7 +35,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
     }
 
     ///@dev initialization function
-    ///@param _totalAllocatedAmount total allocated amount           
+    ///@param _totalAllocatedAmount total allocated amount
     ///@param _claimCounts total claim Counts
     ///@param _claimTimes each claimTime
     ///@param _claimAmounts each claimAmount
@@ -43,7 +44,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyOwner {
+    ) external override onlyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         require(set != true, "already set");
 
@@ -65,7 +66,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         
         totalAllocatedAmount = _totalAllocatedAmount;
@@ -83,11 +84,11 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
 
     function changeAddr(
         address _token
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         token = _token;
     }
 
-    function currentRound() public view returns (uint256 round) {
+    function currentRound() public override view returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
             if(block.timestamp < claimTimes[0]){
                 round = 0;
@@ -99,7 +100,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         }
     }
 
-    function calcalClaimAmount(uint256 _round) public view returns (uint256 amount) {
+    function calcalClaimAmount(uint256 _round) public override view returns (uint256 amount) {
         uint256 expectedClaimAmount;
         for(uint256 i = 0; i < _round; i++) {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
@@ -110,11 +111,12 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
             amount = totalAllocatedAmount - totalClaimsAmount;
         } else {
             amount = expectedClaimAmount - totalClaimsAmount;
-        }        
+        }
     }
 
     function claim(address _account)
         external
+        override
         onlyOwner
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
@@ -130,13 +132,5 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         IERC20(token).safeTransfer(_account, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
-    }
-
-    function withdraw(address _account, uint256 _amount)
-        external    
-        onlyOwner
-    {
-        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        IERC20(token).safeTransfer(_account, _amount);
     }
 }

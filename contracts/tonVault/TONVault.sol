@@ -7,11 +7,10 @@ import "./TONVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
 import "../interfaces/ITokenDividendPool.sol";
+import "../interfaces/ITONVault.sol";
 import "../proxy/VaultStorage.sol";
 
-import "hardhat/console.sol";
-
-contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
+contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault {
     using SafeERC20 for IERC20;
   
     event Claimed(
@@ -46,7 +45,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyOwner {
+    ) external override onlyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         require(settingCheck != true, "already set");
    
@@ -70,7 +69,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         
         totalAllocatedAmount = _totalAllocatedAmount;
@@ -90,12 +89,12 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
     function changeAddr(
         address _token,
         address _dividedPool
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         token = _token;
         dividiedPool = _dividedPool;
     }
 
-    function currentRound() public view returns (uint256 round) {
+    function currentRound() public override view returns (uint256 round) {
         if(block.timestamp < claimTimes[0]){
             round = 0;
         }
@@ -109,19 +108,21 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
         }
     }
 
-    function calculClaimAmount(uint256 _round) public view returns (uint256 amount) {
+    function calculClaimAmount(uint256 _round) public override view returns (uint256 amount) {
         if (totalClaimCounts == _round) {
             amount = totalAllocatedAmount - totalClaimsAmount;
-        } 
-        uint256 expectedClaimAmount;
-        for (uint256 i = 0; i < _round; i++) {
-           expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
+        } else {
+            uint256 expectedClaimAmount;
+            for (uint256 i = 0; i < _round; i++) {
+                expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
+            }
+            amount = expectedClaimAmount - totalClaimsAmount;
         }
-        amount = expectedClaimAmount - totalClaimsAmount;
     }
 
     function claim()
         external
+        override
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
@@ -134,13 +135,5 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon {
         ITokenDividendPool(dividiedPool).distribute(token, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
-    }
-
-    function withdraw(address _account, uint256 _amount)
-        external    
-        onlyOwner
-    {
-        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        IERC20(token).safeTransfer(_account, _amount);
     }
 }

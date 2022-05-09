@@ -6,17 +6,18 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./TypeBVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
+import "../interfaces/ITypeBVault.sol";
 import "../proxy/VaultStorage.sol";
 
-contract TypeBVault is TypeBVaultStorage, VaultStorage, ProxyAccessCommon {
+contract TypeBVault is TypeBVaultStorage, VaultStorage, ProxyAccessCommon, ITypeBVault {
     using SafeERC20 for IERC20;
 
     ///@dev constructor
     constructor() {
     }
 
-    function claim(address _to, uint256 _amount) external onlyOwner {
-        require(IERC20(token).balanceOf(address(this)) >= _amount, "Vault: insufficent");
+    function claim(address _to, uint256 _amount) external override onlyOwner {
+        require(IERC20(token).balanceOf(address(this)) >= _amount, "Vault: insufficient");
         IERC20(token).safeTransfer(_to, _amount);
     }
 

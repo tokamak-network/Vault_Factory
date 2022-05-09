@@ -10,7 +10,7 @@ contract TypeCVaultProxy is TypeCVaultStorage, VaultProxy {
         string memory _name,
         address _token,
         address _owner
-    ) external onlyOwner {
+    ) external onlyProxyOwner {
         name = _name;
         token = _token;
         owner = _owner;
