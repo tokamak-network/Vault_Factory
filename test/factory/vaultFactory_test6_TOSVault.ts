@@ -348,23 +348,26 @@ describe("VaultFactory", () => {
             )).to.be.revertedWith("Accessible: Caller is not an admin");
         })
 
-        it("check the changeToken call from not owner", async () => {
-            await expect(TOSVaultLogic.connect(person5).changeToken(
-                erc20_1.address
-            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        it("check the changeAddr call from not owner", async () => {
+            await expect(TOSVaultLogic.connect(person5).changeAddr(
+                erc20_1.address,
+                lockTOSContract.address
+            )).to.be.revertedWith("Accessible: Caller is not an proxy admin")
         })
 
-        it("check the changeToken call from owner", async () => {
+        it("check the changeAddr call from owner", async () => {
             let tx = await TOSVaultLogic.token();
             expect(tx).to.be.equal(erc20.address)
-            await TOSVaultLogic.connect(person2).changeToken(
-                erc20_1.address
+            await TOSVaultLogic.connect(proxyAdmin).changeAddr(
+                erc20_1.address,
+                lockTOSContract.address
             )
             let tx2 = await TOSVaultLogic.token();
             expect(tx2).to.be.equal(erc20_1.address)
 
-            await TOSVaultLogic.connect(person2).changeToken(
-                erc20.address
+            await TOSVaultLogic.connect(proxyAdmin).changeAddr(
+                erc20.address,
+                lockTOSContract.address
             )
         })
 
@@ -400,10 +403,11 @@ describe("VaultFactory", () => {
             expect(tx4).to.equal(claim6)
         })
 
-        it("check the changeToken after setting", async () => {
-            await expect(TOSVaultLogic.connect(person3).changeToken(
-                erc20_1.address
-            )).to.be.revertedWith("Accessible: Caller is not an admin")
+        it("check the changeAddr after setting", async () => {
+            await expect(TOSVaultLogic.connect(person3).changeAddr(
+                erc20_1.address,
+                lockTOSContract.address
+            )).to.be.revertedWith("Accessible: Caller is not an proxy admin")
         })
 
         it("check the initialize after setting", async () => {
