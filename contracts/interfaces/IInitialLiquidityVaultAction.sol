@@ -109,4 +109,18 @@ interface IInitialLiquidityVaultAction {
     /// @dev function to charge a fee
     function collect() external ;
 
+
+    /// @dev get minimum tick
+    function getMinTick() external view returns (int24);
+
+
+    /// @dev get maximum tick
+    function getMaxTick() external view returns (int24);
+
+    /// @dev Set a price and create a pool.
+    function setInitialPriceAndCreatePool(
+        uint256 tosPrice,
+        uint256 tokenPrice,
+        uint160 initSqrtPrice
+    ) external ;
 }

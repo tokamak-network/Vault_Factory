@@ -84,7 +84,7 @@ contract InitialLiquidityVault is
     function setBoolReadyToCreatePool(
         bool _boolReadyToCreatePool
         )
-        external override
+        public override
         onlyOwner
     {
         require(boolReadyToCreatePool != _boolReadyToCreatePool, "same boolReadyToCreatePool");
@@ -99,13 +99,13 @@ contract InitialLiquidityVault is
         uint256 tokenPrice,
         uint160 initSqrtPrice
         )
-        external override
+        public override
         onlyOwner beforeSetReadyToCreatePool
     {
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;
         initSqrtPriceX96 = initSqrtPrice;
-        //LogEvent("SetBoolSetInitialPriceReadyToCreatePool", abi.encode(tosPrice, tokenPrice, initSqrtPrice));
+
         emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
     }
 
@@ -165,6 +165,24 @@ contract InitialLiquidityVault is
 
         emit ChangedToken(_token);
     }
+
+    /// @inheritdoc IInitialLiquidityVaultAction
+    function setInitialPriceAndCreatePool(
+        uint256 tosPrice,
+        uint256 tokenPrice,
+        uint160 initSqrtPrice
+    ) external override onlyOwner beforeSetReadyToCreatePool
+    {
+        setInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
+        setBoolReadyToCreatePool(true);
+        setPool();
+
+        address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
+        require(getPool == address(pool), "different pool address");
+        (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
+        require(sqrtPriceX96 > 0, "price is zero");
+    }
+
 
     /// @inheritdoc IInitialLiquidityVaultAction
     function setPool()
@@ -228,11 +246,13 @@ contract InitialLiquidityVault is
 
     }
 
-    function getMinTick() public view returns (int24){
+    /// @inheritdoc IInitialLiquidityVaultAction
+    function getMinTick() public view override returns (int24){
            return (TickMath.MIN_TICK / tickSpacings) * tickSpacings ;
     }
 
-    function getMaxTick() public view returns (int24){
+    /// @inheritdoc IInitialLiquidityVaultAction
+    function getMaxTick() public view override  returns (int24){
            return (TickMath.MAX_TICK / tickSpacings) * tickSpacings ;
     }
 
