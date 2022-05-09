@@ -44,7 +44,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyOwner {
+    ) external override onlyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         require(set != true, "already set");
 
@@ -66,7 +66,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         
         totalAllocatedAmount = _totalAllocatedAmount;
@@ -84,11 +84,11 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
 
     function changeAddr(
         address _token
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         token = _token;
     }
 
-    function currentRound() public view returns (uint256 round) {
+    function currentRound() public override view returns (uint256 round) {
         for(uint256 i = totalClaimCounts; i > 0; i--) {
             if(block.timestamp < claimTimes[0]){
                 round = 0;
@@ -100,7 +100,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         }
     }
 
-    function calcalClaimAmount(uint256 _round) public view returns (uint256 amount) {
+    function calcalClaimAmount(uint256 _round) public override view returns (uint256 amount) {
         uint256 expectedClaimAmount;
         for(uint256 i = 0; i < _round; i++) {
            expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
@@ -116,6 +116,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
 
     function claim(address _account)
         external
+        override
         onlyOwner
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");

@@ -45,7 +45,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyOwner {
+    ) external override onlyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         require(settingCheck != true, "already set");
    
@@ -69,7 +69,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         
         totalAllocatedAmount = _totalAllocatedAmount;
@@ -89,12 +89,12 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
     function changeAddr(
         address _token,
         address _dividedPool
-    ) external onlyProxyOwner {
+    ) external override onlyProxyOwner {
         token = _token;
         dividiedPool = _dividedPool;
     }
 
-    function currentRound() public view returns (uint256 round) {
+    function currentRound() public override view returns (uint256 round) {
         if(block.timestamp < claimTimes[0]){
             round = 0;
         }
@@ -108,7 +108,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
         }
     }
 
-    function calculClaimAmount(uint256 _round) public view returns (uint256 amount) {
+    function calculClaimAmount(uint256 _round) public override view returns (uint256 amount) {
         if (totalClaimCounts == _round) {
             amount = totalAllocatedAmount - totalClaimsAmount;
         } else {
@@ -122,6 +122,7 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
 
     function claim()
         external
+        override
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
