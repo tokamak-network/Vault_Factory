@@ -22,8 +22,12 @@ contract VaultStorage  {
     mapping(uint256 => address) public proxyImplementation;
     mapping(address => bool) public aliveImplementation;
     mapping(bytes4 => address) public selectorImplementation;
-    
+
     bool public boolLogEvent ;
     address public logEventAddress ;
+
+    function allClaimInfos() external view returns (uint256, uint256[] memory, uint256[] memory, uint256){
+         return (totalClaimCounts, claimTimes, claimAmounts, nowClaimRound);
+    }
 
 }
