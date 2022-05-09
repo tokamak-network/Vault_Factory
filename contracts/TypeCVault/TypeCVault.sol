@@ -6,9 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./TypeCVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
+import "../interface/ITypeCVault.sol";
 import "../proxy/VaultStorage.sol";
 
-contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
+contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, ITypeCVault {
     using SafeERC20 for IERC20;
 
     event Claimed(
@@ -130,13 +131,5 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon {
         IERC20(token).safeTransfer(_account, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
-    }
-
-    function withdraw(address _account, uint256 _amount)
-        external
-        onlyOwner
-    {
-        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        IERC20(token).safeTransfer(_account, _amount);
     }
 }

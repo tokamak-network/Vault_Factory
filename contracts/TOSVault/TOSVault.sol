@@ -7,10 +7,11 @@ import "./TOSVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
 import "../interfaces/ILockTOSDividend.sol";
+import "../interfaces/ITOSVault.sol";
 import "../proxy/VaultStorage.sol";
 
 
-contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
+contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon, ITOSVault {
     using SafeERC20 for IERC20;
   
     event Claimed(
@@ -109,12 +110,13 @@ contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
     function calculClaimAmount(uint256 _round) public view returns (uint256 amount) {
         if (totalClaimCounts == _round) {
             amount = totalAllocatedAmount - totalClaimsAmount;
-        } 
-        uint256 expectedClaimAmount;
-        for (uint256 i = 0; i < _round; i++) {
-           expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
+        } else {
+            uint256 expectedClaimAmount;
+            for (uint256 i = 0; i < _round; i++) {
+                expectedClaimAmount = expectedClaimAmount + claimAmounts[i];
+            }
+            amount = expectedClaimAmount - totalClaimsAmount;
         }
-        amount = expectedClaimAmount - totalClaimsAmount;
     }
 
     function claim()
@@ -131,13 +133,5 @@ contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon {
         ILockTOSDividend(dividiedPool).distribute(token, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
-    }
-
-    function withdraw(address _account, uint256 _amount)
-        external    
-        onlyOwner
-    {
-        require(IERC20(token).balanceOf(address(this)) >= _amount,"Vault: dont have token");
-        IERC20(token).safeTransfer(_account, _amount);
     }
 }
