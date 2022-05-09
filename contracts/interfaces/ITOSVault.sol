@@ -36,12 +36,12 @@ interface ITOSVault {
     ) external;
 
     ///@dev Used to indicate the current round
-    ///@return return the currentRound
+    ///@param round the current round
     function currentRound() external view returns (uint256 round);
 
     ///@dev Reports the claimAmount for the round
     ///@param _round round
-    ///@return return the claimAmount
+    ///@param amount amount
     function calculClaimAmount(uint256 _round) external view returns (uint256 amount);
 
     ///@dev When you claim, the amount corresponding to the round goes to the vault

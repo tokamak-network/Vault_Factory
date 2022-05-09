@@ -29,22 +29,21 @@ interface ITypeCVault {
 
     ///@dev ProxyOwner can change when requested by the project team or change the dividendPool
     ///@param _token manage token Address           
-    ///@param _dividedPool dividendPool Address
     function changeAddr(
-        address _token,
-        address _dividedPool
+        address _token
     ) external;
 
     ///@dev Used to indicate the current round
-    ///@return return the currentRound
+    ///@param round the current round
     function currentRound() external view returns (uint256 round);
 
     ///@dev Reports the claimAmount for the round
     ///@param _round round
-    ///@return return the claimAmount
-    function calculClaimAmount(uint256 _round) external view returns (uint256 amount);
+    ///@param amount amount
+    function calcalClaimAmount(uint256 _round) external view returns (uint256 amount);
 
     ///@dev When you claim, the amount corresponding to the round goes to the vault
-    function claim()
+    ///@param _account give to account
+    function claim(address _account)
         external;
 }

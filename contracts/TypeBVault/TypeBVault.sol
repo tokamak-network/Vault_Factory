@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./TypeBVaultStorage.sol";
 
 import "../common/ProxyAccessCommon.sol";
-import "../interface/ITypeBVault.sol";
+import "../interfaces/ITypeBVault.sol";
 import "../proxy/VaultStorage.sol";
 
 contract TypeBVault is TypeBVaultStorage, VaultStorage, ProxyAccessCommon, ITypeBVault {
