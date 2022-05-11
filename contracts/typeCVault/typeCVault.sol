@@ -45,6 +45,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external override onlyOwner {
+        require(1 ether <= _totalAllocatedAmount, "need the totalAmount 1 token");
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         require(set != true, "already set");
 
@@ -67,7 +68,13 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external override onlyProxyOwner {
+        require(1 ether <= _totalAllocatedAmount, "need the totalAmount 1 token");
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
+
+        if(set == true) {
+            delete claimTimes;
+            delete claimAmounts;
+        }
         
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
@@ -79,7 +86,6 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
             amountCheck += _claimAmounts[i];
         }
         require(_totalAllocatedAmount == amountCheck, "diff totalAmount");
-        set = true;
     }
 
     function changeAddr(
