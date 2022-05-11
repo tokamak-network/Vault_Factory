@@ -8,7 +8,7 @@ async function main() {
 
   [deployer] = await ethers.getSigners();
   
-  const vault = await ethers.getContractFactory("TONVault");
+  const vault = await ethers.getContractFactory("TypeCVaultProxy");
   const vaultLogic = await vault.deploy();
   console.log("vaultLogic deployed to:", vaultLogic.address);
 

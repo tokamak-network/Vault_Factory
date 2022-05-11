@@ -15,11 +15,14 @@ async function main() {
   await typeCfactory.deployed();
 
   //rinkeby
-  const logicaddr = "0x19a71b3646C609c77f8AB775a976d3F1a370BcF7"
+  // const logicaddr = "0x19a71b3646C609c77f8AB775a976d3F1a370BcF7"
+  const logicaddr = "0x97f674859dB715b3d3C1b909c844e634F2eA095f"
 
   const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
 
-  const eventAddr = "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
+  // const eventAddr = "0x6eAb73266e1BDE7D823f278414e928e67C78FE20"
+  const eventAddr = "0x4aAd46a82c1D6fB74c5f552CFB947cB05870F0c6"
+
 
   await typeCfactory.setLogic(
     logicaddr
