@@ -80,18 +80,24 @@ contract TOSVault is TOSVaultStorage, VaultStorage, ProxyAccessCommon, ITOSVault
     {
         require(1 ether <= _totalAllocatedAmount, "need the totalAmount 1 token");
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
+
+        if(settingCheck == true) {
+            delete claimTimes;
+            delete claimAmounts;
+        }
         
         totalAllocatedAmount = _totalAllocatedAmount;
         totalClaimCounts = _claimCounts;
-        uint256 i = 0;
+        uint256 i;
         uint256 amountCheck = 0;
+
         for(i = 0; i < _claimCounts; i++) {
             claimTimes.push(_claimTimes[i]);
             claimAmounts.push(_claimAmounts[i]);
             amountCheck += _claimAmounts[i];
         }
+
         require(_totalAllocatedAmount == amountCheck, "diff totalAmount");
-        settingCheck = true;
         IERC20(token).approve(dividiedPool,totalAllocatedAmount);
     }
 
