@@ -45,7 +45,12 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external override onlyOwner {
+    ) 
+        external 
+        override 
+        onlyOwner 
+    {
+        require(1 ether <= _totalAllocatedAmount, "need the totalAmount 1 token");
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         require(settingCheck != true, "already set");
    
@@ -69,7 +74,12 @@ contract TONVault is TONVaultStorage, VaultStorage, ProxyAccessCommon, ITONVault
         uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
-    ) external override onlyProxyOwner {
+    ) 
+        external
+        override
+        onlyProxyOwner 
+    {
+        require(1 ether <= _totalAllocatedAmount, "need the totalAmount 1 token");
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
         
         totalAllocatedAmount = _totalAllocatedAmount;
