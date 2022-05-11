@@ -211,10 +211,10 @@ describe("InitialLiquidityVault", function () {
             price.initTick = await initialLiquidityVault.getTickAtSqrtRatio(ethers.BigNumber.from(price.initSqrtPrice));
             console.log('price',price);
 
-            //var tokenPrice0 = price.initSqrtPrice ** 2 / 2 ** 192; //token0
-            //var tokenPrice1 = 2 ** 192 / price.initSqrtPrice ** 2;  //token1
-            //console.log('tokenPrice0', tokenPrice0);
-            //console.log('tokenPrice1', tokenPrice1);
+            var tokenPrice0 = price.initSqrtPrice ** 2 / 2 ** 192; //token0
+            var tokenPrice1 = 2 ** 192 / price.initSqrtPrice ** 2;  //token1
+            console.log('tokenPrice0', tokenPrice0);
+            console.log('tokenPrice1', tokenPrice1);
         });
 
 
