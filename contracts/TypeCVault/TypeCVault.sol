@@ -79,7 +79,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         require(1 ether <= _totalAllocatedAmount, "need the totalAmount 1 token");
         require(_totalAllocatedAmount <= IERC20(token).balanceOf(address(this)), "need to input the token");
 
-        if(settingCheck == true) {
+        if(set == true) {
             delete claimTimes;
             delete claimAmounts;
         }
