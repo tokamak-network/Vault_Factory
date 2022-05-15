@@ -56,22 +56,24 @@ const getLogs = async (depositManagerAddress, fromBlockNumber, toBlockNumber, ab
 
   try{
     const txs = await ethers.provider.getLogs(filter);
-    console.log("length: ", txs.length);
-
+    //console.log("length: ", txs.length);
+    let txCount = 0;
     for (const tx of txs) {
-      const { transactionHash } = tx;
-      const { logs } = await ethers.provider.getTransactionReceipt(transactionHash);
-      const foundLog = logs.find(el => el && el.topics &&
-          el.topics.includes(ethers.utils.id(topic0))
-        );
-      if (!foundLog) continue;
-      const parsedlog = iface.parseLog(foundLog);
-      let args = parsedlog["args"];
+        const { transactionHash } = tx;
+        const { logs } = await ethers.provider.getTransactionReceipt(transactionHash);
+        const foundLog = logs.find(el => el && el.topics &&
+            el.topics.includes(ethers.utils.id(topic0))
+          );
+        if (!foundLog) continue;
+        const parsedlog = iface.parseLog(foundLog);
+        let args = parsedlog["args"];
         if(args.layer2.toLowerCase() == layer2.toLowerCase()){
           console.log(args);
+          console.log('transactionHash:', transactionHash);
+          txCount++;
         }
     }
-
+    console.log("length: ", txCount);
   } catch(error){
     console.log('getLogs error',topic0, error);
   }
