@@ -43,8 +43,10 @@ describe("VaultFactory", () => {
     let eventLogAddress : any;
 
 
-    let lockTOSdividedProxy = `0xA1E633C746DA99dceB42D65A59D3e4B5672a6bA1`;
-    let lockTOSProxy = `0x5e820954a327Db71dbcad8D7C73B95f08d8f07f1`;
+    // let lockTOSdividedProxy = `0xA1E633C746DA99dceB42D65A59D3e4B5672a6bA1`;
+    let lockTOSdividedProxy = `0x90DAEb2888f3d2a63FF32cf28c7d5e33E420FC2c`;
+    // let lockTOSProxy = `0x5e820954a327Db71dbcad8D7C73B95f08d8f07f1`;
+    let lockTOSProxy = `0x5adc7de3a0B4A4797f02C3E99265cd7391437568`;
     let TOSAddress = `0x73a54e5C054aA64C1AE7373C2B5474d8AFEa08bd`;
     let lockTOSContract : any;
     let tosContract : any;
@@ -367,7 +369,7 @@ describe("VaultFactory", () => {
 
             await TOSVaultLogic.connect(proxyAdmin).changeAddr(
                 erc20.address,
-                lockTOSContract.address
+                dividedPool.address
             )
         })
 

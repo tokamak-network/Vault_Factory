@@ -283,7 +283,7 @@ describe("VaultFactory", () => {
             await expect(typeBVaultLogic.connect(person1).claim(
                 person1.address,
                 claim1
-            )).to.be.revertedWith("Vault: insufficent");
+            )).to.be.revertedWith("Vault: insufficient");
         })
     })
 

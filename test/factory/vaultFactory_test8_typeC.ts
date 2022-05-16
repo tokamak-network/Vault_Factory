@@ -120,23 +120,23 @@ describe("VaultFactory", () => {
         expect(await erc20.symbol()).to.be.equal(erc20Info.symbol);
     });
 
-    it("deploy TypeAVaultFactory ", async function() {
-        const VaultFactory = await ethers.getContractFactory("TypeAVaultFactory");
+    // it("deploy TypeAVaultFactory ", async function() {
+    //     const VaultFactory = await ethers.getContractFactory("TypeAVaultFactory");
     
-        vaultAFactory = await VaultFactory.connect(deployer).deploy();
+    //     vaultAFactory = await VaultFactory.connect(deployer).deploy();
     
-        let code = await deployer.provider.getCode(vaultAFactory.address);
-        expect(code).to.not.eq("0x");
-    });
+    //     let code = await deployer.provider.getCode(vaultAFactory.address);
+    //     expect(code).to.not.eq("0x");
+    // });
 
-    it("deploy TypeBVaultFactory ", async function() {
-        const VaultFactory = await ethers.getContractFactory("TypeBVaultFactory");
+    // it("deploy TypeBVaultFactory ", async function() {
+    //     const VaultFactory = await ethers.getContractFactory("TypeBVaultFactory");
     
-        vaultBFactory = await VaultFactory.connect(deployer).deploy();
+    //     vaultBFactory = await VaultFactory.connect(deployer).deploy();
     
-        let code = await deployer.provider.getCode(vaultBFactory.address);
-        expect(code).to.not.eq("0x");
-    });
+    //     let code = await deployer.provider.getCode(vaultBFactory.address);
+    //     expect(code).to.not.eq("0x");
+    // });
 
     it("deploy TypeCVaultFactory ", async function() {
         const VaultFactory = await ethers.getContractFactory("TypeCVaultFactory");
@@ -361,7 +361,7 @@ describe("VaultFactory", () => {
                     totalClaim,
                     [Time1,Time2,Time3,Time4,Time5,Time6],
                     [claim1,claim2,claim3,claim4,claim5,claim6]
-                )).to.be.revertedWith("over time");
+                )).to.be.revertedWith("already set");
 
             })
 
