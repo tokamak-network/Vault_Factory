@@ -197,6 +197,8 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
         public override nonReentrant
         nonZeroAddress(address(pool))
     {
+        require( pool.token0() != address(0) && pool.token1() != address(0), "pool is zero");
+
         //require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 round = currentRound();
@@ -207,11 +209,19 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
         uint256 programDuration = getProgramDuration(nowClaimRound);
         require(programDuration > 0, "zero duration");
 
+        uint256 duration = programDuration;
+
+        if( duration == 0 )  duration = 60*60*24*30;
+
+        if( totalClaimCounts > 1 && round < totalClaimCounts && round > 0 ) {
+            duration = claimTimes[round] - claimTimes[round-1];
+        }
+
         createIncentive(IUniswapV3Staker.IncentiveKey(
             token,
             pool,
             block.timestamp + startWaitTime,
-            block.timestamp + startWaitTime + programDuration,
+            block.timestamp + startWaitTime + duration,
             address(this)
             ),
             amount
