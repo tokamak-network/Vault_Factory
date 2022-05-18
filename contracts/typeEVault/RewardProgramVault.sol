@@ -158,6 +158,8 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         require(amount > 0, "no claimable amount");
         nowClaimRound = round;
+        uint256 programDuration = getProgramDuration(nowClaimRound);
+        require(programDuration > 0, "zero duration");
 
         createIncentive(IUniswapV3Staker.IncentiveKey(
             token,
@@ -168,6 +170,44 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             ),
             amount
         );
+    }
+
+    function getProgramDuration(uint256 _round) public view returns (uint256 period){
+
+        if(_round < 1) period = 0;
+        else if(_round == totalClaimCounts) {
+            if(totalClaimCounts == 1) period = 30 days;
+            else {
+                 period = claimTimes[claimTimes.length-1] - claimTimes[claimTimes.length-2];
+            }
+        } else if (_round < claimTimes.length) {
+            period = claimTimes[_round] - claimTimes[_round-1];
+        } else period = 0;
+    }
+
+    /// @inheritdoc IRewardProgramVaultAction
+    function IncentiveEnded(uint256 idx, uint256[] memory tokenIds)
+        public override nonReentrant
+        nonZeroAddress(address(pool))
+    {
+        require(totalProgramCount > 0, "no programs");
+        require(idx < totalProgramCount, "invalid index");
+        require(programs[idx].end == false, "already end");
+        programs[idx].end = true;
+        bytes32 incentiveId = keccak256(abi.encode(programs[idx].key));
+
+        ( ,, uint96 numberOfStakes) = staker.incentives(incentiveId);
+
+        if(numberOfStakes > 0)  require(tokenIds.length > 0, "there are stakers.");
+
+        for(uint256 i = 0; i < tokenIds.length; i++){
+            staker.unstakeToken(programs[idx].key, tokenIds[i]);
+        }
+
+        ( ,, uint96 numberOfStakesAfter) = staker.incentives(incentiveId);
+        require(numberOfStakesAfter == 0, "after unstakes, there are stakers.");
+
+        uint256 refund = staker.endIncentive(programs[idx].key);
 
     }
 
