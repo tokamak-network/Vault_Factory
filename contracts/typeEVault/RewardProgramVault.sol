@@ -209,14 +209,6 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
         uint256 programDuration = getProgramDuration(nowClaimRound);
         require(programDuration > 0, "zero duration");
 
-        uint256 duration = programDuration;
-
-        if( duration == 0 )  duration = 60*60*24*30;
-
-        if( totalClaimCounts > 1 && round < totalClaimCounts && round > 0 ) {
-            duration = claimTimes[round] - claimTimes[round-1];
-        }
-
         createIncentive(IUniswapV3Staker.IncentiveKey(
             token,
             pool,
@@ -232,7 +224,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
 
         if(_round < 1) period = 0;
         else if(_round == totalClaimCounts) {
-            if(totalClaimCounts == 1) period = 1 days;
+            if(totalClaimCounts == 1) period = 30 days;
             else {
                  period = claimTimes[claimTimes.length-1] - claimTimes[claimTimes.length-2];
             }
