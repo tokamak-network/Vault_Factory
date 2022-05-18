@@ -213,7 +213,7 @@ contract RewardProgramVault is  RewardProgramVaultStorage, VaultStorage, ProxyAc
             token,
             pool,
             block.timestamp + startWaitTime,
-            block.timestamp + startWaitTime + duration,
+            block.timestamp + startWaitTime + programDuration,
             address(this)
             ),
             amount
