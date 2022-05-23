@@ -49,7 +49,6 @@ interface ITypeCVault {
     function calcalClaimAmount(uint256 _round) external view returns (uint256 amount);
 
     ///@dev When you claim, the amount corresponding to the round goes to the vault
-    ///@param _account give to account
-    function claim(address _account)
+    function claim()
         external;
 }

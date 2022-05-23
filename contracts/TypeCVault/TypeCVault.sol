@@ -136,7 +136,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         }
     }
 
-    function claim(address _account)
+    function claim()
         external
         override
     {
