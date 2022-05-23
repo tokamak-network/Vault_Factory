@@ -98,6 +98,12 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         require(_totalAllocatedAmount == amountCheck, "diff totalAmount");
     }
 
+    function changeReceiveAddr(
+        address _receive
+    ) external override onlyOwner {
+        owner = _receive;
+    }
+
     function changeAddr(
         address _token
     ) external override onlyProxyOwner {
@@ -133,7 +139,6 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
     function claim(address _account)
         external
         override
-        onlyOwner
     {
         require(block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
@@ -145,7 +150,7 @@ contract TypeCVault is TypeCVaultStorage, VaultStorage, ProxyAccessCommon, IType
         require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: dont have token");
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
-        IERC20(token).safeTransfer(_account, amount);
+        IERC20(token).safeTransfer(owner, amount);
 
         emit Claimed(msg.sender, amount, totalClaimsAmount);
     }

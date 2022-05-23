@@ -27,6 +27,12 @@ interface ITypeCVault {
         uint256[] calldata _claimAmounts
     ) external;
 
+    ///@dev Owner can change receive Address
+    ///@param _receive token receive Address   
+    function changeReceiveAddr(
+        address _receive
+    ) external;
+
     ///@dev ProxyOwner can change when requested by the project team or change the dividendPool
     ///@param _token manage token Address           
     function changeAddr(
