@@ -4,16 +4,15 @@ const save = require("../save_deployed");
 const loadDeployed = require("../load_deployed");
 
 // rinkeby
-let newOwnerAddress = '0x3b9878Ef988B086F13E5788ecaB9A35E74082ED9';
+//let newOwnerAddress = '0x3b9878Ef988B086F13E5788ecaB9A35E74082ED9';
 // mainnet
-//let newOwnerAddress = '0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1';
+let newOwnerAddress = '0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1';
 //newOwner: 0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1
 
 async function main() {
 
   console.log('newOwnerAddress',newOwnerAddress);
 
-  /*
   let deployer, user2;
 
   const { chainId } = await ethers.provider.getNetwork();
@@ -65,7 +64,7 @@ async function main() {
 
   isAdmin1 = await initialLiquidityVaultFactoryContract.isAdmin(deployer.address);
   console.log("InitialLiquidityVaultFactory isAdmin(",deployer.address,"):", isAdmin1);
-  */
+
 
 }
 

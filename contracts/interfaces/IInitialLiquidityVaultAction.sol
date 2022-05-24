@@ -25,7 +25,7 @@ interface IInitialLiquidityVaultAction {
         )
         external;
 
-
+    /*
     /// @dev setInitialPrice function
     /// @param tosPrice tosPrice
     /// @param tokenPrice tokenPrice
@@ -36,11 +36,18 @@ interface IInitialLiquidityVaultAction {
         uint160 initSqrtPrice
         )
         external;
+    */
 
     /// @dev initialization function . Set claim information.
     /// @param _totalAllocatedAmount total allocated amount
+    /// @param tosPrice tosPrice
+    /// @param tokenPrice tokenPrice
+    /// @param initSqrtPrice When a pool is created for the first time, pricing information is absolutely necessary when initializing it.
     function initialize(
-        uint256 _totalAllocatedAmount
+        uint256 _totalAllocatedAmount,
+        uint256 tosPrice,
+        uint256 tokenPrice,
+        uint160 initSqrtPrice
     ) external ;
 
 
@@ -117,10 +124,15 @@ interface IInitialLiquidityVaultAction {
     /// @dev get maximum tick
     function getMaxTick() external view returns (int24);
 
+    /*
     /// @dev Set a price and create a pool.
     function setInitialPriceAndCreatePool(
         uint256 tosPrice,
         uint256 tokenPrice,
         uint160 initSqrtPrice
     ) external ;
+    */
+
+    /// @dev create a pool.
+    function setCreatePool() external ;
 }

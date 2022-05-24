@@ -13,6 +13,7 @@ module.exports = function (network, deployed) {
   data[deployed.name] = deployed.address;
 
   //console.log('data[deployed.name]', deployed.name, data[deployed.name]);
+  console.log('data',data);
 
   fs.writeFileSync(`deployed.${network}.json`, JSON.stringify(data, null, 2))
 }

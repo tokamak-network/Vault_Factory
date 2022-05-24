@@ -93,6 +93,7 @@ contract InitialLiquidityVault is
         emit SetBoolReadyToCreatePool(_boolReadyToCreatePool);
     }
 
+    /*
     /// @inheritdoc IInitialLiquidityVaultAction
     function setInitialPrice(
         uint256 tosPrice,
@@ -108,17 +109,28 @@ contract InitialLiquidityVault is
 
         emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
     }
+    */
 
     /// @inheritdoc IInitialLiquidityVaultAction
     function initialize(
-        uint256 _totalAllocatedAmount
+        uint256 _totalAllocatedAmount,
+        uint256 tosPrice,
+        uint256 tokenPrice,
+        uint160 initSqrtPrice
     )
         external override onlyOwner afterSetUniswap
     {
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
+        require(tosPrice > 0 && tokenPrice > 0 && initSqrtPrice > 0 , "zero tosPrice or tokenPrice or initSqrtPriceX96");
+
         totalAllocatedAmount = _totalAllocatedAmount;
 
+        initialTosPrice = tosPrice;
+        initialTokenPrice = tokenPrice;
+        initSqrtPriceX96 = initSqrtPrice;
+
         emit Initialized(_totalAllocatedAmount);
+        emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
     }
 
     /// @inheritdoc IInitialLiquidityVaultAction
@@ -166,6 +178,7 @@ contract InitialLiquidityVault is
         emit ChangedToken(_token);
     }
 
+    /*
     /// @inheritdoc IInitialLiquidityVaultAction
     function setInitialPriceAndCreatePool(
         uint256 tosPrice,
@@ -182,7 +195,20 @@ contract InitialLiquidityVault is
         (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "price is zero");
     }
+    */
 
+    /// @inheritdoc IInitialLiquidityVaultAction
+    function setCreatePool() external override onlyOwner beforeSetReadyToCreatePool
+    {
+        require(initSqrtPriceX96 > 0, "zero initSqrtPriceX96");
+        setBoolReadyToCreatePool(true);
+        setPool();
+
+        address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
+        require(getPool == address(pool), "different pool address");
+        (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
+        require(sqrtPriceX96 > 0, "price is zero");
+    }
 
     /// @inheritdoc IInitialLiquidityVaultAction
     function setPool()
