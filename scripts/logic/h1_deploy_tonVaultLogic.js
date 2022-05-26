@@ -16,7 +16,8 @@ async function main() {
   
   console.log("finish")
 
-  //npx hardhat verify --contract contracts/TONVault/TONVault.sol:TONVault 0x8Be08835EF4AfF5d14220BeBC8B7622b3F8D8B83 --network rinkeby
+  //npx hardhat verify --contract contracts/TONVault/TONVault.sol:TONVault 0xc3f4EA06A7BB8F218643d622cF1e84B7e5e4229D --network rinkeby
+  //npx hardhat verify --contract contracts/TONVault/TONVault.sol:TONVault 0xc3f4EA06A7BB8F218643d622cF1e84B7e5e4229D --network mainnet
 }
 
 // We recommend this pattern to be able to use async/await everywhere
