@@ -60,7 +60,7 @@ contract InitialLiquidityVault is
     ///@dev constructor
     constructor() {
     }
-
+    /*
     /// @inheritdoc IInitialLiquidityVaultAction
     function setBaseInfo(
         string memory _name,
@@ -79,7 +79,7 @@ contract InitialLiquidityVault is
 
         emit SetBaseInfo(_name, _token, _owner);
     }
-
+    */
     /// @inheritdoc IInitialLiquidityVaultAction
     function setBoolReadyToCreatePool(
         bool _boolReadyToCreatePool
@@ -169,7 +169,7 @@ contract InitialLiquidityVault is
 
         emit SetTokens(tos, _fee, tickSpacings);
     }
-
+    /*
     /// @inheritdoc IInitialLiquidityVaultAction
     function changeToken(address _token) external override onlyOwner beforeSetReadyToCreatePool
     {
@@ -177,7 +177,7 @@ contract InitialLiquidityVault is
 
         emit ChangedToken(_token);
     }
-
+    */
     /*
     /// @inheritdoc IInitialLiquidityVaultAction
     function setInitialPriceAndCreatePool(

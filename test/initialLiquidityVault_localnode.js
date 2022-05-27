@@ -120,12 +120,33 @@ describe("InitialLiquidityVault", function () {
     before(async function () {
         accounts = await ethers.getSigners();
         [admin1, admin2, user1, user2, minter1, minter2, proxyAdmin, proxyAdmin2 ] = accounts;
-        //console.log('admin1',admin1.address);
+        // console.log('admin1',admin1.address);
+        // console.log('admin2',admin2.address);
+        // console.log('user1',user1.address);
+        // console.log('user2',user2.address);
 
         provider = ethers.provider;
 
         poolInfo.admin = admin1;
         tokenInfo.admin = admin1;
+
+
+        // await ethers.provider.send("hardhat_setBalance", [
+        //     admin1.address,
+        //   "0x56BC75E2D63100000",
+        // ]);
+        // await ethers.provider.send("hardhat_setBalance", [
+        //     admin2.address,
+        //   "0x56BC75E2D63100000",
+        // ]);
+        // await ethers.provider.send("hardhat_setBalance", [
+        //     user1.address,
+        //   "0x56BC75E2D63100000",
+        // ]);
+        // await ethers.provider.send("hardhat_setBalance", [
+        //     user2.address,
+        //   "0x56BC75E2D63100000",
+        // ]);
     });
 
     it("create tokenA", async function () {
@@ -924,6 +945,8 @@ describe("InitialLiquidityVault", function () {
             //console.log('tokenPrice1', tokenPrice1);
         });
 
+        /*
+        // delete function
         it("2-3. setInitialPrice : when not admin, fail", async function () {
 
             await expect(
@@ -945,7 +968,61 @@ describe("InitialLiquidityVault", function () {
             expect((await initialLiquidityVault.initialTokenPrice()).toNumber()).to.be.eq(price.projectToken.toNumber());
             expect(await initialLiquidityVault.initSqrtPriceX96()).to.be.eq(price.initSqrtPrice);
         });
+        */
+    });
 
+    describe("InitialLiquidityVault : Only Admin ", function () {
+
+        it("2-5. initialize : fail when not admin ", async function () {
+
+            await expect(
+                initialLiquidityVault.connect(user2).initialize(
+                    poolInfo.totalAllocatedAmount,
+                    price.tos,
+                    price.projectToken,
+                    price.initSqrtPrice
+                )
+             ).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+
+        it("2-5. initialize : fail when the Vault's project token balances are less than totalAllocatedAmount ", async function () {
+
+            await expect(
+                initialLiquidityVault.connect(poolInfo.admin).initialize(
+                    poolInfo.totalAllocatedAmount,
+                    price.tos,
+                    price.projectToken,
+                    price.initSqrtPrice
+                )
+             ).to.be.revertedWith("need to input the token");
+        });
+
+        it("2-6. initialize   ", async function () {
+
+            await poolInfo.allocateToken.connect(tokenInfo.admin).transfer(initialLiquidityVault.address, poolInfo.totalAllocatedAmount);
+
+            expect(await poolInfo.allocateToken.balanceOf(initialLiquidityVault.address)).to.be.eq(poolInfo.totalAllocatedAmount);
+
+            await initialLiquidityVault.connect(poolInfo.admin).initialize(
+                    poolInfo.totalAllocatedAmount,
+                    price.tos,
+                    price.projectToken,
+                    price.initSqrtPrice
+                );
+
+            expect(await initialLiquidityVault.totalAllocatedAmount()).to.be.eq(poolInfo.totalAllocatedAmount);
+
+       });
+       /*
+       // delete function
+        it("2-8. withdraw : fail when not admin ", async function () {
+            await expect(
+                initialLiquidityVault.connect(user2).withdraw(
+                    tosToken.address, user2.address, ethers.BigNumber.from("100")
+                    )
+             ).to.be.revertedWith("Accessible: Caller is not an admin");
+        });
+        */
     });
 
 
@@ -1015,49 +1092,6 @@ describe("InitialLiquidityVault", function () {
 
     });
 
-    describe("InitialLiquidityVault : Only Admin ", function () {
-
-        it("2-5. initialize : fail when not admin ", async function () {
-
-            await expect(
-                initialLiquidityVault.connect(user2).initialize(
-                    poolInfo.totalAllocatedAmount
-                )
-             ).to.be.revertedWith("Accessible: Caller is not an admin");
-        });
-
-        it("2-5. initialize : fail when the Vault's project token balances are less than totalAllocatedAmount ", async function () {
-
-            await expect(
-                initialLiquidityVault.connect(poolInfo.admin).initialize(
-                    poolInfo.totalAllocatedAmount
-                )
-             ).to.be.revertedWith("need to input the token");
-        });
-
-        it("2-6. initialize   ", async function () {
-
-            await poolInfo.allocateToken.connect(tokenInfo.admin).transfer(initialLiquidityVault.address, poolInfo.totalAllocatedAmount);
-
-            expect(await poolInfo.allocateToken.balanceOf(initialLiquidityVault.address)).to.be.eq(poolInfo.totalAllocatedAmount);
-
-            await initialLiquidityVault.connect(poolInfo.admin).initialize(
-                    poolInfo.totalAllocatedAmount
-                );
-
-            expect(await initialLiquidityVault.totalAllocatedAmount()).to.be.eq(poolInfo.totalAllocatedAmount);
-
-       });
-
-        it("2-8. withdraw : fail when not admin ", async function () {
-            await expect(
-                initialLiquidityVault.connect(user2).withdraw(
-                    tosToken.address, user2.address, ethers.BigNumber.from("100")
-                    )
-             ).to.be.revertedWith("Accessible: Caller is not an admin");
-        });
-    });
-
 
     describe("InitialLiquidityVault : Can Anybody ", function () {
 
@@ -1077,7 +1111,7 @@ describe("InitialLiquidityVault", function () {
             expect(await tosToken.balanceOf(initialLiquidityVault.address)).to.be.eq(tosAmount);
 
         });
-
+        /*
         it("2-9. withdraw : fail when never minted ", async function () {
 
             await expect(
@@ -1087,7 +1121,7 @@ describe("InitialLiquidityVault", function () {
              ).to.be.revertedWith("It is not minted yet");
 
         });
-
+        */
         it("3-8. mint : cover the whole price ", async function () {
             let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
             let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
@@ -1122,7 +1156,7 @@ describe("InitialLiquidityVault", function () {
             // console.log('balanceTos',balanceTos) ;
             // console.log('balanceToken',balanceToken) ;
         });
-
+        /*
         it("2-9. withdraw : fail when it has project tokens ", async function () {
              await expect(
                 initialLiquidityVault.connect(poolInfo.admin).withdraw(
@@ -1130,7 +1164,7 @@ describe("InitialLiquidityVault", function () {
                 )
              ).to.be.revertedWith("Has project tokens");
         });
-
+        */
         it("     TOS transfer to InitialLiquidityVault", async function () {
 
             //let tosAmount = poolInfo.totalAllocatedAmount.mul(price.projectToken).div(price.tos);
@@ -1234,7 +1268,7 @@ describe("InitialLiquidityVault", function () {
             // console.log('balanceTos',balanceTos) ;
             // console.log('balanceToken',balanceToken) ;
         });
-
+        /*
         it("2-10. withdraw : project token can not withdraw ", async function () {
              await expect(
                 initialLiquidityVault.connect(poolInfo.admin).withdraw(
@@ -1248,7 +1282,7 @@ describe("InitialLiquidityVault", function () {
                     tosToken.address, user2.address, ethers.BigNumber.from("1000000000000000000")
                 );
         });
-
+        */
 
 
         it("      swap ", async function () {

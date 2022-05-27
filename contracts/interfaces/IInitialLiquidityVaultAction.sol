@@ -6,7 +6,7 @@ pragma solidity ^0.8.4;
 interface IInitialLiquidityVaultAction {
 
     /// ####### only admin ##########
-
+    /*
     /// @dev setBaseInfo function
     /// @param _name Vault's name
     /// @param _token Allocated token address
@@ -17,7 +17,7 @@ interface IInitialLiquidityVaultAction {
         address _owner
         )
         external;
-
+    */
     /// @dev set the boolReadyToCreatePool storage
     /// @param _boolReadyToCreatePool _boolReadyToCreatePool , true if it's ready to CreatePool
     function setBoolReadyToCreatePool(
@@ -70,11 +70,23 @@ interface IInitialLiquidityVaultAction {
         )
         external;
 
-
+    /*
     /// @dev Set the project token address.
     /// @param _token project token address.
     function changeToken(address _token) external ;
+    */
 
+    /*
+    /// @dev Set a price and create a pool.
+    function setInitialPriceAndCreatePool(
+        uint256 tosPrice,
+        uint256 tokenPrice,
+        uint160 initSqrtPrice
+    ) external ;
+    */
+
+    /// @dev create a pool.
+    function setCreatePool() external ;
 
     /// @dev Configure pool settings for uniswapV3.
     function setPool()
@@ -124,15 +136,5 @@ interface IInitialLiquidityVaultAction {
     /// @dev get maximum tick
     function getMaxTick() external view returns (int24);
 
-    /*
-    /// @dev Set a price and create a pool.
-    function setInitialPriceAndCreatePool(
-        uint256 tosPrice,
-        uint256 tokenPrice,
-        uint160 initSqrtPrice
-    ) external ;
-    */
 
-    /// @dev create a pool.
-    function setCreatePool() external ;
 }
