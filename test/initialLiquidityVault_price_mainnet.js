@@ -96,8 +96,8 @@ describe("InitialLiquidityVault", function () {
     }
 
      let price = {
-        tos: ethers.BigNumber.from("1"),
-        projectToken:  ethers.BigNumber.from("40"),
+        tos: ethers.BigNumber.from("100"),
+        projectToken:  ethers.BigNumber.from("274"),
         initSqrtPrice: 0,
         initTick: 0,
         targetPriceInterval: 1,
@@ -155,6 +155,9 @@ describe("InitialLiquidityVault", function () {
             poolInfo.token0 = poolAddress.token0;
             poolInfo.token1 = poolAddress.token1;
 
+
+            //
+            /*
             if(poolInfo.token0.toLowerCase() == uniswapInfo.tos.toLowerCase()){
 
                 if(price.tos.gt(price.projectToken)) {
@@ -181,6 +184,9 @@ describe("InitialLiquidityVault", function () {
 
 
             price.initSqrtPrice = sqrtPrice;
+            //
+            price.initSqrtPrice = ethers.BigNumber.from("131145399113454840259099904918");
+            */
 
             /**
             * Calculates the sqrt ratio as a Q64.96 corresponding to a given ratio of amount1 and amount0
@@ -189,10 +195,14 @@ describe("InitialLiquidityVault", function () {
             * @param {bigint} amount0 the denominator amount, i.en amount of token0.
             * @return {bigint} the sqrt ratio.
             */
-            /*
-            let amount1 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
-            let amount0 = 1;
 
+            //let amount1 = Math.floor(price.tos.toNumber()/price.projectToken.toNumber());
+            // let amount1 = Math.floor(price.projectToken.toNumber()/price.tos.toNumber());
+            // let amount0 = 1;
+            let amount1 = price.projectToken.toNumber();
+            let amount0 = price.tos.toNumber();
+
+            console.log('** amount1',amount1);
             if(poolAddress.token0.toLowerCase() == uniswapInfo.tos.toLowerCase()){
                 const encodeSqrtRatioX96 = utils.encodeSqrtRatioX96(amount1, amount0);
                 price.initSqrtPrice = encodeSqrtRatioX96.toString();
@@ -203,7 +213,9 @@ describe("InitialLiquidityVault", function () {
             }
 
             console.log('** initSqrtPrice',price.initSqrtPrice);
-            */
+
+
+            //--
             price.initTick = await initialLiquidityVault.getTickAtSqrtRatio(ethers.BigNumber.from(price.initSqrtPrice));
             console.log('price',price);
 
