@@ -30,7 +30,7 @@ async function main() {
   const logicaddr = "0xaf96340E1Bfaf7DD5B58a4188a3E2Cb4586E7BdD"
   const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
   const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
-  const dividedAddr = "0x9aCb022B3A8a334618f5cea15A046C10FEE1352f"
+  const dividedAddr = "0x06245F89576536E9cF844C5804a8ad1CCeDb2642"
 
   await tonVfactory.setLogic(
     logicaddr
