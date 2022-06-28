@@ -18,7 +18,7 @@ import "../common/ProxyAccessCommon.sol";
 
 //import "hardhat/console.sol";
 
-contract InitialLiquidityVault is
+contract InitialLiquidityVault1 is
     InitialLiquidityVaultStorage,
     VaultStorage,
     ProxyAccessCommon,
