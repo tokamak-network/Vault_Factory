@@ -131,7 +131,7 @@ contract InitialLiquidityVault1 is
         startTime = _startTime;
         emit SetStartTime(startTime);
     }
-
+    /*
     function setInitialPrice(
         uint256 tosPrice,
         uint256 tokenPrice,
@@ -147,6 +147,7 @@ contract InitialLiquidityVault1 is
         setStartTime(startTime);
         emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
     }
+    */
 
     /// @inheritdoc IInitialLiquidityVaultAction1
     function setBoolReadyToCreatePool(
@@ -171,6 +172,7 @@ contract InitialLiquidityVault1 is
     )
         external override onlyOwner afterSetUniswap
     {
+        require(initSqrtPrice == 0, "already initialized");
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         require(tosPrice > 0 && tokenPrice > 0 && initSqrtPrice > 0,
             "zero tosPrice or tokenPrice or initSqrtPriceX96 or startTime");

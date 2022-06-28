@@ -27,7 +27,7 @@ interface IInitialLiquidityVaultAction1 {
 
     function setStartTime(uint256 _startTime) external;
 
-
+    /*
     /// @dev setInitialPrice function
     /// @param tosPrice tosPrice
     /// @param tokenPrice tokenPrice
@@ -40,6 +40,7 @@ interface IInitialLiquidityVaultAction1 {
         uint256 _startTime
         )
         external;
+    */
 
     /// @dev initialization function . Set claim information.
     /// @param _totalAllocatedAmount total allocated amount
