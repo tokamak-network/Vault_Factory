@@ -83,18 +83,21 @@ contract InitialLiquidityVaultIncrease is
         }
     }
 
-    function increaseLiquidity(uint256 tosAmount, uint256 slippage) external
+    function increaseLiquidity(uint256 tosAmount, uint8 slippage, int24 curTick) external
     {
         require(lpToken > 0, "It is not minted yet");
+
+        (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
+        require(tick == curTick, "already tick was changed.");
+        require(slippage > 0 && slippage < 10, "It is not allowed slippage.");
+
         uint256 tosBalance =  TOS.balanceOf(address(this));
         uint256 tokenBalance =  token.balanceOf(address(this));
-
         require(tosBalance > 1 ether || tokenBalance > 1 ether, "balance is insufficient");
         require(tosAmount <= tosBalance, "toBalance is insufficient");
 
         uint256 amount0Min = 0;
         uint256 amount1Min = 0;
-
         uint256 amount0Desired = 0;
         uint256 amount1Desired = 0;
 
@@ -110,29 +113,21 @@ contract InitialLiquidityVaultIncrease is
             checkBalance(amount0Desired, amount1Desired);
         }
 
-        uint256 _slip = slippage;
-
-        (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
+        uint8 _slip = slippage;
         uint256 price = getPriceX96FromSqrtPriceX96(sqrtPriceX96);
 
-        amount0Min = amount0Desired * slippage / 100;
-        amount1Min = amount1Desired * slippage / 100;
+        amount0Min = amount0Desired * uint256(slippage) / 100;
+        amount1Min = amount1Desired * uint256(slippage) / 100;
 
         (uint128 liquidity, uint256 amount0, uint256 amount1) = NonfungiblePositionManager.increaseLiquidity(INonfungiblePositionManager.IncreaseLiquidityParams(
-                lpToken, amount0Desired, amount1Desired, amount0Min, amount1Min, block.timestamp + 100000));
+                lpToken, amount0Desired, amount1Desired, amount0Min, amount1Min, block.timestamp + 1000));
 
         (uint160 sqrtPriceX961, int24 tick1,,,,,) =  pool.slot0();
         uint256 price1 = getPriceX96FromSqrtPriceX96(sqrtPriceX961);
-        //require(tick == tick1, "can't allow to change tick");
-
 
         uint256 lower = price * ( 1000 - (_slip * 1000 / 200) ) / 1000 ;
         uint256 upper = price * ( 1000 + (_slip * 1000 / 200) ) / 1000 ;
 
-        // require(
-        //         (price * (1000 - (_slip * 1000 / 200) ) / 1000) <= price1
-        //         && price1 < (price * (1000 + (_slip * 1000 / 200) ) / 1000 )
-        //         , "out of acceptable price range");
         require(lower <= price1 && price1 < upper, "out of acceptable price range");
 
         emit IncreaseLiquidityInVault(lpToken, liquidity, amount0, amount1);
@@ -178,4 +173,10 @@ contract InitialLiquidityVaultIncrease is
     function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public view returns(uint256 priceX96) {
         return FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, FixedPoint96.Q96);
     }
+
+    function currentTick() public view returns(uint160 sqrtPriceX96, int24 tick) {
+        (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
+        return (sqrtPriceX96, tick);
+    }
+
 }
