@@ -324,9 +324,15 @@ contract InitialLiquidityVault1 is
         (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "pool is not initialized");
 
+        // require(
+        //     acceptMinTick(tick, getTickSpacing(fee)) <= curTick
+        //     && curTick < acceptMaxTick(tick, getTickSpacing(fee)),
+        //     "It's not allowed changed tick range."
+        // );
+        int24 timeWeightedAverageTick = OracleLibrary.consult(address(pool), 60);
         require(
-            acceptMinTick(tick, getTickSpacing(fee)) <= curTick
-            && curTick < acceptMaxTick(tick, getTickSpacing(fee)),
+            acceptMinTick(timeWeightedAverageTick, getTickSpacing(fee)) <= curTick
+            && curTick < acceptMaxTick(timeWeightedAverageTick, getTickSpacing(fee)),
             "It's not allowed changed tick range."
         );
 
