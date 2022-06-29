@@ -4,4 +4,5 @@ pragma solidity ^0.8.4;
 contract InitialLiquidityVaultStorage1{
 
     uint256 public startTime;
+    uint8 public SLIPPAGE_LIMIT;
 }

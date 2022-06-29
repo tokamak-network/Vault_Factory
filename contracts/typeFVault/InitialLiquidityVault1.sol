@@ -105,49 +105,13 @@ contract InitialLiquidityVault1 is
     ///@dev constructor
     constructor() {
     }
-    /*
-    /// @inheritdoc IInitialLiquidityVaultAction1
-    function setBaseInfo(
-        string memory _name,
-        address _token,
-        address _owner
-        )
-        external override
-        onlyOwner beforeSetReadyToCreatePool
-    {
-        require(bytes(name).length == 0,"already set");
-        name = _name;
-        token = IERC20(_token);
-        if(!isAdmin(_owner)){
-            _setupRole(PROJECT_ADMIN_ROLE, _owner);
-        }
 
-        emit SetBaseInfo(_name, _token, _owner);
-    }
-    */
     function setStartTime(uint256 _startTime) public override onlyOwner
     {
         require(_startTime > block.timestamp, "StartTime has passed");
         startTime = _startTime;
-        emit SetStartTime(startTime);
+        emit SetStartTime(_startTime);
     }
-    /*
-    function setInitialPrice(
-        uint256 tosPrice,
-        uint256 tokenPrice,
-        uint160 initSqrtPrice,
-        uint256 _startTime
-        )
-        public override
-        onlyOwner beforeSetReadyToCreatePool
-    {
-        initialTosPrice = tosPrice;
-        initialTokenPrice = tokenPrice;
-        initSqrtPriceX96 = initSqrtPrice;
-        setStartTime(startTime);
-        emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
-    }
-    */
 
     /// @inheritdoc IInitialLiquidityVaultAction1
     function setBoolReadyToCreatePool(
@@ -182,7 +146,7 @@ contract InitialLiquidityVault1 is
         initialTosPrice = tosPrice;
         initialTokenPrice = tokenPrice;
         initSqrtPriceX96 = initSqrtPrice;
-        setStartTime(startTime);
+        setStartTime(_startTime);
 
         emit Initialized(_totalAllocatedAmount);
         emit SetInitialPrice(tosPrice, tokenPrice, initSqrtPrice);
@@ -332,6 +296,12 @@ contract InitialLiquidityVault1 is
         }
     }
 
+    function setSlippageLimit(uint8 slippage) external onlyOwner
+    {
+        require(slippage > 0, "zero slippage");
+        require(SLIPPAGE_LIMIT != slippage, "same slippage");
+        SLIPPAGE_LIMIT = slippage;
+    }
 
     function mint(uint256 tosAmount, uint8 slippage, int24 curTick)
         external override readyToCreatePool nonReentrant
@@ -339,7 +309,8 @@ contract InitialLiquidityVault1 is
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
     {
-        require(slippage > 0 && slippage <= 10, "It is not allowed slippage.");
+        if (SLIPPAGE_LIMIT == 0) SLIPPAGE_LIMIT = 10;
+        require(slippage > 0 && slippage <= SLIPPAGE_LIMIT, "It is not allowed slippage.");
         (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "pool is not initialized");
         require(tick == curTick, "already tick was changed.");
@@ -396,6 +367,15 @@ contract InitialLiquidityVault1 is
         );
 
         require(tokenId > 0, "tokenId is zero");
+
+        (uint160 sqrtPriceX961,,,,,,) =  pool.slot0();
+        uint256 price1 = getPriceX96FromSqrtPriceX96(sqrtPriceX961);
+
+        uint256 lower = price * ( 1000 - (uint256(_slip) * 1000 / 200) ) / 1000 ;
+        uint256 upper = price * ( 1000 + (uint256(_slip) * 1000 / 200) ) / 1000 ;
+
+        require(lower <= price1 && price1 < upper, "out of acceptable price range");
+
         lpToken = tokenId;
 
         emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
@@ -436,11 +416,11 @@ contract InitialLiquidityVault1 is
         (uint128 liquidity, uint256 amount0, uint256 amount1) = NonfungiblePositionManager.increaseLiquidity(INonfungiblePositionManager.IncreaseLiquidityParams(
                 lpToken, amount0Desired, amount1Desired, amount0Min, amount1Min, block.timestamp + 1000));
 
-        (uint160 sqrtPriceX961, int24 tick1,,,,,) =  pool.slot0();
+        (uint160 sqrtPriceX961,,,,,,) =  pool.slot0();
         uint256 price1 = getPriceX96FromSqrtPriceX96(sqrtPriceX961);
 
-        uint256 lower = price * ( 1000 - (_slip * 1000 / 200) ) / 1000 ;
-        uint256 upper = price * ( 1000 + (_slip * 1000 / 200) ) / 1000 ;
+        uint256 lower = price * ( 1000 - (uint256(_slip) * 1000 / 200) ) / 1000 ;
+        uint256 upper = price * ( 1000 + (uint256(_slip) * 1000 / 200) ) / 1000 ;
 
         require(lower <= price1 && price1 < upper, "out of acceptable price range");
 
@@ -506,7 +486,7 @@ contract InitialLiquidityVault1 is
         return (I2ERC20(token0).decimals(), I2ERC20(token1).decimals());
     }
 
-    function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public view returns(uint256 priceX96) {
+    function getPriceX96FromSqrtPriceX96(uint160 sqrtPriceX96) public pure returns(uint256 priceX96) {
         return FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, FixedPoint96.Q96);
     }
 
@@ -515,13 +495,12 @@ contract InitialLiquidityVault1 is
         if(address(pool) == address(0)){
             address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
             if(getPool != address(0)) {
-                (uint160 sqrtPriceX96, int24 tick,,,,,) =  IUniswapV3Pool(getPool).slot0();
-                return (sqrtPriceX96, tick);
+                (uint160 sqrtPriceX961, int24 tick1,,,,,) =  IUniswapV3Pool(getPool).slot0();
+                return (sqrtPriceX961, tick1);
             }
             return (0, 0);
         }
 
-        (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
-        return (sqrtPriceX96, tick);
+        (sqrtPriceX96,tick,,,,,) =  pool.slot0();
     }
 }
