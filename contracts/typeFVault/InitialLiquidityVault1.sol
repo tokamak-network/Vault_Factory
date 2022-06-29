@@ -540,10 +540,10 @@ contract InitialLiquidityVault1 is
     function acceptMaxTick(int24 _tick, int24 _tickSpacings) public returns (int24)
     {
         int24 _maxTick = getMaxTick(_tickSpacings);
-        int24 _acceptMinTick = _tick + (_tickSpacings * int24(uint24(ACCEPT_TICK_INTERVAL)));
+        int24 _acceptMaxTick = _tick + (_tickSpacings * int24(uint24(ACCEPT_TICK_INTERVAL)));
 
-        if(_maxTick < _acceptMinTick) return _maxTick;
-        else return _acceptMinTick;
+        if(_maxTick < _acceptMaxTick) return _maxTick;
+        else return _acceptMaxTick;
     }
 
 
