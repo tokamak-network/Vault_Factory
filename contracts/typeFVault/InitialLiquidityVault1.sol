@@ -303,6 +303,14 @@ contract InitialLiquidityVault1 is
         SLIPPAGE_LIMIT = slippage;
     }
 
+
+    function setAcceptTickInterval(uint8 tickInterval) external onlyOwner
+    {
+        require(tickInterval > 0, "zero slippage");
+        require(ACCEPT_TICK_INTERVAL != tickInterval, "same slippage");
+        ACCEPT_TICK_INTERVAL = tickInterval;
+    }
+
     function mint(uint256 tosAmount, uint8 slippage, int24 curTick)
         external override readyToCreatePool nonReentrant
         nonZeroAddress(address(pool))
@@ -310,10 +318,18 @@ contract InitialLiquidityVault1 is
         nonZeroAddress(token1Address)
     {
         if (SLIPPAGE_LIMIT == 0) SLIPPAGE_LIMIT = 10;
+        if (ACCEPT_TICK_INTERVAL == 0) ACCEPT_TICK_INTERVAL = 8;
+
         require(slippage > 0 && slippage <= SLIPPAGE_LIMIT, "It is not allowed slippage.");
         (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "pool is not initialized");
-        require(tick == curTick, "already tick was changed.");
+
+        require(
+            acceptMinTick(tick, getTickSpacing(fee)) <= curTick
+            && curTick < acceptMaxTick(tick, getTickSpacing(fee)),
+            "It's not allowed changed tick range."
+        );
+
 
         if(lpToken == 0)  initialMint(tosAmount, slippage, sqrtPriceX96);
         else increaseLiquidity(tosAmount, slippage, sqrtPriceX96);
@@ -503,4 +519,41 @@ contract InitialLiquidityVault1 is
 
         (sqrtPriceX96,tick,,,,,) =  pool.slot0();
     }
+
+    function getTickSpacing(uint24 _fee) public returns (int24 tickSpacings)
+    {
+        if(_fee == 500) tickSpacings = 10;
+        else if(_fee == 3000) tickSpacings = 60;
+        else if(_fee == 10000) tickSpacings = 200;
+    }
+
+    function acceptMinTick(int24 _tick, int24 _tickSpacings) public returns (int24)
+    {
+
+        int24 _minTick = getMiniTick(_tickSpacings);
+        int24 _acceptMinTick = _tick - (_tickSpacings * int24(uint24(ACCEPT_TICK_INTERVAL)));
+
+        if(_minTick < _acceptMinTick) return _acceptMinTick;
+        else return _minTick;
+    }
+
+    function acceptMaxTick(int24 _tick, int24 _tickSpacings) public returns (int24)
+    {
+        int24 _maxTick = getMaxTick(_tickSpacings);
+        int24 _acceptMinTick = _tick + (_tickSpacings * int24(uint24(ACCEPT_TICK_INTERVAL)));
+
+        if(_maxTick < _acceptMinTick) return _maxTick;
+        else return _acceptMinTick;
+    }
+
+
+    function getMiniTick(int24 tickSpacings) public view returns (int24){
+           return (TickMath.MIN_TICK / tickSpacings) * tickSpacings ;
+    }
+
+    function getMaxTick(int24 tickSpacings) public view  returns (int24){
+           return (TickMath.MAX_TICK / tickSpacings) * tickSpacings ;
+    }
+
+
 }
