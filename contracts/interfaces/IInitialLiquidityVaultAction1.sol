@@ -77,7 +77,7 @@ interface IInitialLiquidityVaultAction1 {
 
 
     /// @dev Provide liquidity to uniswap V3 and receive LP tokens. Vault uses up all available project token
-    function mint(uint256 tosAmount, uint8 slippage, int24 curTick) external;
+    function mint(uint256 tosAmount) external;
 
     /// @dev function to charge a fee
     function collect() external ;

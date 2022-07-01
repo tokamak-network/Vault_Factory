@@ -19,7 +19,7 @@ import "./InitialLiquidityVaultStorage.sol";
 import "../proxy/VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 import "./InitialLiquidityVaultStorage1.sol";
-//import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 interface I2ERC20 {
     function decimals() external view returns (uint256);
@@ -136,7 +136,7 @@ contract InitialLiquidityVault1 is
     )
         external override onlyOwner afterSetUniswap
     {
-        require(initSqrtPrice == 0, "already initialized");
+        require(initSqrtPriceX96 == 0, "already initialized");
         require(_totalAllocatedAmount <= token.balanceOf(address(this)), "need to input the token");
         require(tosPrice > 0 && tokenPrice > 0 && initSqrtPrice > 0,
             "zero tosPrice or tokenPrice or initSqrtPriceX96 or startTime");
@@ -263,7 +263,6 @@ contract InitialLiquidityVault1 is
                 )
             ))
         );
-
     }
 
     /// @inheritdoc IInitialLiquidityVaultAction1
@@ -296,82 +295,93 @@ contract InitialLiquidityVault1 is
         }
     }
 
-    function setSlippageLimit(uint8 slippage) external onlyOwner
+    function setAcceptTickChangeInterval(int24 _interval) external onlyOwner
     {
-        require(slippage > 0, "zero slippage");
-        require(SLIPPAGE_LIMIT != slippage, "same slippage");
-        SLIPPAGE_LIMIT = slippage;
+        require(_interval > 0, "zero");
+        require(acceptTickChangeInterval != _interval, "same");
+        acceptTickChangeInterval = _interval;
     }
 
-
-    function setAcceptTickInterval(uint8 tickInterval) external onlyOwner
+    function setAcceptSlippagePrice(int24 _value) external onlyOwner
     {
-        require(tickInterval > 0, "zero slippage");
-        require(ACCEPT_TICK_INTERVAL != tickInterval, "same slippage");
-        ACCEPT_TICK_INTERVAL = tickInterval;
+        require(_value > 0, "zero");
+        require(acceptSlippagePrice != _value, "same");
+        acceptSlippagePrice = _value;
     }
 
-    function mint(uint256 tosAmount, uint8 slippage, int24 curTick)
+    function setTWAP_PERIOD(uint32 value) external onlyOwner
+    {
+        require(value > 0, "zero");
+        require(TWAP_PERIOD != value, "same");
+        TWAP_PERIOD = value;
+    }
+
+    function mint(uint256 tosAmount)
         external override readyToCreatePool nonReentrant
         nonZeroAddress(address(pool))
         nonZeroAddress(token0Address)
         nonZeroAddress(token1Address)
     {
-        if (SLIPPAGE_LIMIT == 0) SLIPPAGE_LIMIT = 10;
-        if (ACCEPT_TICK_INTERVAL == 0) ACCEPT_TICK_INTERVAL = 8;
+        require(tosAmount > 0, "zero input amount");
+        uint256 tosBalance =  TOS.balanceOf(address(this));
+        uint256 tokenBalance =  token.balanceOf(address(this));
+        require(tosBalance > 1 ether && tokenBalance > 1 ether, "balance is insufficient");
+        require(tosAmount <= tosBalance, "toBalance is insufficient");
 
-        require(slippage > 0 && slippage <= SLIPPAGE_LIMIT, "It is not allowed slippage.");
+        if (acceptTickChangeInterval == 0) acceptTickChangeInterval = 8;
+        if (acceptSlippagePrice == 0) acceptSlippagePrice = 10; // based 100
+        if (TWAP_PERIOD == 0) TWAP_PERIOD = 60;
+
         (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "pool is not initialized");
 
-        // require(
-        //     acceptMinTick(tick, getTickSpacing(fee)) <= curTick
-        //     && curTick < acceptMaxTick(tick, getTickSpacing(fee)),
-        //     "It's not allowed changed tick range."
-        // );
-        int24 timeWeightedAverageTick = OracleLibrary.consult(address(pool), 60);
-        require(
-            acceptMinTick(timeWeightedAverageTick, getTickSpacing(fee)) <= curTick
-            && curTick < acceptMaxTick(timeWeightedAverageTick, getTickSpacing(fee)),
-            "It's not allowed changed tick range."
-        );
+        //if (lpToken > 0)
+        {
+            int24 timeWeightedAverageTick = OracleLibrary.consult(address(pool), TWAP_PERIOD);
+            require(
+                acceptMinTick(timeWeightedAverageTick, getTickSpacing(fee)) <= tick
+                && tick < acceptMaxTick(timeWeightedAverageTick, getTickSpacing(fee)),
+                "It's not allowed changed tick range."
+            );
+        }
 
-
-        if(lpToken == 0)  initialMint(tosAmount, slippage, sqrtPriceX96);
-        else increaseLiquidity(tosAmount, slippage, sqrtPriceX96);
-    }
-
-    function initialMint(uint256 tosAmount, uint8 slippage, uint160 sqrtPriceX96) internal
-    {
-        require(lpToken == 0, "already minted");
-
-        uint256 tosBalance =  TOS.balanceOf(address(this));
-        uint256 tokenBalance =  token.balanceOf(address(this));
-        require(tosBalance > 1 ether || tokenBalance > 1 ether, "balance is insufficient");
-        require(tosAmount <= tosBalance, "toBalance is insufficient");
-
-        uint256 amount0Min = 0;
-        uint256 amount1Min = 0;
         uint256 amount0Desired = 0;
         uint256 amount1Desired = 0;
 
         if(token0Address != address(TOS)){
-            amount0Desired = tosAmount * getPriceToken1(address(pool)) / (10 ** 18);
+            amount0Desired = getQuoteAtTick(
+                tick,
+                uint128(tosAmount),
+                address(TOS),
+                address(token)
+                );
             amount1Desired = tosAmount;
+
             require(amount0Desired <= tokenBalance, "tokenBalance is insufficient");
             checkBalance(amount1Desired, amount0Desired);
         } else {
             amount0Desired = tosAmount;
-            amount1Desired = tosAmount * getPriceToken0(address(pool)) / (10 ** 18);
+            amount1Desired = getQuoteAtTick(
+                tick,
+                uint128(tosAmount),
+                address(TOS),
+                address(token)
+                );
+
             require(amount1Desired <= tokenBalance, "tokenBalance is insufficient");
             checkBalance(amount0Desired, amount1Desired);
         }
 
-        uint8 _slip = slippage;
-        uint256 price = getPriceX96FromSqrtPriceX96(sqrtPriceX96);
+        uint256 amount0Min = amount0Desired * (100 - uint256(int256(acceptSlippagePrice))) / 100;
+        uint256 amount1Min = amount1Desired * (100 - uint256(int256(acceptSlippagePrice))) / 100;
 
-        amount0Min = amount0Desired * uint256(slippage) / 100;
-        amount1Min = amount1Desired * uint256(slippage) / 100;
+        if(lpToken == 0)  initialMint(amount0Desired, amount1Desired, amount0Min, amount1Min);
+        else increaseLiquidity(amount0Desired, amount1Desired, amount0Min, amount1Min);
+    }
+
+    function initialMint(uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min) internal
+    {
+        require(lpToken == 0, "already minted");
 
         int24 tickLower = getMinTick();
         int24 tickUpper = getMaxTick();
@@ -384,67 +394,23 @@ contract InitialLiquidityVault1 is
         ) = NonfungiblePositionManager.mint(INonfungiblePositionManager.MintParams(
                 token0Address, token1Address, fee, tickLower, tickUpper,
                 amount0Desired, amount1Desired, amount0Min, amount1Min,
-                address(this), block.timestamp + 1000
+                address(this), block.timestamp + 100
             )
         );
 
         require(tokenId > 0, "tokenId is zero");
-
-        (uint160 sqrtPriceX961,,,,,,) =  pool.slot0();
-        uint256 price1 = getPriceX96FromSqrtPriceX96(sqrtPriceX961);
-
-        uint256 lower = price * ( 1000 - (uint256(_slip) * 1000 / 200) ) / 1000 ;
-        uint256 upper = price * ( 1000 + (uint256(_slip) * 1000 / 200) ) / 1000 ;
-
-        require(lower <= price1 && price1 < upper, "out of acceptable price range");
 
         lpToken = tokenId;
 
         emit MintedInVault(msg.sender, tokenId, liquidity, amount0, amount1);
     }
 
-    function increaseLiquidity(uint256 tosAmount, uint8 slippage, uint160 sqrtPriceX96) internal
+    function increaseLiquidity(uint256 amount0Desired, uint256 amount1Desired, uint256 amount0Min, uint256 amount1Min) internal
     {
         require(lpToken > 0, "It is not minted yet");
 
-        uint256 tosBalance =  TOS.balanceOf(address(this));
-        uint256 tokenBalance =  token.balanceOf(address(this));
-        require(tosBalance > 1 ether || tokenBalance > 1 ether, "balance is insufficient");
-        require(tosAmount <= tosBalance, "toBalance is insufficient");
-
-        uint256 amount0Min = 0;
-        uint256 amount1Min = 0;
-        uint256 amount0Desired = 0;
-        uint256 amount1Desired = 0;
-
-        if(token0Address != address(TOS)){
-            amount0Desired = tosAmount * getPriceToken1(address(pool)) / (10 ** 18);
-            amount1Desired = tosAmount;
-            require(amount0Desired <= tokenBalance, "tokenBalance is insufficient");
-            checkBalance(amount1Desired, amount0Desired);
-        } else {
-            amount0Desired = tosAmount;
-            amount1Desired = tosAmount * getPriceToken0(address(pool)) / (10 ** 18);
-            require(amount1Desired <= tokenBalance, "tokenBalance is insufficient");
-            checkBalance(amount0Desired, amount1Desired);
-        }
-
-        uint8 _slip = slippage;
-        uint256 price = getPriceX96FromSqrtPriceX96(sqrtPriceX96);
-
-        amount0Min = amount0Desired * uint256(slippage) / 100;
-        amount1Min = amount1Desired * uint256(slippage) / 100;
-
         (uint128 liquidity, uint256 amount0, uint256 amount1) = NonfungiblePositionManager.increaseLiquidity(INonfungiblePositionManager.IncreaseLiquidityParams(
-                lpToken, amount0Desired, amount1Desired, amount0Min, amount1Min, block.timestamp + 1000));
-
-        (uint160 sqrtPriceX961,,,,,,) =  pool.slot0();
-        uint256 price1 = getPriceX96FromSqrtPriceX96(sqrtPriceX961);
-
-        uint256 lower = price * ( 1000 - (uint256(_slip) * 1000 / 200) ) / 1000 ;
-        uint256 upper = price * ( 1000 + (uint256(_slip) * 1000 / 200) ) / 1000 ;
-
-        require(lower <= price1 && price1 < upper, "out of acceptable price range");
+                lpToken, amount0Desired, amount1Desired, amount0Min, amount1Min, block.timestamp + 100 ));
 
         emit IncreaseLiquidityInVault(lpToken, liquidity, amount0, amount1);
     }
@@ -526,40 +492,46 @@ contract InitialLiquidityVault1 is
         (sqrtPriceX96,tick,,,,,) =  pool.slot0();
     }
 
-    function getTickSpacing(uint24 _fee) public returns (int24 tickSpacings)
+    function getTickSpacing(uint24 _fee) public pure returns (int24 tickSpacings)
     {
         if(_fee == 500) tickSpacings = 10;
         else if(_fee == 3000) tickSpacings = 60;
         else if(_fee == 10000) tickSpacings = 200;
     }
 
-    function acceptMinTick(int24 _tick, int24 _tickSpacings) public returns (int24)
+    function acceptMinTick(int24 _tick, int24 _tickSpacings) public view returns (int24)
     {
-
         int24 _minTick = getMiniTick(_tickSpacings);
-        int24 _acceptMinTick = _tick - (_tickSpacings * int24(uint24(ACCEPT_TICK_INTERVAL)));
+        int24 _acceptMinTick = _tick - (_tickSpacings * int24(uint24(acceptTickChangeInterval)));
 
         if(_minTick < _acceptMinTick) return _acceptMinTick;
         else return _minTick;
     }
 
-    function acceptMaxTick(int24 _tick, int24 _tickSpacings) public returns (int24)
+    function acceptMaxTick(int24 _tick, int24 _tickSpacings) public view returns (int24)
     {
         int24 _maxTick = getMaxTick(_tickSpacings);
-        int24 _acceptMaxTick = _tick + (_tickSpacings * int24(uint24(ACCEPT_TICK_INTERVAL)));
+        int24 _acceptMinTick = _tick + (_tickSpacings * int24(uint24(acceptTickChangeInterval)));
 
-        if(_maxTick < _acceptMaxTick) return _maxTick;
-        else return _acceptMaxTick;
+        if(_maxTick < _acceptMinTick) return _maxTick;
+        else return _acceptMinTick;
     }
 
-
-    function getMiniTick(int24 tickSpacings) public view returns (int24){
+    function getMiniTick(int24 tickSpacings) public pure returns (int24){
            return (TickMath.MIN_TICK / tickSpacings) * tickSpacings ;
     }
 
-    function getMaxTick(int24 tickSpacings) public view  returns (int24){
+    function getMaxTick(int24 tickSpacings) public pure  returns (int24){
            return (TickMath.MAX_TICK / tickSpacings) * tickSpacings ;
     }
 
+    function getQuoteAtTick(
+        int24 tick,
+        uint128 amountIn,
+        address baseToken,
+        address quoteToken
+    ) public pure returns (uint256 amountOut) {
+        return OracleLibrary.getQuoteAtTick(tick, amountIn, baseToken, quoteToken);
+    }
 
 }
