@@ -1220,7 +1220,7 @@ describe("InitialLiquidityVault", function () {
 
             // console.log('tosAmount',tosAmount);
             await tosToken.connect(tosInfo.admin).mint(initialLiquidityVault.address, tosAmount);
-            expect(await tosToken.balanceOf(initialLiquidityVault.address)).to.be.eq(tosAmount);
+            expect(await tosToken.balanceOf(initialLiquidityVault.address)).to.be.gte(tosAmount);
 
         });
 
