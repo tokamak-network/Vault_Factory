@@ -50,6 +50,7 @@ describe("InitialLiquidityVault", function () {
     let tokenA, initialLiquidityVaultFactory, initialLiquidityVaultLogic,  initialLiquidityVault, initialLiquidityVaultProxy, provider;
     let uniswapV3Factory, uniswapV3Pool ;
     let deployedUniswapV3 , tosToken , vaultAddress, testLogicAddress, testLogicContract;
+    let initialLiquidityVault1, oracleLibrary;
 
     let tosInfo={
         name: "TOS",
@@ -131,22 +132,22 @@ describe("InitialLiquidityVault", function () {
         tokenInfo.admin = admin1;
 
 
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     admin1.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     admin2.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     user1.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     user2.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            admin1.address,
+          "0x56BC75E2D63100000",
+        ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            admin2.address,
+          "0x56BC75E2D63100000",
+        ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            user1.address,
+          "0x56BC75E2D63100000",
+        ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            user2.address,
+          "0x56BC75E2D63100000",
+        ]);
     });
 
     it("create tokenA", async function () {
@@ -234,12 +235,25 @@ describe("InitialLiquidityVault", function () {
     });
 
     it("create InitialLiquidityVault Logic", async function () {
-        const InitialLiquidityVault = await ethers.getContractFactory("InitialLiquidityVault");
+        const InitialLiquidityVault = await ethers.getContractFactory("InitialLiquidityVault1");
         let InitialLiquidityVaultLogicDeployed = await InitialLiquidityVault.deploy();
         let tx = await InitialLiquidityVaultLogicDeployed.deployed();
         initialLiquidityVaultLogic = InitialLiquidityVaultLogicDeployed.address;
     });
+    /*
+    it("deploying library OracleLibrary", async function () {
+        const OracleLibrary = await ethers.getContractFactory("OracleLibrary");
+        oracleLibrary = await OracleLibrary.connect(admin1).deploy();
 
+    });
+
+    it("create InitialLiquidityVault1 Logic", async function () {
+        const InitialLiquidityVault1 = await ethers.getContractFactory("InitialLiquidityVault1" );
+        let InitialLiquidityVaultLogicDeployed = await InitialLiquidityVault1.deploy();
+        await InitialLiquidityVaultLogicDeployed.deployed();
+        initialLiquidityVault1 = InitialLiquidityVaultLogicDeployed.address;
+    });
+    */
     it("create InitialLiquidityVaultFactory ", async function () {
         const InitialLiquidityVaultFactory = await ethers.getContractFactory("InitialLiquidityVaultFactory");
         let InitialLiquidityVaultFactoryDeployed = await InitialLiquidityVaultFactory.deploy();
@@ -259,7 +273,6 @@ describe("InitialLiquidityVault", function () {
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
-
         it("0-1. setLogic ", async function () {
 
             await initialLiquidityVaultFactory.connect(admin1).setLogic(initialLiquidityVaultLogic);
@@ -463,7 +476,7 @@ describe("InitialLiquidityVault", function () {
         initialLiquidityVaultProxy =  await ethers.getContractAt("InitialLiquidityVaultProxy", InitialLiquidityVaultProxyDeployed.address);
 
         //console.log('initialLiquidityVaultProxy' ,initialLiquidityVaultProxy.address);
-        initialLiquidityVault =  await ethers.getContractAt("InitialLiquidityVault", InitialLiquidityVaultProxyDeployed.address);
+        initialLiquidityVault =  await ethers.getContractAt("InitialLiquidityVault1", InitialLiquidityVaultProxyDeployed.address);
         //console.log('initialLiquidityVault' ,initialLiquidityVault.address);
     });
 
@@ -648,7 +661,7 @@ describe("InitialLiquidityVault", function () {
 
         it("     change vault ", async function () {
 
-            initialLiquidityVault = await ethers.getContractAt("InitialLiquidityVault", vaultAddress);
+            initialLiquidityVault = await ethers.getContractAt("InitialLiquidityVault1", vaultAddress);
             initialLiquidityVaultProxy =  await ethers.getContractAt("InitialLiquidityVaultProxy", vaultAddress);
             expect(await initialLiquidityVaultProxy.name()).to.be.equal(poolInfo.name);
             expect(await initialLiquidityVaultProxy.token()).to.be.equal(poolInfo.allocateToken.address);
@@ -974,31 +987,35 @@ describe("InitialLiquidityVault", function () {
     describe("InitialLiquidityVault : Only Admin ", function () {
 
         it("2-5. initialize : fail when not admin ", async function () {
-
+            let _block = await ethers.provider.getBlock();
             await expect(
                 initialLiquidityVault.connect(user2).initialize(
                     poolInfo.totalAllocatedAmount,
                     price.tos,
                     price.projectToken,
-                    price.initSqrtPrice
+                    price.initSqrtPrice,
+                    _block.timestamp + 100
                 )
              ).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
         it("2-5. initialize : fail when the Vault's project token balances are less than totalAllocatedAmount ", async function () {
+            let _block = await ethers.provider.getBlock();
+            let initSqrtPriceX96 = await initialLiquidityVault.initSqrtPriceX96();
 
             await expect(
                 initialLiquidityVault.connect(poolInfo.admin).initialize(
                     poolInfo.totalAllocatedAmount,
                     price.tos,
                     price.projectToken,
-                    price.initSqrtPrice
+                    price.initSqrtPrice,
+                    _block.timestamp + 100
                 )
              ).to.be.revertedWith("need to input the token");
         });
 
         it("2-6. initialize   ", async function () {
-
+            let _block = await ethers.provider.getBlock();
             await poolInfo.allocateToken.connect(tokenInfo.admin).transfer(initialLiquidityVault.address, poolInfo.totalAllocatedAmount);
 
             expect(await poolInfo.allocateToken.balanceOf(initialLiquidityVault.address)).to.be.eq(poolInfo.totalAllocatedAmount);
@@ -1007,7 +1024,8 @@ describe("InitialLiquidityVault", function () {
                     poolInfo.totalAllocatedAmount,
                     price.tos,
                     price.projectToken,
-                    price.initSqrtPrice
+                    price.initSqrtPrice,
+                    _block.timestamp + 100
                 );
 
             expect(await initialLiquidityVault.totalAllocatedAmount()).to.be.eq(poolInfo.totalAllocatedAmount);
@@ -1061,9 +1079,19 @@ describe("InitialLiquidityVault", function () {
         });
 
         it("3-4. mint fail : when pool is not set", async function () {
+            let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
             await expect(
-                initialLiquidityVault.connect(user2).mint()
+                initialLiquidityVault.connect(user2).mint(preTosBalance)
             ).to.be.revertedWith("zero address");
+        });
+
+        it("        pass blocks", async function () {
+
+            await ethers.provider.send("evm_increaseTime", [100]);
+            await ethers.provider.send("evm_mine");
+
+            // let block = await ethers.provider.getBlock();
+            // console.log('block2',block);
         });
 
         it("3-2. setPool  ", async function () {
@@ -1094,12 +1122,28 @@ describe("InitialLiquidityVault", function () {
 
 
     describe("InitialLiquidityVault : Can Anybody ", function () {
+        it("        pass blocks", async function () {
 
+            await ethers.provider.send("evm_increaseTime", [1000]);
+            await ethers.provider.send("evm_mine");
+
+            // let block = await ethers.provider.getBlock();
+            // console.log('block2',block);
+        });
         it("3-6. mint fail : when tos balance is zero", async function () {
-            await expect( initialLiquidityVault.connect(user2).mint()).to.be.revertedWith("balance is insufficient");
+            let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
+            let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
+
+            await expect( initialLiquidityVault.connect(user2).mint(preTosBalance)).to.be.revertedWith("zero input amount");
 
         });
+        it("3-6. mint fail : when tos is insufficent", async function () {
+            let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
+            let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
 
+            await expect( initialLiquidityVault.connect(user2).mint(preTokenBalance)).to.be.revertedWith("balance is insufficient");
+
+        });
         it("     TOS transfer to InitialLiquidityVault", async function () {
 
             //let tosAmount = poolInfo.totalAllocatedAmount.mul(price.projectToken).div(price.tos);
@@ -1122,11 +1166,12 @@ describe("InitialLiquidityVault", function () {
 
         });
         */
+
         it("3-8. mint : cover the whole price ", async function () {
             let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
             let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
 
-            let tx = await initialLiquidityVault.connect(user2).mint() ;
+            let tx = await initialLiquidityVault.connect(user2).mint(preTosBalance) ;
 
             const receipt = await tx.wait();
             //console.log('receipt',receipt);
@@ -1156,6 +1201,7 @@ describe("InitialLiquidityVault", function () {
             // console.log('balanceTos',balanceTos) ;
             // console.log('balanceToken',balanceToken) ;
         });
+
         /*
         it("2-9. withdraw : fail when it has project tokens ", async function () {
              await expect(
@@ -1165,6 +1211,7 @@ describe("InitialLiquidityVault", function () {
              ).to.be.revertedWith("Has project tokens");
         });
         */
+
         it("     TOS transfer to InitialLiquidityVault", async function () {
 
             //let tosAmount = poolInfo.totalAllocatedAmount.mul(price.projectToken).div(price.tos);
@@ -1173,7 +1220,7 @@ describe("InitialLiquidityVault", function () {
 
             // console.log('tosAmount',tosAmount);
             await tosToken.connect(tosInfo.admin).mint(initialLiquidityVault.address, tosAmount);
-            expect(await tosToken.balanceOf(initialLiquidityVault.address)).to.be.eq(tosAmount);
+            expect(await tosToken.balanceOf(initialLiquidityVault.address)).to.be.gte(tosAmount);
 
         });
 
@@ -1234,11 +1281,25 @@ describe("InitialLiquidityVault", function () {
 
         });
 
+
+        it("        pass blocks", async function () {
+
+            await ethers.provider.send("evm_increaseTime", [1000]);
+            await ethers.provider.send("evm_mine");
+
+            // let block = await ethers.provider.getBlock();
+            // console.log('block2',block);
+        });
+
         it("3-8. mint : IncreaseLiquidityInVault ", async function () {
             let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
             let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
 
-            let tx = await initialLiquidityVault.connect(user2).mint() ;
+
+            let tx = await initialLiquidityVault.connect(user2).mint(
+                preTokenBalance.div(ethers.BigNumber.from("10"))
+            );
+            //let tx = await initialLiquidityVault.connect(user2).mint() ;
 
             const receipt = await tx.wait();
             //console.log('receipt',receipt);
@@ -1254,7 +1315,7 @@ describe("InitialLiquidityVault", function () {
                     {  data,  topics } );
                     tokenId = log.args.tokenId;
                     poolInfo.tokenIds.push(log.args.tokenId) ;
-                   // console.log(log.args)
+                    // console.log(log.args)
                 }
             }
 
@@ -1262,11 +1323,10 @@ describe("InitialLiquidityVault", function () {
 
             let balanceTos = await tosToken.balanceOf(initialLiquidityVault.address);
             let balanceToken = await tokenA.balanceOf(initialLiquidityVault.address);
+
             expect(balanceTos).to.be.lt(preTosBalance);
             expect(balanceToken).to.be.lt(preTokenBalance);
 
-            // console.log('balanceTos',balanceTos) ;
-            // console.log('balanceToken',balanceToken) ;
         });
         /*
         it("2-10. withdraw : project token can not withdraw ", async function () {
@@ -1367,8 +1427,6 @@ describe("InitialLiquidityVault", function () {
                     tokensOwed1 = log.args.amount1;
                 }
             }
-
-
             positions = await deployedUniswapV3.nftPositionManager.positions(poolInfo.tokenIds[tokenIndex]);
            // console.log('positions after ', positions)
 

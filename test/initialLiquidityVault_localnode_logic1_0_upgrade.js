@@ -50,6 +50,7 @@ describe("InitialLiquidityVault", function () {
     let tokenA, initialLiquidityVaultFactory, initialLiquidityVaultLogic,  initialLiquidityVault, initialLiquidityVaultProxy, provider;
     let uniswapV3Factory, uniswapV3Pool ;
     let deployedUniswapV3 , tosToken , vaultAddress, testLogicAddress, testLogicContract;
+    let initialLiquidityVault1, oracleLibrary;
 
     let tosInfo={
         name: "TOS",
@@ -131,22 +132,22 @@ describe("InitialLiquidityVault", function () {
         tokenInfo.admin = admin1;
 
 
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     admin1.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     admin2.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     user1.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
-        // await ethers.provider.send("hardhat_setBalance", [
-        //     user2.address,
-        //   "0x56BC75E2D63100000",
-        // ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            admin1.address,
+          "0x56BC75E2D63100000",
+        ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            admin2.address,
+          "0x56BC75E2D63100000",
+        ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            user1.address,
+          "0x56BC75E2D63100000",
+        ]);
+        await ethers.provider.send("hardhat_setBalance", [
+            user2.address,
+          "0x56BC75E2D63100000",
+        ]);
     });
 
     it("create tokenA", async function () {
@@ -240,6 +241,19 @@ describe("InitialLiquidityVault", function () {
         initialLiquidityVaultLogic = InitialLiquidityVaultLogicDeployed.address;
     });
 
+    it("deploying library OracleLibrary", async function () {
+        const OracleLibrary = await ethers.getContractFactory("OracleLibrary");
+        oracleLibrary = await OracleLibrary.connect(admin1).deploy();
+
+    });
+
+    it("create InitialLiquidityVault1 Logic", async function () {
+        const InitialLiquidityVault1 = await ethers.getContractFactory("InitialLiquidityVault1" );
+        let InitialLiquidityVaultLogicDeployed = await InitialLiquidityVault1.deploy();
+        await InitialLiquidityVaultLogicDeployed.deployed();
+        initialLiquidityVault1 = InitialLiquidityVaultLogicDeployed.address;
+    });
+
     it("create InitialLiquidityVaultFactory ", async function () {
         const InitialLiquidityVaultFactory = await ethers.getContractFactory("InitialLiquidityVaultFactory");
         let InitialLiquidityVaultFactoryDeployed = await InitialLiquidityVaultFactory.deploy();
@@ -259,7 +273,6 @@ describe("InitialLiquidityVault", function () {
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
-
         it("0-1. setLogic ", async function () {
 
             await initialLiquidityVaultFactory.connect(admin1).setLogic(initialLiquidityVaultLogic);
@@ -1122,6 +1135,7 @@ describe("InitialLiquidityVault", function () {
 
         });
         */
+
         it("3-8. mint : cover the whole price ", async function () {
             let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
             let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
@@ -1156,6 +1170,7 @@ describe("InitialLiquidityVault", function () {
             // console.log('balanceTos',balanceTos) ;
             // console.log('balanceToken',balanceToken) ;
         });
+
         /*
         it("2-9. withdraw : fail when it has project tokens ", async function () {
              await expect(
@@ -1165,6 +1180,7 @@ describe("InitialLiquidityVault", function () {
              ).to.be.revertedWith("Has project tokens");
         });
         */
+
         it("     TOS transfer to InitialLiquidityVault", async function () {
 
             //let tosAmount = poolInfo.totalAllocatedAmount.mul(price.projectToken).div(price.tos);
@@ -1234,11 +1250,36 @@ describe("InitialLiquidityVault", function () {
 
         });
 
+        it("0-8. upgradeContractLogic  ", async function () {
+
+            let tx = await initialLiquidityVaultFactory.connect(admin1).upgradeContractLogic(
+                vaultAddress, initialLiquidityVault1, 0, true
+            );
+
+            await tx.wait();
+
+            initialLiquidityVault =  await ethers.getContractAt("InitialLiquidityVault1", vaultAddress);
+
+        });
+
+        it("        pass blocks", async function () {
+
+            await ethers.provider.send("evm_increaseTime", [1000]);
+            await ethers.provider.send("evm_mine");
+
+            // let block = await ethers.provider.getBlock();
+            // console.log('block2',block);
+        });
+
         it("3-8. mint : IncreaseLiquidityInVault ", async function () {
             let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
             let preTokenBalance = await tokenA.balanceOf(initialLiquidityVault.address);
 
-            let tx = await initialLiquidityVault.connect(user2).mint() ;
+
+            let tx = await initialLiquidityVault.connect(user2).mint(
+                preTokenBalance.div(ethers.BigNumber.from("10"))
+            );
+            //let tx = await initialLiquidityVault.connect(user2).mint() ;
 
             const receipt = await tx.wait();
             //console.log('receipt',receipt);
@@ -1254,7 +1295,7 @@ describe("InitialLiquidityVault", function () {
                     {  data,  topics } );
                     tokenId = log.args.tokenId;
                     poolInfo.tokenIds.push(log.args.tokenId) ;
-                   // console.log(log.args)
+                    //console.log(log.args)
                 }
             }
 
@@ -1262,11 +1303,10 @@ describe("InitialLiquidityVault", function () {
 
             let balanceTos = await tosToken.balanceOf(initialLiquidityVault.address);
             let balanceToken = await tokenA.balanceOf(initialLiquidityVault.address);
+
             expect(balanceTos).to.be.lt(preTosBalance);
             expect(balanceToken).to.be.lt(preTokenBalance);
 
-            // console.log('balanceTos',balanceTos) ;
-            // console.log('balanceToken',balanceToken) ;
         });
         /*
         it("2-10. withdraw : project token can not withdraw ", async function () {

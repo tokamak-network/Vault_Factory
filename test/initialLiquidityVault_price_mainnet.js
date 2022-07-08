@@ -202,6 +202,7 @@ describe("InitialLiquidityVault", function () {
             let amount1 = price.projectToken.toNumber();
             let amount0 = price.tos.toNumber();
 
+            console.log('** amount0',amount0);
             console.log('** amount1',amount1);
             if(poolAddress.token0.toLowerCase() == uniswapInfo.tos.toLowerCase()){
                 const encodeSqrtRatioX96 = utils.encodeSqrtRatioX96(amount1, amount0);

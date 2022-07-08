@@ -32,6 +32,7 @@ async function main() {
       address: rewardProgramVault.address
   }
 
+  console.log(networkName," : ", deployInfo);
   save(networkName, deployInfo);
 
   if(chainId == 1 || chainId == 4)

@@ -11,7 +11,7 @@ async function main() {
   if(chainId == 4) networkName = "rinkeby";
 
   [deployer, user2] = await ethers.getSigners();
-  // console.log('deployer',deployer.address);
+  console.log('deployer',deployer.address);
   // console.log('user2',user2.address);
 
   let deployInfo = {
@@ -38,6 +38,7 @@ async function main() {
       address: eventLog.address,
       constructorArgsParams: [],
     });
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

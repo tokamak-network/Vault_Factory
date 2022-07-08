@@ -3,21 +3,10 @@ pragma solidity ^0.8.4;
 
 
 /// @title IInitialLiquidityVaultAction
-interface IInitialLiquidityVaultAction {
+interface IInitialLiquidityVaultAction1 {
 
     /// ####### only admin ##########
-    /*
-    /// @dev setBaseInfo function
-    /// @param _name Vault's name
-    /// @param _token Allocated token address
-    /// @param _owner owner address
-    function setBaseInfo(
-        string memory _name,
-        address _token,
-        address _owner
-        )
-        external;
-    */
+
     /// @dev set the boolReadyToCreatePool storage
     /// @param _boolReadyToCreatePool _boolReadyToCreatePool , true if it's ready to CreatePool
     function setBoolReadyToCreatePool(
@@ -25,29 +14,20 @@ interface IInitialLiquidityVaultAction {
         )
         external;
 
-    /*
-    /// @dev setInitialPrice function
-    /// @param tosPrice tosPrice
-    /// @param tokenPrice tokenPrice
-    /// @param initSqrtPrice When a pool is created for the first time, pricing information is absolutely necessary when initializing it.
-    function setInitialPrice(
-        uint256 tosPrice,
-        uint256 tokenPrice,
-        uint160 initSqrtPrice
-        )
-        external;
-    */
+    function setStartTime(uint256 _startTime) external;
 
     /// @dev initialization function . Set claim information.
     /// @param _totalAllocatedAmount total allocated amount
     /// @param tosPrice tosPrice
     /// @param tokenPrice tokenPrice
     /// @param initSqrtPrice When a pool is created for the first time, pricing information is absolutely necessary when initializing it.
+    /// @param _startTime After this time, the pool can be created.
     function initialize(
         uint256 _totalAllocatedAmount,
         uint256 tosPrice,
         uint256 tokenPrice,
-        uint160 initSqrtPrice
+        uint160 initSqrtPrice,
+        uint256 _startTime
     ) external ;
 
 
@@ -70,42 +50,16 @@ interface IInitialLiquidityVaultAction {
         )
         external;
 
-    /*
-    /// @dev Set the project token address.
-    /// @param _token project token address.
-    function changeToken(address _token) external ;
-    */
-
-    /*
-    /// @dev Set a price and create a pool.
-    function setInitialPriceAndCreatePool(
-        uint256 tosPrice,
-        uint256 tokenPrice,
-        uint160 initSqrtPrice
-    ) external ;
-    */
-
     /// @dev create a pool.
     function setCreatePool() external ;
 
     /// @dev Configure pool settings for uniswapV3.
-    function setPool()
-        external ;
+    function setPool() external ;
 
 
     /// @dev Initialize the pool of uniswapV3.
     /// @param inSqrtPriceX96 initial price inSqrtPriceX96
-    function setPoolInitialize(uint160 inSqrtPriceX96)
-        external;
-
-    /*
-    /// @dev If the total allocated amount is all claimed, the remaining token balance can be transferred to the account by the owner.
-    /// @param _token token address
-    /// @param _account account
-    /// @param _amount amount
-    function withdraw(address _token, address _account, uint256 _amount)
-        external;
-    */
+    function setPoolInitialize(uint160 inSqrtPriceX96) external;
 
 
     /// ####### anyone can use ##########
@@ -123,7 +77,7 @@ interface IInitialLiquidityVaultAction {
 
 
     /// @dev Provide liquidity to uniswap V3 and receive LP tokens. Vault uses up all available project token
-    function mint() external;
+    function mint(uint256 tosAmount) external;
 
     /// @dev function to charge a fee
     function collect() external ;
