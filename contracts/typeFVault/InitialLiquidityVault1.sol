@@ -229,11 +229,15 @@ contract InitialLiquidityVault1 is
         public nonZeroAddress(address(pool)) override readyToCreatePool
     {
         require(inSqrtPriceX96 > 0, "zero inSqrtPriceX96");
-        (uint160 sqrtPriceX96,,,,,,) =  pool.slot0();
+        (uint160 sqrtPriceX96,,,,uint16 observationCardinalityNext,,) =  pool.slot0();
         if(sqrtPriceX96 == 0){
             pool.initialize(inSqrtPriceX96);
 
             emit SetPoolInitialized(inSqrtPriceX96);
+        }
+
+        if (observationCardinalityNext < 8) {
+            pool.increaseObservationCardinalityNext(8);
         }
     }
 
@@ -330,7 +334,7 @@ contract InitialLiquidityVault1 is
 
         if (acceptTickChangeInterval == 0) acceptTickChangeInterval = 8;
         if (acceptSlippagePrice == 0) acceptSlippagePrice = 10; // based 100
-        if (TWAP_PERIOD == 0) TWAP_PERIOD = 60;
+        if (TWAP_PERIOD == 0) TWAP_PERIOD = 120;
 
         (uint160 sqrtPriceX96, int24 tick,,,,,) =  pool.slot0();
         require(sqrtPriceX96 > 0, "pool is not initialized");
