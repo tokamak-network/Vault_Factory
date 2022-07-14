@@ -185,4 +185,17 @@ contract ReceivedFundVault
 
         emit Claimed(msg.sender, receivedAddress, amount);
     }
+
+    /// @inheritdoc IReceivedFundVaultAction
+    function funding(uint256 amount)
+        external override
+    {
+        require(msg.sender == publicSaleVaultAddress, "caller is not publicSaleVault.");
+        require(IERC20(token).allowance(publicSaleVaultAddress, address(this)) >= amount, "allowance is insufficient.");
+
+        totalAllocatedAmount += amount;
+        IERC20(token).safeTransferFrom(publicSaleVaultAddress, address(this), amount);
+
+        emit Funded(msg.sender, amount);
+    }
 }

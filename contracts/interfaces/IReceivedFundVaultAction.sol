@@ -51,6 +51,12 @@ interface IReceivedFundVaultAction {
     ) external ;
 
 
+    /// ####### Only Public Sale Vault ##########
+
+    /// @dev execute funding.
+    function funding(uint256 amount) external;
+
+
     /// ####### Can Anybody ##########
 
     /// @dev return the current round
@@ -61,5 +67,6 @@ interface IReceivedFundVaultAction {
 
     /// @dev execute claim.
     function claim() external;
+
 
 }
