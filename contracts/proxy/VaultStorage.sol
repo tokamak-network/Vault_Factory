@@ -15,7 +15,6 @@ contract VaultStorage  {
 
     uint256[] public claimTimes;
     uint256[] public claimAmounts;
-    // uint256[] public addAmounts;
 
     bool public pauseProxy;
 
