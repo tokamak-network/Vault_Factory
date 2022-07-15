@@ -10,12 +10,8 @@ interface IReceivedFundVaultFactory {
 
     /// @dev set unoswap address , token address and pools addresses
     /// @param addrs [token, daoAddress]
-    /// @param _minimumClaimCounts  _minimumClaimCounts
-    /// @param _minimumClaimPeriod _minimumClaimPeriod
     function setBaseInfo(
-        address[2] calldata addrs,
-        uint16 _minimumClaimCounts,
-        uint16 _minimumClaimPeriod
+        address[2] calldata addrs
     )   external;
 
 
@@ -24,8 +20,10 @@ interface IReceivedFundVaultFactory {
     /// @dev Create a InitialLiquidityVaultProxy
     /// @param _name name
     /// @param publicSaleAddress publicSaleVault address
+    /// @param receivedAddress the received fund address
     function create(
         string calldata _name,
-        address publicSaleAddress
+        address publicSaleAddress,
+        address receivedAddress
     )  external returns (address);
 }

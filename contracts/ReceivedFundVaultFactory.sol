@@ -13,43 +13,36 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
 
     address public token;
     address public daoAddress;
-    uint16 public minimumClaimCounts;
-    uint16 public minimumClaimPeriod;
 
     constructor() {}
 
     /// @inheritdoc IReceivedFundVaultFactory
     function setBaseInfo(
-        address[2] calldata addrs,
-        uint16 _minimumClaimCounts,
-        uint16 _minimumClaimPeriod
+        address[2] calldata addrs
     )   external override
         onlyOwner
         nonZeroAddress(addrs[0])
         nonZeroAddress(addrs[1])
     {
-        require(minimumClaimCounts > 0 && minimumClaimPeriod > 0, "zero value");
         token = addrs[0];
         daoAddress = addrs[1];
-        minimumClaimCounts = _minimumClaimCounts;
-        minimumClaimPeriod = _minimumClaimPeriod;
     }
 
     /// @inheritdoc IReceivedFundVaultFactory
     function create(
         string calldata _name,
-        address publicSaleAddress
+        address publicSaleAddress,
+        address receivedAddress
     )
         external override
-        nonZeroAddress(token)
-        nonZeroAddress(daoAddress)
-        nonZeroAddress(vaultLogic)
-        nonZeroAddress(upgradeAdmin)
-        nonZeroAddress(publicSaleAddress)
         returns (address)
     {
-        require(minimumClaimCounts > 0 && minimumClaimPeriod > 0, "zero value");
-        require(bytes(_name).length > 0,"name is empty");
+        require(bytes(_name).length > 0, "name is empty");
+        require(
+                token != address(0) && daoAddress != address(0) && vaultLogic != address(0) &&
+                upgradeAdmin != address(0) && publicSaleAddress != address(0) && receivedAddress != address(0),
+                "some address is zero"
+                );
 
         ReceivedFundVaultProxy _proxy = new ReceivedFundVaultProxy();
 
@@ -59,7 +52,7 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         );
 
         _proxy.addProxyAdmin(upgradeAdmin);
-        _proxy.addAdmin(upgradeAdmin);
+        // _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
         _proxy.setLogEventAddress(logEventAddress, true);
 
@@ -68,11 +61,10 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
             token,
             daoAddress,
             publicSaleAddress,
-            minimumClaimCounts,
-            minimumClaimPeriod
+            receivedAddress
         );
 
-        _proxy.removeAdmin();
+        //_proxy.removeAdmin();
         // _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
