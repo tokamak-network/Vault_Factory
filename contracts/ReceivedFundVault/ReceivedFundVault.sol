@@ -77,28 +77,6 @@ contract ReceivedFundVault
     }
 
     /// @inheritdoc IReceivedFundVaultAction
-    function setMinimumClaimCounts(uint16 _count)
-        external override onlyProxyOwner
-    {
-        require(_count > 0, "zero _count");
-        require(minimumClaimCounts != _count, "same value");
-        minimumClaimCounts = _count;
-
-        emit SetMinimumClaimCounts(_count);
-    }
-
-    /// @inheritdoc IReceivedFundVaultAction
-    function setMinimumClaimPeriod(uint16 _period)
-        external override onlyProxyOwner
-    {
-        require(_period > 0, "zero _period");
-        require(minimumClaimPeriod != _period, "same value");
-        minimumClaimPeriod = _period;
-
-        emit SetMinimumClaimPeriod(_period);
-    }
-
-    /// @inheritdoc IReceivedFundVaultAction
     function setVestingPause(bool _pause)
         external override onlyOwner
     {
@@ -156,19 +134,19 @@ contract ReceivedFundVault
     )
         internal
     {
-        require(_claimCounts > 0 && _claimCounts >= uint256(minimumClaimCounts),
-                "claimCounts must be greater than minimumClaimCounts");
+        require(_claimCounts > 0,
+                "claimCounts must be greater than zero");
 
         require(_claimCounts == _claimTimes.length && _claimCounts == _claimAmounts.length,
                 "wrong _claimTimes/_claimAmounts length");
 
-        require(claimAmounts[0] < 50, "cannot claim more than 50% in the first round");
+        // require(claimAmounts[0] < 50, "cannot claim more than 50% in the first round");
 
         require(claimAmounts[_claimCounts-1] == 100, "wrong last claimAmounts");
 
         uint256 i = 0;
         for (i = 1; i < _claimCounts; i++) {
-            require(claimTimes[i] >= claimTimes[i-1] + uint256(minimumClaimPeriod), "wrong claimTimes");
+            require(claimTimes[i] > claimTimes[i-1], "wrong claimTimes");
             require(claimAmounts[i] > claimAmounts[i-1], "wrong claimAmounts");
         }
 

@@ -36,14 +36,6 @@ interface IReceivedFundVaultEvent {
     /// @dev occur when setVestingPause function is executed
     event SetVestingPaused(bool _pause);
 
-
-    /// @dev occur when setMinimumClaimPeriod function is executed
-    event SetMinimumClaimPeriod(uint16 _period);
-
-
-    /// @dev occur when setMinimumClaimCounts function is executed
-    event SetMinimumClaimCounts(uint16 _count);
-
     /// @dev occur when setVestingStop function is executed
     event SetVestingStopped();
 

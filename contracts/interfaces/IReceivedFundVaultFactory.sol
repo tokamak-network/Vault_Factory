@@ -10,12 +10,8 @@ interface IReceivedFundVaultFactory {
 
     /// @dev set unoswap address , token address and pools addresses
     /// @param addrs [token, daoAddress]
-    /// @param _minimumClaimCounts  _minimumClaimCounts
-    /// @param _minimumClaimPeriod _minimumClaimPeriod
     function setBaseInfo(
-        address[2] calldata addrs,
-        uint16 _minimumClaimCounts,
-        uint16 _minimumClaimPeriod
+        address[2] calldata addrs
     )   external;
 
 

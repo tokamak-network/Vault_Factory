@@ -28,13 +28,6 @@ interface IReceivedFundVaultAction {
         uint256[] memory _claimAmounts
     ) external;
 
-    /// @dev set minimum claim counts
-    /// @param _count the minimum claim counts
-    function setMinimumClaimCounts(uint16 _count) external;
-
-    /// @dev set minimum claim period(seconds)
-    /// @param _period the minimum claim period
-    function setMinimumClaimPeriod(uint16 _period) external;
 
     /// ####### only owner (DAO) ##########
 

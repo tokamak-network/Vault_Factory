@@ -11,6 +11,4 @@ contract ReceivedFundVaultStorage {
     bool public vestingPause;
     bool public vestingStop;
 
-    uint16 public minimumClaimCounts;
-    uint16 public minimumClaimPeriod;
 }

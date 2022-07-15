@@ -13,26 +13,19 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
 
     address public token;
     address public daoAddress;
-    uint16 public minimumClaimCounts;
-    uint16 public minimumClaimPeriod;
 
     constructor() {}
 
     /// @inheritdoc IReceivedFundVaultFactory
     function setBaseInfo(
-        address[2] calldata addrs,
-        uint16 _minimumClaimCounts,
-        uint16 _minimumClaimPeriod
+        address[2] calldata addrs
     )   external override
         onlyOwner
         nonZeroAddress(addrs[0])
         nonZeroAddress(addrs[1])
     {
-        require(minimumClaimCounts > 0 && minimumClaimPeriod > 0, "zero value");
         token = addrs[0];
         daoAddress = addrs[1];
-        minimumClaimCounts = _minimumClaimCounts;
-        minimumClaimPeriod = _minimumClaimPeriod;
     }
 
     /// @inheritdoc IReceivedFundVaultFactory
@@ -45,7 +38,6 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         returns (address)
     {
         require(bytes(_name).length > 0, "name is empty");
-        require(minimumClaimCounts > 0 && minimumClaimPeriod > 0, "zero value");
         require(
                 token != address(0) && daoAddress != address(0) && vaultLogic != address(0) &&
                 upgradeAdmin != address(0) && publicSaleAddress != address(0) && receivedAddress != address(0),
@@ -69,9 +61,7 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
             token,
             daoAddress,
             publicSaleAddress,
-            receivedAddress,
-            minimumClaimCounts,
-            minimumClaimPeriod
+            receivedAddress
         );
 
         //_proxy.removeAdmin();
