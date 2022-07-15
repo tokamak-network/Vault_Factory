@@ -11,6 +11,7 @@ contract ReceivedFundVaultProxy is ReceivedFundVaultStorage, VaultProxy {
         address _token,
         address _owner,
         address _publicSaleVault,
+        address _receivedAddress,
         uint16 _minimumClaimCounts,
         uint16 _minimumClaimPeriod
     ) external onlyProxyOwner {
@@ -29,6 +30,8 @@ contract ReceivedFundVaultProxy is ReceivedFundVaultStorage, VaultProxy {
         name = _name;
         token = _token;
         publicSaleVaultAddress = _publicSaleVault;
+        receivedAddress =_receivedAddress;
+
         minimumClaimCounts = _minimumClaimCounts;
         minimumClaimPeriod = _minimumClaimPeriod;
 

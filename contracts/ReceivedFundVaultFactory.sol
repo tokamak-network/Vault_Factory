@@ -38,18 +38,19 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
     /// @inheritdoc IReceivedFundVaultFactory
     function create(
         string calldata _name,
-        address publicSaleAddress
+        address publicSaleAddress,
+        address receivedAddress
     )
         external override
-        nonZeroAddress(token)
-        nonZeroAddress(daoAddress)
-        nonZeroAddress(vaultLogic)
-        nonZeroAddress(upgradeAdmin)
-        nonZeroAddress(publicSaleAddress)
         returns (address)
     {
+        require(bytes(_name).length > 0, "name is empty");
         require(minimumClaimCounts > 0 && minimumClaimPeriod > 0, "zero value");
-        require(bytes(_name).length > 0,"name is empty");
+        require(
+                token != address(0) && daoAddress != address(0) && vaultLogic != address(0) &&
+                upgradeAdmin != address(0) && publicSaleAddress != address(0) && receivedAddress != address(0),
+                "some address is zero"
+                );
 
         ReceivedFundVaultProxy _proxy = new ReceivedFundVaultProxy();
 
@@ -59,7 +60,7 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         );
 
         _proxy.addProxyAdmin(upgradeAdmin);
-        _proxy.addAdmin(upgradeAdmin);
+        // _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
         _proxy.setLogEventAddress(logEventAddress, true);
 
@@ -68,11 +69,12 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
             token,
             daoAddress,
             publicSaleAddress,
+            receivedAddress,
             minimumClaimCounts,
             minimumClaimPeriod
         );
 
-        _proxy.removeAdmin();
+        //_proxy.removeAdmin();
         // _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);

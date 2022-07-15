@@ -22,6 +22,11 @@ contract ReceivedFundVault
         _;
     }
 
+    modifier nonVestingStop() {
+        require(!vestingStop, "Vesting is stopped");
+        _;
+    }
+
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
         _;
@@ -103,6 +108,32 @@ contract ReceivedFundVault
         emit SetVestingPaused(_pause);
     }
 
+
+    /// @inheritdoc IReceivedFundVaultAction
+    function setVestingStop()
+        external override onlyOwner
+    {
+        require(!vestingStop, "already stopped");
+        vestingStop = true;
+
+        emit SetVestingStopped();
+    }
+
+    /// @inheritdoc IReceivedFundVaultAction
+    function withdraw(address to, uint256 amount)
+        external override onlyOwner
+        nonZeroAddress(to)
+        nonZero(amount)
+    {
+        require(vestingStop == true, "it is not stop status.");
+
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: balance is insufficient.");
+
+        IERC20(token).safeTransferFrom(address(this), to, amount);
+
+        emit Withdrawals(to, amount);
+    }
+
     /// @inheritdoc IReceivedFundVaultAction
     function initialize(
         uint256 _claimCounts,
@@ -111,8 +142,8 @@ contract ReceivedFundVault
     )
         external
         override
-        onlyOwner
     {
+        require(msg.sender ==  receivedAddress, "caller is not receivedAddress");
         require(settingCheck != true, "already set");
         _initialize(_claimCounts, _claimTimes, _claimAmounts);
         settingCheck = true;
@@ -184,8 +215,7 @@ contract ReceivedFundVault
     }
 
     /// @inheritdoc IReceivedFundVaultAction
-    function claim()
-        external override nonVestingPause
+    function claim() external override nonVestingPause nonVestingStop
     {
         require(claimTimes[0] > 0 && block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
@@ -204,8 +234,7 @@ contract ReceivedFundVault
     }
 
     /// @inheritdoc IReceivedFundVaultAction
-    function funding(uint256 amount)
-        external override
+    function funding(uint256 amount) external override
     {
         require(msg.sender == publicSaleVaultAddress, "caller is not publicSaleVault.");
         require(IERC20(token).allowance(publicSaleVaultAddress, address(this)) >= amount, "allowance is insufficient.");
@@ -215,4 +244,5 @@ contract ReceivedFundVault
 
         emit Funded(msg.sender, amount);
     }
+
 }

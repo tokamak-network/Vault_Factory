@@ -42,6 +42,14 @@ interface IReceivedFundVaultAction {
     /// @param _pause pause flag
     function setVestingPause(bool _pause) external;
 
+    /// @dev set vesting stop
+    function setVestingStop() external;
+
+    /// @dev withdraw
+    /// @param to the to address
+    /// @param amount amount
+    function withdraw(address to, uint256 amount) external;
+
 
     /// @dev set function controlled by proxy owner
     /// @param _claimCounts total number of claims
