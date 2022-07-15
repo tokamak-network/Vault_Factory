@@ -32,7 +32,11 @@ interface IReceivedFundVaultAction {
     /// @param _count the minimum claim counts
     function setMinimumClaimCounts(uint16 _count) external;
 
-    /// ####### only owner ##########
+    /// @dev set minimum claim period(seconds)
+    /// @param _period the minimum claim period
+    function setMinimumClaimPeriod(uint16 _period) external;
+
+    /// ####### only owner (DAO) ##########
 
     /// @dev set vesting pause flag
     /// @param _pause pause flag

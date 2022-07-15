@@ -78,6 +78,19 @@ contract ReceivedFundVault
         require(_count > 0, "zero _count");
         require(minimumClaimCounts != _count, "same value");
         minimumClaimCounts = _count;
+
+        emit SetMinimumClaimCounts(_count);
+    }
+
+    /// @inheritdoc IReceivedFundVaultAction
+    function setMinimumClaimPeriod(uint16 _period)
+        external override onlyProxyOwner
+    {
+        require(_period > 0, "zero _period");
+        require(minimumClaimPeriod != _period, "same value");
+        minimumClaimPeriod = _period;
+
+        emit SetMinimumClaimPeriod(_period);
     }
 
     /// @inheritdoc IReceivedFundVaultAction
@@ -86,6 +99,8 @@ contract ReceivedFundVault
     {
         require(vestingPause != _pause, "same _pause");
         vestingPause = _pause;
+
+        emit SetVestingPaused(_pause);
     }
 
     /// @inheritdoc IReceivedFundVaultAction
@@ -122,7 +137,7 @@ contract ReceivedFundVault
 
         uint256 i = 0;
         for (i = 1; i < _claimCounts; i++) {
-            require(claimTimes[i] > claimTimes[i-1], "wrong claimTimes");
+            require(claimTimes[i] >= claimTimes[i-1] + uint256(minimumClaimPeriod), "wrong claimTimes");
             require(claimAmounts[i] > claimAmounts[i-1], "wrong claimAmounts");
         }
 
@@ -135,6 +150,8 @@ contract ReceivedFundVault
             claimTimes[i] = _claimTimes[i];
             claimAmounts[i] = claimAmounts[i];
         }
+
+        emit Initialized(_claimCounts, _claimTimes, _claimAmounts);
     }
 
     /// @inheritdoc IReceivedFundVaultAction

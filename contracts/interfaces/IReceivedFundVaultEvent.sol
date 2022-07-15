@@ -22,4 +22,27 @@ interface IReceivedFundVaultEvent {
         address from,
         uint256 amount
     );
+
+    /// @dev occur when initialize function is executed
+    /// @param _claimCounts the total count of round
+    /// @param _claimTimes the start time of each claim round
+    /// @param _claimAmounts Cumulative claimable percentage for each round
+    event Initialized(
+        uint256 _claimCounts,
+        uint256[] _claimTimes,
+        uint256[] _claimAmounts
+    );
+
+    /// @dev occur when setVestingPause function is executed
+    event SetVestingPaused(bool _pause);
+
+
+    /// @dev occur when setMinimumClaimPeriod function is executed
+    event SetMinimumClaimPeriod(uint16 _period);
+
+
+    /// @dev occur when setMinimumClaimCounts function is executed
+    event SetMinimumClaimCounts(uint16 _count);
+
+
 }
