@@ -6,16 +6,18 @@ import "../proxy/VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+// import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IReceivedFundVaultAction.sol";
 import "../interfaces/IReceivedFundVaultEvent.sol";
+
+// import "hardhat/console.sol";
 
 contract ReceivedFundVault
     is
     ReceivedFundVaultStorage, VaultStorage, ProxyAccessCommon, IReceivedFundVaultAction, IReceivedFundVaultEvent
 {
-    using SafeERC20 for IERC20;
+    // using SafeERC20 for IERC20;
 
     modifier nonVestingPause() {
         require(!vestingPause, "Vesting is paused");
@@ -107,7 +109,7 @@ contract ReceivedFundVault
 
         require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: balance is insufficient.");
 
-        IERC20(token).safeTransferFrom(address(this), to, amount);
+        IERC20(token).transfer(to, amount);
 
         emit Withdrawals(to, amount);
     }
@@ -140,14 +142,12 @@ contract ReceivedFundVault
         require(_claimCounts == _claimTimes.length && _claimCounts == _claimAmounts.length,
                 "wrong _claimTimes/_claimAmounts length");
 
-        // require(claimAmounts[0] < 50, "cannot claim more than 50% in the first round");
-
-        require(claimAmounts[_claimCounts-1] == 100, "wrong last claimAmounts");
+        require(_claimAmounts[_claimCounts-1] == 100, "wrong the last claimAmounts");
 
         uint256 i = 0;
         for (i = 1; i < _claimCounts; i++) {
-            require(claimTimes[i] > claimTimes[i-1], "wrong claimTimes");
-            require(claimAmounts[i] > claimAmounts[i-1], "wrong claimAmounts");
+            require(_claimTimes[i-1] > block.timestamp && _claimTimes[i] > _claimTimes[i-1], "wrong claimTimes");
+            require(_claimAmounts[i] > _claimAmounts[i-1], "wrong claimAmounts");
         }
 
         totalClaimCounts = _claimCounts;
@@ -157,7 +157,7 @@ contract ReceivedFundVault
 
         for(i = 0; i < _claimCounts; i++) {
             claimTimes[i] = _claimTimes[i];
-            claimAmounts[i] = claimAmounts[i];
+            claimAmounts[i] = _claimAmounts[i];
         }
 
         emit Initialized(_claimCounts, _claimTimes, _claimAmounts);
@@ -165,6 +165,7 @@ contract ReceivedFundVault
 
     /// @inheritdoc IReceivedFundVaultAction
     function currentRound() public override view returns (uint256 round) {
+        if(claimTimes.length == 0) return 0;
         if(block.timestamp < claimTimes[0]){
             round = 0;
         }
@@ -205,8 +206,7 @@ contract ReceivedFundVault
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
 
-        // send TON to receivedAddress
-        IERC20(token).safeTransferFrom(address(this), receivedAddress, amount);
+        IERC20(token).transfer(receivedAddress, amount);
 
         emit Claimed(msg.sender, receivedAddress, amount);
     }
@@ -218,7 +218,7 @@ contract ReceivedFundVault
         require(IERC20(token).allowance(publicSaleVaultAddress, address(this)) >= amount, "allowance is insufficient.");
 
         totalAllocatedAmount += amount;
-        IERC20(token).safeTransferFrom(publicSaleVaultAddress, address(this), amount);
+        IERC20(token).transferFrom(publicSaleVaultAddress, address(this), amount);
 
         emit Funded(msg.sender, amount);
     }

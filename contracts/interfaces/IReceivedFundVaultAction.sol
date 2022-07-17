@@ -58,7 +58,8 @@ interface IReceivedFundVaultAction {
 
     /// ####### Only Public Sale Vault ##########
 
-    /// @dev execute funding.
+    /// @dev Put PublicSaleVault's funds in the vault.
+    /// @param amount the sending amount
     function funding(uint256 amount) external;
 
 

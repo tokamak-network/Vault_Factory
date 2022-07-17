@@ -52,7 +52,7 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         );
 
         _proxy.addProxyAdmin(upgradeAdmin);
-        // _proxy.addAdmin(upgradeAdmin);
+        _proxy.addAdmin(upgradeAdmin);
         _proxy.setImplementation2(vaultLogic, 0, true);
         _proxy.setLogEventAddress(logEventAddress, true);
 
@@ -65,7 +65,7 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         );
 
         //_proxy.removeAdmin();
-        // _proxy.removeProxyAdmin();
+        _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
