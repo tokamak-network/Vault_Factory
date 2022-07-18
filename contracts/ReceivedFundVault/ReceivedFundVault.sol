@@ -6,12 +6,9 @@ import "../proxy/VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "../interfaces/IReceivedFundVaultAction.sol";
 import "../interfaces/IReceivedFundVaultEvent.sol";
-
-// import "hardhat/console.sol";
 
 contract ReceivedFundVault
     is
