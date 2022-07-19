@@ -109,21 +109,9 @@ contract InitialLiquidityVault1 is
     function setStartTime(uint256 _startTime) public override onlyOwner
     {
         require(_startTime > block.timestamp, "StartTime has passed");
+        require(startTime != _startTime, "same StartTime");
         startTime = _startTime;
         emit SetStartTime(_startTime);
-    }
-
-    /// @inheritdoc IInitialLiquidityVaultAction1
-    function setBoolReadyToCreatePool(
-        bool _boolReadyToCreatePool
-        )
-        public override
-        onlyOwner
-    {
-        require(boolReadyToCreatePool != _boolReadyToCreatePool, "same boolReadyToCreatePool");
-        boolReadyToCreatePool = _boolReadyToCreatePool;
-
-        emit SetBoolReadyToCreatePool(_boolReadyToCreatePool);
     }
 
     /// @inheritdoc IInitialLiquidityVaultAction1
@@ -193,7 +181,7 @@ contract InitialLiquidityVault1 is
     function setCreatePool() external override beforeSetReadyToCreatePool
     {
         require(initSqrtPriceX96 > 0, "zero initSqrtPriceX96");
-        setBoolReadyToCreatePool(true);
+
         setPool();
 
         address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
@@ -204,7 +192,7 @@ contract InitialLiquidityVault1 is
 
     /// @inheritdoc IInitialLiquidityVaultAction1
     function setPool()
-        public override afterSetUniswap readyToCreatePool
+        public override afterSetUniswap beforeSetReadyToCreatePool
     {
         require(startTime > 0 && startTime < block.timestamp, "StartTime has not passed.");
         address getPool = UniswapV3Factory.getPool(address(TOS), address(token), fee);
@@ -216,6 +204,8 @@ contract InitialLiquidityVault1 is
         pool = IUniswapV3Pool(getPool);
         token0Address = pool.token0();
         token1Address = pool.token1();
+
+        boolReadyToCreatePool = true;
 
         if(initSqrtPriceX96 > 0){
             setPoolInitialize(initSqrtPriceX96);

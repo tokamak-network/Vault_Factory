@@ -7,12 +7,6 @@ interface IInitialLiquidityVaultAction1 {
 
     /// ####### only admin ##########
 
-    /// @dev set the boolReadyToCreatePool storage
-    /// @param _boolReadyToCreatePool _boolReadyToCreatePool , true if it's ready to CreatePool
-    function setBoolReadyToCreatePool(
-         bool _boolReadyToCreatePool
-        )
-        external;
 
     function setStartTime(uint256 _startTime) external;
 

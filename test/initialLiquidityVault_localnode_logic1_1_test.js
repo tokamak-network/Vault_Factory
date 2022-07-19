@@ -1046,55 +1046,40 @@ describe("InitialLiquidityVault", function () {
 
     describe("InitialLiquidityVault : Can Anybody ", function () {
 
-        it("3-1. setPool : fail when boolReadyToCreatePool is false ", async function () {
+        it("3-1. setPool : fail when startTime hasn't passes ", async function () {
             expect(await initialLiquidityVault.boolReadyToCreatePool()).to.be.eq(false);
 
             await expect(
                 initialLiquidityVault.setPool()
-             ).to.be.revertedWith("Vault: not ready to CreatePool");
+             ).to.be.revertedWith("StartTime has not passed.");
 
-        });
-        it("2-11. setBoolReadyToCreatePool : fail when caller is not admin ", async function () {
-            expect(await initialLiquidityVault.isAdmin(user2.address)).to.be.eq(false);
-
-            await expect(
-                initialLiquidityVault.connect(user2).setBoolReadyToCreatePool(true)
-             ).to.be.revertedWith("Accessible: Caller is not an admin");
-
-        });
-        it("2-11. setBoolReadyToCreatePool  ", async function () {
-            expect(await initialLiquidityVault.isAdmin(poolInfo.admin.address)).to.be.eq(true);
-
-            await initialLiquidityVault.connect(poolInfo.admin).setBoolReadyToCreatePool(true);
-
-            expect(await initialLiquidityVault.boolReadyToCreatePool()).to.be.eq(true);
-        });
-
-        it("2-11. setBoolReadyToCreatePool : fail when values are same ", async function () {
-            expect(await initialLiquidityVault.isAdmin(poolInfo.admin.address)).to.be.eq(true);
-            expect(await initialLiquidityVault.boolReadyToCreatePool()).to.be.eq(true);
-            await expect(
-                initialLiquidityVault.connect(poolInfo.admin).setBoolReadyToCreatePool(true)
-             ).to.be.revertedWith("same boolReadyToCreatePool");
-        });
-
-        it("3-4. mint fail : when pool is not set", async function () {
-            let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
-            await expect(
-                initialLiquidityVault.connect(user2).mint(preTosBalance)
-            ).to.be.revertedWith("zero address");
         });
 
         it("        pass blocks", async function () {
 
             await ethers.provider.send("evm_increaseTime", [100]);
             await ethers.provider.send("evm_mine");
-
-            // let block = await ethers.provider.getBlock();
-            // console.log('block2',block);
         });
 
+        it("3-4. mint fail : when pool is not set", async function () {
+            let preTosBalance = await tosToken.balanceOf(initialLiquidityVault.address);
+            await expect(
+                initialLiquidityVault.connect(user2).mint(preTosBalance)
+            ).to.be.revertedWith("Vault: not ready to CreatePool");
+        });
+
+        // it("        pass blocks", async function () {
+
+        //     await ethers.provider.send("evm_increaseTime", [100]);
+        //     await ethers.provider.send("evm_mine");
+
+        //     // let block = await ethers.provider.getBlock();
+        //     // console.log('block2',block);
+        // });
+
         it("3-2. setPool  ", async function () {
+            expect(await initialLiquidityVault.boolReadyToCreatePool()).to.be.eq(false);
+
             await initialLiquidityVault.setPool();
 
             expect((await initialLiquidityVault.pool()).toLowerCase()).to.be.eq(poolInfo.poolAddress.toLowerCase());
@@ -1117,6 +1102,16 @@ describe("InitialLiquidityVault", function () {
             else tickPrice = tokenPrice0-tokenPrice01;
             price.tickPrice = tickPrice;
         });
+
+        it("3-1. setPool : fail when already executed ", async function () {
+            expect(await initialLiquidityVault.boolReadyToCreatePool()).to.be.eq(true);
+
+            await expect(
+                initialLiquidityVault.setPool()
+             ).to.be.revertedWith("Vault: already ready to CreatePool");
+
+        });
+
 
     });
 
