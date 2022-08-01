@@ -2,8 +2,8 @@
 pragma solidity ^0.8.4;
 
 
-/// @title IReceivedFundVaultAction
-interface IReceivedFundVaultAction {
+/// @title IVestingPublicFundAction
+interface IVestingPublicFundAction {
 
     /// ####### only ProxyOwner ##########
 

@@ -2,8 +2,8 @@
 pragma solidity ^0.8.4;
 
 
-/// @title IReceivedFundVaultEvent
-interface IReceivedFundVaultEvent {
+/// @title IVestingPublicFundEvent
+interface IVestingPublicFundEvent {
 
     /// @dev occur when claim function is executed
     /// @param caller caller

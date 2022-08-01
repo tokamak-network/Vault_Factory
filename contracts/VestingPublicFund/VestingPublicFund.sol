@@ -1,18 +1,18 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-import "./ReceivedFundVaultStorage.sol";
+import "./VestingPublicFundStorage.sol";
 import "../proxy/VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import "../interfaces/IReceivedFundVaultAction.sol";
-import "../interfaces/IReceivedFundVaultEvent.sol";
+import "../interfaces/IVestingPublicFundAction.sol";
+import "../interfaces/IVestingPublicFundEvent.sol";
 
-contract ReceivedFundVault
+contract VestingPublicFund
     is
-    ReceivedFundVaultStorage, VaultStorage, ProxyAccessCommon, IReceivedFundVaultAction, IReceivedFundVaultEvent
+    VestingPublicFundStorage, VaultStorage, ProxyAccessCommon, IVestingPublicFundAction, IVestingPublicFundEvent
 {
     // using SafeERC20 for IERC20;
 
@@ -41,7 +41,7 @@ contract ReceivedFundVault
 
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function changeAddr(
         address _token,
         address _receivedAddress,
@@ -57,7 +57,7 @@ contract ReceivedFundVault
         publicSaleVaultAddress = _publicSaleVaultAddress;
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function ownerSetting(
         uint256 _claimCounts,
         uint256[] memory _claimTimes,
@@ -75,7 +75,7 @@ contract ReceivedFundVault
         if(settingCheck != true) settingCheck = true;
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function setVestingPause(bool _pause)
         external override onlyOwner
     {
@@ -86,7 +86,7 @@ contract ReceivedFundVault
     }
 
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function setVestingStop()
         external override onlyOwner
     {
@@ -96,7 +96,7 @@ contract ReceivedFundVault
         emit SetVestingStopped();
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function withdraw(address to, uint256 amount)
         external override onlyOwner
         nonZeroAddress(to)
@@ -111,7 +111,7 @@ contract ReceivedFundVault
         emit Withdrawals(to, amount);
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function initialize(
         uint256 _claimCounts,
         uint256[] memory _claimTimes,
@@ -160,7 +160,7 @@ contract ReceivedFundVault
         emit Initialized(_claimCounts, _claimTimes, _claimAmounts);
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function currentRound() public override view returns (uint256 round) {
         if(claimTimes.length == 0) return 0;
         if(block.timestamp < claimTimes[0]){
@@ -179,7 +179,7 @@ contract ReceivedFundVault
         }
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function calculClaimAmount(uint256 _round) public override view returns (uint256 amount) {
         if (currentRound() == 0) return 0;
         if (totalClaimCounts == 0 || totalAllocatedAmount == 0) return 0;
@@ -190,7 +190,7 @@ contract ReceivedFundVault
         }
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function claim() external override nonVestingPause nonVestingStop
     {
         require(claimTimes[0] > 0 && block.timestamp > claimTimes[0], "Vault: not started yet");
@@ -208,7 +208,7 @@ contract ReceivedFundVault
         emit Claimed(msg.sender, receivedAddress, amount);
     }
 
-    /// @inheritdoc IReceivedFundVaultAction
+    /// @inheritdoc IVestingPublicFundAction
     function funding(uint256 amount) external override
     {
         require(msg.sender == publicSaleVaultAddress, "caller is not publicSaleVault.");

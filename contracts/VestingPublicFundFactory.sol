@@ -3,20 +3,20 @@ pragma solidity ^0.8.4;
 
 import "./VaultFactory.sol";
 
-import {ReceivedFundVaultProxy} from "./ReceivedFundVault/ReceivedFundVaultProxy.sol";
+import {VestingPublicFundProxy} from "./VestingPublicFund/VestingPublicFundProxy.sol";
 import "./interfaces/IEventLog.sol";
-import "./interfaces/IReceivedFundVaultFactory.sol";
+import "./interfaces/IVestingPublicFundFactory.sol";
 
 
 /// @title A factory that creates a Vault
-contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
+contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
 
     address public token;
     address public daoAddress;
 
     constructor() {}
 
-    /// @inheritdoc IReceivedFundVaultFactory
+    /// @inheritdoc IVestingPublicFundFactory
     function setBaseInfo(
         address[2] calldata addrs
     )   external override
@@ -28,7 +28,7 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         daoAddress = addrs[1];
     }
 
-    /// @inheritdoc IReceivedFundVaultFactory
+    /// @inheritdoc IVestingPublicFundFactory
     function create(
         string calldata _name,
         address publicSaleAddress,
@@ -44,11 +44,11 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
                 "some address is zero"
                 );
 
-        ReceivedFundVaultProxy _proxy = new ReceivedFundVaultProxy();
+        VestingPublicFundProxy _proxy = new VestingPublicFundProxy();
 
         require(
             address(_proxy) != address(0),
-            "ReceivedFundVaultProxy zero"
+            "VestingPublicFundProxy zero"
         );
 
         _proxy.addProxyAdmin(upgradeAdmin);
@@ -71,13 +71,13 @@ contract ReceivedFundVaultFactory is VaultFactory, IReceivedFundVaultFactory {
         totalCreatedContracts++;
 
         IEventLog(logEventAddress).logEvent(
-            keccak256("ReceivedFundVaultFactory"),
-            keccak256("CreatedReceivedFundVault"),
+            keccak256("VestingPublicFundFactory"),
+            keccak256("CreatedVestingPublicFund"),
             address(this),
             abi.encode(address(_proxy), _name));
 
 
-        emit CreatedReceivedFundVault(address(_proxy), _name);
+        emit CreatedVestingPublicFund(address(_proxy), _name);
 
         return address(_proxy);
     }

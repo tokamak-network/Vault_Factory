@@ -1,9 +1,9 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-interface IReceivedFundVaultFactory {
+interface IVestingPublicFundFactory {
 
-    event CreatedReceivedFundVault(address contractAddress, string name);
+    event CreatedVestingPublicFund(address contractAddress, string name);
 
 
     /// ###### only admin ######
