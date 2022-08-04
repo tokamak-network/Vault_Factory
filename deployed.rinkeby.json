@@ -10,5 +10,7 @@
   "InitialLiquidityVaultFactory": "0xBb3E39360Df9a024cbf4ABa28e0B8F4421e7525F",
   "EventLog": "0x6eAb73266e1BDE7D823f278414e928e67C78FE20",
   "ReceivedFundVault": "0x6c85cebe545b03dC72904cAC566935A0689f998f",
-  "ReceivedFundVaultFactory": "0x61a6c5EF6D2f53a6A3De64ad9b4a51ED7F55A3E3"
+  "ReceivedFundVaultFactory": "0x61a6c5EF6D2f53a6A3De64ad9b4a51ED7F55A3E3",
+  "VestingPublicFund": "0x0362Ef70d6839920071e65AbA8067b592Ad3001c",
+  "VestingPublicFundFactory": "0x0bEb3D909B8F16A893850eead2f91b6509C8Cef3"
 }

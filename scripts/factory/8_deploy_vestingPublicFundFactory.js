@@ -11,7 +11,7 @@ const loadDeployed = require("../load_deployed");
         EventLog: "0x4aad46a82c1d6fb74c5f552cfb947cb05870f0c6",
         wton: "0x709bef48982Bbfd6F2D4Be24660832665F53406C",
         tos: "0x73a54e5C054aA64C1AE7373C2B5474d8AFEa08bd",
-        ReceivedFundVaultAddress: "0x6c85cebe545b03dC72904cAC566935A0689f998f"
+        VestingPublicFundAddress: "0x0362Ef70d6839920071e65AbA8067b592Ad3001c"
   }
 
 
@@ -23,7 +23,7 @@ const loadDeployed = require("../load_deployed");
         EventLog: "0x508d5fada6871348a5b4fb66f4a1f58b187ce9bd",
         wton: "0x709bef48982Bbfd6F2D4Be24660832665F53406C",
         tos: "0x409c4D8cd5d2924b9bc5509230d16a61289c8153",
-        ReceivedFundVaultAddress:  null
+        VestingPublicFundAddress:  null
   }
 
 
@@ -49,52 +49,52 @@ async function main() {
     address: ""
   }
   /*
-  const ReceivedFundVaultFactory = await ethers.getContractFactory("ReceivedFundVaultFactory");
-  const receivedFundVaultFactory  = await ReceivedFundVaultFactory.deploy();
+  const VestingPublicFundFactory = await ethers.getContractFactory("VestingPublicFundFactory");
+  const vestingPublicFundFactory  = await VestingPublicFundFactory.deploy();
 
-  let tx0 = await receivedFundVaultFactory.deployed();
-  console.log("ReceivedFundVaultFactory tx0:", tx0.deployTransaction.hash);
-  console.log("ReceivedFundVaultFactory deployed to:", receivedFundVaultFactory.address );
+  let tx0 = await vestingPublicFundFactory.deployed();
+  console.log("VestingPublicFundFactory tx0:", tx0.deployTransaction.hash);
+  console.log("VestingPublicFundFactory deployed to:", vestingPublicFundFactory.address );
 
   deployInfo = {
-      name: "ReceivedFundVaultFactory",
-      address: receivedFundVaultFactory.address
+      name: "VestingPublicFundFactory",
+      address: vestingPublicFundFactory.address
   }
 
   save(networkName, deployInfo);
 
-  const receivedFundVaultFactoryContract = await ethers.getContractAt("ReceivedFundVaultFactory", receivedFundVaultFactory.address);
-*/
+  const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactory.address);
+  */
 
-let receivedFundVaultFactoryAddress = "0x61a6c5EF6D2f53a6A3De64ad9b4a51ED7F55A3E3";
-const receivedFundVaultFactoryContract = await ethers.getContractAt("ReceivedFundVaultFactory", receivedFundVaultFactoryAddress);
+  let vestingPublicFundFactoryAddress = "0x0bEb3D909B8F16A893850eead2f91b6509C8Cef3";
+  const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactoryAddress);
 
   /*
-  tx = await receivedFundVaultFactoryContract.connect(deployer).setUpgradeAdmin(
+  tx = await vestingPublicFundFactoryContract.connect(deployer).setUpgradeAdmin(
     info.upgradeAdmin
   );
   await tx.wait();
   console.log("setUpgradeAdmin:", tx.hash);
-    */
+  */
 
-  tx = await receivedFundVaultFactoryContract.connect(deployer).setBaseInfo(
+  tx = await vestingPublicFundFactoryContract.connect(deployer).setBaseInfo(
         [info.ton, info.dao]
       );
   await tx.wait();
   console.log("setBaseInfo:", tx.hash);
 
 
-  tx = await receivedFundVaultFactoryContract.connect(deployer).setLogEventAddress(info.EventLog);
+  tx = await vestingPublicFundFactoryContract.connect(deployer).setLogEventAddress(info.EventLog);
   await tx.wait();
   console.log("setLogEventAddress:", tx.hash);
 
-  tx = await receivedFundVaultFactoryContract.connect(deployer).setLogic(info.ReceivedFundVaultAddress);
+  tx = await vestingPublicFundFactoryContract.connect(deployer).setLogic(info.VestingPublicFundAddress);
   await tx.wait();
   console.log("setLogic:", tx.hash);
 
   if(chainId == 1 || chainId == 4)
     await run("verify", {
-      address: receivedFundVaultFactoryContract.address,
+      address: vestingPublicFundFactoryContract.address,
       constructorArgsParams: [],
     });
 }
