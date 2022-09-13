@@ -15,7 +15,7 @@ const loadDeployed = require("../load_deployed");
         tos: "0x73a54e5C054aA64C1AE7373C2B5474d8AFEa08bd",
         weth: "0xc778417e063141139fce010982780140aa0cd5ab",
         usdc: "0x4dbcdf9b62e891a7cec5a2568c3f4faf9e8abe2b",
-        fee: ethers.BigNumber.from("3000"),
+        fee:0x91ae842A5Ffd8d12023116943e72A606179294f30x91ae842A5Ffd8d12023116943e72A606179294f3 ethers.BigNumber.from("3000"),
         NonfungibleTokenPositionDescriptor: "0x91ae842A5Ffd8d12023116943e72A606179294f3",
         UniswapV3Staker: "0xe34139463bA50bD61336E0c446Bd8C0867c6fE65"
   }
@@ -38,6 +38,22 @@ const loadDeployed = require("../load_deployed");
         UniswapV3Staker: "0xe34139463bA50bD61336E0c446Bd8C0867c6fE65"
   }
 
+  // goerli
+  let uniswapInfo_goerli = {
+    poolfactory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    npm: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
+    swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+    wethUsdcPool: "",
+    wtonWethPool: "",
+    wtonTosPool: "",
+    wton: "",
+    tos: "0x67F3bE272b1913602B191B3A68F7C238A2D81Bb9",
+    weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+    usdc: "",
+    _fee: ethers.BigNumber.from("3000"),
+    NonfungibleTokenPositionDescriptor: "0x91ae842A5Ffd8d12023116943e72A606179294f3",
+    UniswapV3Staker: "0xe34139463bA50bD61336E0c446Bd8C0867c6fE65"
+}
 
 async function main() {
   let deployer, user2;

@@ -1,0 +1,9 @@
+{
+  "EventLog": "0xcCcFc0c04c8c751f0ffF7CAf4340f2155BB352C8",
+  "RewardProgramVault": "0x2927d8f5A9C7278feC8a62d169267dAc3d029b2B",
+  "RewardProgramVaultFactory": "0x02901517F8384f0c252a86D2Fff348D51748130d",
+  "InitialLiquidityVault": "0xd8EF9699eBc5b8357cbAaAbCa8af40141180aaB2",
+  "InitialLiquidityVault1": "0x330531C5c4702b396B0707bda73875eFfBd3478d",
+  "InitialLiquidityVaultFactory": "0x174e97B891701D207BD48087Fe9e3b3d10ed7c99",
+  "VestingPublicFund": "0xdfBEf1c5D4e659B11E6A3e862487e390Dbba0bc5"
+}
