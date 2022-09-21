@@ -27,10 +27,16 @@ async function main() {
   // const dividedAddr = "0x5adc7de3a0B4A4797f02C3E99265cd7391437568"
 
    //mainnet
-   const logicaddr = "0xEfb52DAB209Fb24A93173ad4A7E8F0e4549624Cb"
-   const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
-   const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
-   const dividedAddr = "0x69b4A202Fa4039B42ab23ADB725aA7b1e9EEBD79"
+  //  const logicaddr = "0xEfb52DAB209Fb24A93173ad4A7E8F0e4549624Cb"
+  //  const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
+  //  const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
+  //  const dividedAddr = "0x69b4A202Fa4039B42ab23ADB725aA7b1e9EEBD79"
+
+  //goerli
+  const logicaddr = "0x988A796F5ca1d4848d00daC1c17d0A2Bbca18a9b"
+  const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
+  const eventAddr = "0xcCcFc0c04c8c751f0ffF7CAf4340f2155BB352C8"
+  const dividedAddr = "0xa59B0e009BebC5496ca38A2EE5611f6cFe343dAB" //LockTOSDividendProxy 주소 넣어야함
 
   await tosVfactory.setLogic(
     logicaddr

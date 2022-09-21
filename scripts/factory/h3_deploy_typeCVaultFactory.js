@@ -24,9 +24,14 @@ async function main() {
   // const eventAddr = "0x4aAd46a82c1D6fB74c5f552CFB947cB05870F0c6"
 
   //mainnet
-  const logicaddr = "0xe0F0d15A60a51A4715326cEa2D236239683048C0"
-  const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
-  const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
+  // const logicaddr = "0xe0F0d15A60a51A4715326cEa2D236239683048C0"
+  // const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
+  // const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
+
+  //goerli
+  const logicaddr = "0xBef737D725993847c345647ebA096500FdAE71c6"
+  const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
+  const eventAddr = "0xcCcFc0c04c8c751f0ffF7CAf4340f2155BB352C8"
 
   await typeCfactory.setLogic(
     logicaddr

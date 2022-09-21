@@ -13,6 +13,8 @@ async function main() {
   console.log("vaultFactory deployed to:", tonVfactory.address);
 
   await tonVfactory.deployed();
+  console.log("deploy finish");
+
 
   //rinkeby
   // // const logicaddr = "0x9906888eB644B49C6D60ceAE0104108a3D1113Fc"
@@ -27,10 +29,16 @@ async function main() {
   // const dividedAddr = "0x9aCb022B3A8a334618f5cea15A046C10FEE1352f"
 
   //mainnet
-  const logicaddr = "0xaf96340E1Bfaf7DD5B58a4188a3E2Cb4586E7BdD"
-  const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
-  const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
-  const dividedAddr = "0x9aCb022B3A8a334618f5cea15A046C10FEE1352f"
+  // const logicaddr = "0xaf96340E1Bfaf7DD5B58a4188a3E2Cb4586E7BdD"
+  // const upgradeaddr = "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1"
+  // const eventAddr = "0x508d5FaDA6871348A5b4fb66f4A1F58b187Ce9Bd"
+  // const dividedAddr = "0x9aCb022B3A8a334618f5cea15A046C10FEE1352f"
+
+  //goerli
+  const logicaddr = "0xC597fE33d2066c9929a4AF3a0004f5ec55d39E06"
+  const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
+  const eventAddr = "0xcCcFc0c04c8c751f0ffF7CAf4340f2155BB352C8"
+  const dividedAddr = "0xa59B0e009BebC5496ca38A2EE5611f6cFe343dAB"
 
   await tonVfactory.setLogic(
     logicaddr

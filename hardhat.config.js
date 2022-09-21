@@ -24,6 +24,10 @@ module.exports = {
       //   `${process.env.PRIVATE_KEY_3}`,
       //   `${process.env.PRIVATE_KEY_4}`],
     },
+    goerli: {
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY2}`,
+      accounts: [`${process.env.PRIVATE_KEY}`,`${process.env.PRIVATE_KEY_2}`,`${process.env.PRIVATE_KEY_3}`],
+    },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [`${process.env.PRIVATE_KEY}`,`${process.env.PRIVATE_KEY_2}`,`${process.env.PRIVATE_KEY_3}`],
