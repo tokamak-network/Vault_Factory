@@ -38,7 +38,7 @@ async function main() {
   const logicaddr = "0xC597fE33d2066c9929a4AF3a0004f5ec55d39E06"
   const upgradeaddr = "0x8c595DA827F4182bC0E3917BccA8e654DF8223E1"
   const eventAddr = "0xcCcFc0c04c8c751f0ffF7CAf4340f2155BB352C8"
-  const dividedAddr = "0xa59B0e009BebC5496ca38A2EE5611f6cFe343dAB"
+  const dividedAddr = "0xa59B0e009BebC5496ca38A2EE5611f6cFe343dAB"    //TokenDividendPoolProxy 주소 넣어야함
 
   await tonVfactory.setLogic(
     logicaddr

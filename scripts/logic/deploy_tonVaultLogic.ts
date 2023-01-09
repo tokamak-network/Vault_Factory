@@ -22,7 +22,7 @@ async function main() {
   
   console.log("finish")
 
-  //npx hardhat verify --contract contracts/TONVault/TONVault.sol:TONVault 0xe4067AD5e335F659D7478E052b4589333cca5313 --network rinkeby
+  //npx hardhat verify --contract contracts/TONVault/TONVault.sol:TONVault 0x84a19994ac29EbdbEe780d0892f2f143c7Fa9A99 --network rinkeby
 }
 
 // We recommend this pattern to be able to use async/await everywhere

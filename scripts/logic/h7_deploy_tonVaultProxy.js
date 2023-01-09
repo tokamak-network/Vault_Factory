@@ -15,6 +15,9 @@ async function main() {
   await vaultLogic.deployed();
   
   console.log("finish")
+
+  //npx hardhat verify 0x274f1fEee5219380ff84df41F4F19c0dBD420C63 --network rinkeby --contract contracts/TONVault/TONVaultProxy.sol:TONVaultProxy
+  //npx hardhat verify 0xBc78272DcDac34706b974FF3d6F77D91Ed6DBedE --network mainnet --contract contracts/TONVault/TONVaultProxy.sol:TONVaultProxy
 }
 
 // We recommend this pattern to be able to use async/await everywhere

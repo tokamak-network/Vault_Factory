@@ -16,7 +16,8 @@ async function main() {
   
   console.log("finish")
 
-  //npx hardhat verify 0x274f1fEee5219380ff84df41F4F19c0dBD420C63 --network rinkeby --contract contracts/TOSVault/TOSVaultProxy.sol:TOSVaultProxy
+  //npx hardhat verify 0xC0b514aC90856336cb1B783b6F8235DAA9D33ED2 --network rinkeby --contract contracts/TOSVault/TOSVaultProxy.sol:TOSVaultProxy
+  //npx hardhat verify 0x59165cb69878ED06790c459D59E0f7aFAa1662CB --network mainnet --contract contracts/TOSVault/TOSVaultProxy.sol:TOSVaultProxy
 }
 
 // We recommend this pattern to be able to use async/await everywhere
