@@ -113,15 +113,18 @@ contract VestingPublicFund
 
     /// @inheritdoc IVestingPublicFundAction
     function initialize(
+        address _publicSaleVault,
         uint256 _claimCounts,
         uint256[] memory _claimTimes,
         uint256[] memory _claimAmounts
     )
         external
         override
+        nonZeroAddress(_publicSaleVault)
     {
         require(msg.sender ==  receivedAddress, "caller is not receivedAddress");
         require(settingCheck != true, "already set");
+        publicSaleVaultAddress = _publicSaleVault;
         _initialize(_claimCounts, _claimTimes, _claimAmounts);
         settingCheck = true;
     }

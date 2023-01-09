@@ -10,7 +10,6 @@ contract VestingPublicFundProxy is VestingPublicFundStorage, VaultProxy {
         string memory _name,
         address _token,
         address _owner,
-        address _publicSaleVault,
         address _receivedAddress
     ) external onlyProxyOwner {
 
@@ -18,14 +17,12 @@ contract VestingPublicFundProxy is VestingPublicFundStorage, VaultProxy {
 
         require(
             _token != address(0)
-            && _owner != address(0)
-            && _publicSaleVault != address(0),
+            && _owner != address(0),
             "zero address"
         );
 
         name = _name;
         token = _token;
-        publicSaleVaultAddress = _publicSaleVault;
         receivedAddress =_receivedAddress;
 
         if(!isAdmin(_owner)){

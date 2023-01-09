@@ -148,7 +148,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFundFactory.create(
                     vaultInfo.name,
-                    info.publicSaleVault.address,
                     ethers.constants.AddressZero
                 )
             ).to.be.revertedWith("some address is zero");
@@ -161,7 +160,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFundFactory.create(
                     vaultInfo.name,
-                    info.publicSaleVault.address,
                     receivedAddress.address
                 )
             ).to.be.revertedWith("some address is zero");
@@ -183,7 +181,6 @@ describe("VestingPublicFund", function () {
 
             let tx = await vestingPublicFundFactory.create(
                 vaultInfo.name,
-                info.publicSaleVault.address,
                 receivedAddress.address
             );
             vaultInfo.admin = dao;
@@ -220,7 +217,7 @@ describe("VestingPublicFund", function () {
 
             expect(await vestingPublicFundFactory.token()).to.be.eq(await vestingPublicFundProxy.token());
             expect(receivedAddress.address).to.be.eq(await vestingPublicFundProxy.receivedAddress());
-            expect(info.publicSaleVault.address).to.be.eq(await vestingPublicFundProxy.publicSaleVaultAddress());
+            // expect(info.publicSaleVault.address).to.be.eq(await vestingPublicFundProxy.publicSaleVaultAddress());
         });
     });
 
@@ -368,7 +365,6 @@ describe("VestingPublicFund", function () {
                     vaultInfo.name,
                     info.tokenAddress,
                     info.dao.address,
-                    info.publicSaleVault.address,
                     receivedAddress.address
                 )
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
@@ -382,7 +378,6 @@ describe("VestingPublicFund", function () {
                     vaultInfo.name,
                     info.tokenAddress,
                     info.dao.address,
-                    info.publicSaleVault.address,
                     receivedAddress.address
                 )
             ).to.be.revertedWith("already set");
@@ -527,6 +522,7 @@ describe("VestingPublicFund", function () {
             expect(await vestingPublicFund.receivedAddress()).to.not.eq(user2.address);
             await expect(
                 vestingPublicFund.connect(user2).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
@@ -540,6 +536,7 @@ describe("VestingPublicFund", function () {
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
@@ -569,6 +566,7 @@ describe("VestingPublicFund", function () {
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
@@ -598,6 +596,7 @@ describe("VestingPublicFund", function () {
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
@@ -620,6 +619,7 @@ describe("VestingPublicFund", function () {
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
@@ -647,6 +647,7 @@ describe("VestingPublicFund", function () {
             ];
 
             await vestingPublicFund.connect(receivedAddress).initialize(
+                info.publicSaleVault.address,
                 vaultInfo.claimCounts,
                 vaultInfo.claimTimes,
                 vaultInfo.claimAmounts
@@ -674,6 +675,7 @@ describe("VestingPublicFund", function () {
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts

@@ -19,11 +19,9 @@ interface IVestingPublicFundFactory {
 
     /// @dev Create a InitialLiquidityVaultProxy
     /// @param _name name
-    /// @param publicSaleAddress publicSaleVault address
     /// @param receivedAddress the received fund address
     function create(
         string calldata _name,
-        address publicSaleAddress,
         address receivedAddress
     )  external returns (address);
 }

@@ -31,7 +31,6 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
     /// @inheritdoc IVestingPublicFundFactory
     function create(
         string calldata _name,
-        address publicSaleAddress,
         address receivedAddress
     )
         external override
@@ -40,7 +39,7 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
         require(bytes(_name).length > 0, "name is empty");
         require(
                 token != address(0) && daoAddress != address(0) && vaultLogic != address(0) &&
-                upgradeAdmin != address(0) && publicSaleAddress != address(0) && receivedAddress != address(0),
+                upgradeAdmin != address(0) && receivedAddress != address(0),
                 "some address is zero"
                 );
 
@@ -60,7 +59,6 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
             _name,
             token,
             daoAddress,
-            publicSaleAddress,
             receivedAddress
         );
 
@@ -75,7 +73,6 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
             keccak256("CreatedVestingPublicFund"),
             address(this),
             abi.encode(address(_proxy), _name));
-
 
         emit CreatedVestingPublicFund(address(_proxy), _name);
 
