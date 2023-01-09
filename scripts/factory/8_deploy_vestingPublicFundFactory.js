@@ -20,7 +20,7 @@ async function main() {
     name: "",
     address: ""
   }
-
+  /*
   const VestingPublicFundFactory = await ethers.getContractFactory("VestingPublicFundFactory");
   const vestingPublicFundFactory  = await VestingPublicFundFactory.deploy();
 
@@ -34,10 +34,13 @@ async function main() {
   }
 
   save(networkName, deployInfo);
-
+  */
   const EventLog = loadDeployed(networkName, "EventLog");
   const VestingPublicFund = loadDeployed(networkName, "VestingPublicFund");
-  const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactory.address);
+  const vestingPublicFundFactoryAddress = loadDeployed(networkName, "VestingPublicFundFactory");
+  const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactoryAddress);
+
+  //const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactory.address);
 
   tx = await vestingPublicFundFactoryContract.connect(deployer).setUpgradeAdmin(
     info.vestingUpgradeAdmin

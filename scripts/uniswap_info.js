@@ -51,7 +51,7 @@ let uniswapInfo_goerli = {
     wethUsdcPool: "",
     wtonWethPool: "",
     wtonTosPool: "",
-    wton: "",
+    wton: "0xe86fCf5213C785AcF9a8BFfEeDEfA9a2199f7Da6",
     tos: "0x67F3bE272b1913602B191B3A68F7C238A2D81Bb9",
     weth: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     usdc: "",
@@ -60,11 +60,11 @@ let uniswapInfo_goerli = {
     UniswapV3Staker: "0xe34139463bA50bD61336E0c446Bd8C0867c6fE65",
     vestingDao: "0x3b9878Ef988B086F13E5788ecaB9A35E74082ED9",
     vestingUpgradeAdmin: "0x3b9878Ef988B086F13E5788ecaB9A35E74082ED9",
-    ton: ""
+    ton: "0x68c1F9620aeC7F2913430aD6daC1bb16D8444F00"
 }
 
-let networkName = "local";
-let uniswapInfo = uniswapInfo_rinkeby;
+let networkName = "goerli";
+let uniswapInfo = uniswapInfo_goerli;
 
 
 async function getUniswapInfo() {

@@ -5,5 +5,6 @@
   "InitialLiquidityVault": "0xd8EF9699eBc5b8357cbAaAbCa8af40141180aaB2",
   "InitialLiquidityVault1": "0x330531C5c4702b396B0707bda73875eFfBd3478d",
   "InitialLiquidityVaultFactory": "0x174e97B891701D207BD48087Fe9e3b3d10ed7c99",
-  "VestingPublicFund": "0xdfBEf1c5D4e659B11E6A3e862487e390Dbba0bc5"
+  "VestingPublicFund": "0xdfBEf1c5D4e659B11E6A3e862487e390Dbba0bc5",
+  "VestingPublicFundFactory": "0xA7d0Bb01810c1a3AFcDcBf8D02cE3ED17b384069"
 }

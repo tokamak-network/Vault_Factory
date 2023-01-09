@@ -7,7 +7,7 @@ import "./interfaces/ITypeBVaultFactory.sol";
 import "./VaultFactory.sol";
 
 /// @title A factory that creates a Vault
-contract TypeBVaultFactory is VaultFactory, ITypeBVaultFactory { 
+contract TypeBVaultFactory is VaultFactory, ITypeBVaultFactory {
 
     event CreatedTypeBVault(address contractAddress, string name);
 
@@ -16,7 +16,7 @@ contract TypeBVaultFactory is VaultFactory, ITypeBVaultFactory {
         address _token,
         address _owner
     )
-        external 
+        external
         override
         returns (address)
     {
@@ -53,5 +53,5 @@ contract TypeBVaultFactory is VaultFactory, ITypeBVaultFactory {
         emit CreatedTypeBVault(address(typeB), _name);
 
         return address(typeB);
-    } 
+    }
 }
