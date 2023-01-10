@@ -523,7 +523,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFund.connect(user2).initialize(
                     info.publicSaleVault.address,
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -533,13 +532,23 @@ describe("VestingPublicFund", function () {
         it("4-3. initialize : The total number of claims and array's length should be the same. ", async function () {
 
             expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
+            let _block = await ethers.provider.getBlock();
+            let timeBN =  ethers.BigNumber.from(""+_block.timestamp);
+
+            vaultInfo.claimTimes = [
+                timeBN,
+                timeBN,
+                timeBN
+            ];
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
                     info.publicSaleVault.address,
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
-                    vaultInfo.claimAmounts
+                    [
+                        ethers.utils.parseEther("10"),
+                        ethers.utils.parseEther("10")
+                    ]
                 )
              ).to.be.revertedWith("wrong _claimTimes/_claimAmounts length");
 
@@ -567,7 +576,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
                     info.publicSaleVault.address,
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -597,7 +605,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
                     info.publicSaleVault.address,
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -620,7 +627,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
                     info.publicSaleVault.address,
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -648,7 +654,6 @@ describe("VestingPublicFund", function () {
 
             await vestingPublicFund.connect(receivedAddress).initialize(
                 info.publicSaleVault.address,
-                vaultInfo.claimCounts,
                 vaultInfo.claimTimes,
                 vaultInfo.claimAmounts
             );
@@ -676,7 +681,6 @@ describe("VestingPublicFund", function () {
             await expect(
                 vestingPublicFund.connect(receivedAddress).initialize(
                     info.publicSaleVault.address,
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -690,7 +694,6 @@ describe("VestingPublicFund", function () {
 
             await expect(
                 vestingPublicFund.connect(receivedAddress).ownerSetting(
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -717,7 +720,6 @@ describe("VestingPublicFund", function () {
             ];
 
             await vestingPublicFund.connect(proxyAdmin).ownerSetting(
-                    vaultInfo.claimCounts,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 );
