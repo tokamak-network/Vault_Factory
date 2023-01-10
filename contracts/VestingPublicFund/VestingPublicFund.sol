@@ -32,7 +32,7 @@ contract VestingPublicFund
     }
 
     modifier nonZero(uint256 _value) {
-        require(_value > 0, "Vault: zero value");
+        require(_value != 0, "Vault: zero value");
         _;
     }
 
@@ -133,7 +133,7 @@ contract VestingPublicFund
     )
         internal
     {
-        require(_claimTimes.length > 0,
+        require(_claimTimes.length != 0,
                 "claimCounts must be greater than zero");
 
         require(_claimTimes.length == _claimAmounts.length,
@@ -195,7 +195,7 @@ contract VestingPublicFund
     /// @inheritdoc IVestingPublicFundAction
     function claim() external override nonVestingPause nonVestingStop
     {
-        require(claimTimes[0] > 0 && block.timestamp > claimTimes[0], "Vault: not started yet");
+        require(claimTimes[0] != 0 && block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 curRound = currentRound();
         uint256 amount = calculClaimAmount(curRound);
