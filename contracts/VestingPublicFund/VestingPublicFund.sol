@@ -32,7 +32,7 @@ contract VestingPublicFund
     }
 
     modifier nonZero(uint256 _value) {
-        require(_value > 0, "Vault: zero value");
+        require(_value != 0, "Vault: zero value");
         _;
     }
 
