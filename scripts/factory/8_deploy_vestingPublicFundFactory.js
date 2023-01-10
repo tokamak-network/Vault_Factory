@@ -20,7 +20,7 @@ async function main() {
     name: "",
     address: ""
   }
-  /*
+
   const VestingPublicFundFactory = await ethers.getContractFactory("VestingPublicFundFactory");
   const vestingPublicFundFactory  = await VestingPublicFundFactory.deploy();
 
@@ -34,13 +34,13 @@ async function main() {
   }
 
   save(networkName, deployInfo);
-  */
+
   const EventLog = loadDeployed(networkName, "EventLog");
   const VestingPublicFund = loadDeployed(networkName, "VestingPublicFund");
-  const vestingPublicFundFactoryAddress = loadDeployed(networkName, "VestingPublicFundFactory");
-  const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactoryAddress);
+  // const vestingPublicFundFactoryAddress = loadDeployed(networkName, "VestingPublicFundFactory");
+  // const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactoryAddress);
 
-  //const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactory.address);
+  const vestingPublicFundFactoryContract = await ethers.getContractAt("VestingPublicFundFactory", vestingPublicFundFactory.address);
 
   tx = await vestingPublicFundFactoryContract.connect(deployer).setUpgradeAdmin(
     info.vestingUpgradeAdmin
@@ -63,11 +63,14 @@ async function main() {
   await tx.wait();
   console.log("setLogic:", tx.hash);
 
+
   if(chainId == 1 || chainId == 4 || chainId == 5)
     await run("verify", {
       address: vestingPublicFundFactoryContract.address,
       constructorArgsParams: [],
     });
+
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

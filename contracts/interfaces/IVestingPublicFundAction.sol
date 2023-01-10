@@ -18,12 +18,10 @@ interface IVestingPublicFundAction {
     ) external ;
 
     /// @dev set function controlled by proxy owner
-    /// @param _claimCounts total number of claims
     /// @param _claimTimes start time of each round
     /// @param _claimAmounts  Cumulative claimable percentage for each round (write based on 100)
     ///                       If it is 5% (0.05), enter 5 -> Divide by 100 for calculation
     function ownerSetting(
-        uint256 _claimCounts,
         uint256[] memory _claimTimes,
         uint256[] memory _claimAmounts
     ) external;
@@ -46,13 +44,11 @@ interface IVestingPublicFundAction {
 
     /// @dev set function controlled by proxy owner
     /// @param publicSaleAddress the publicSale contract address
-    /// @param _claimCounts total number of claims
     /// @param _claimTimes start time of each round
     /// @param _claimAmounts  Cumulative claimable percentage for each round (write based on 100)
     ///                       If it is 5% (0.05), enter 5 -> Divide by 100 for calculation
     function initialize(
         address publicSaleAddress,
-        uint256 _claimCounts,
         uint256[] calldata _claimTimes,
         uint256[] calldata _claimAmounts
     ) external ;
