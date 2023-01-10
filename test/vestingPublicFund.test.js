@@ -550,7 +550,7 @@ describe("VestingPublicFund", function () {
                         ethers.utils.parseEther("10")
                     ]
                 )
-             ).to.be.revertedWith("wrong _claimTimes/_claimAmounts length");
+             ).to.be.revertedWith("_claimTimes and _claimAmounts length do not match");
 
         });
 
@@ -579,7 +579,7 @@ describe("VestingPublicFund", function () {
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("wrong the last claimAmounts");
+             ).to.be.revertedWith("Final claimAmounts is not 100%");
 
         });
 
@@ -608,7 +608,7 @@ describe("VestingPublicFund", function () {
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("wrong claimTimes");
+             ).to.be.revertedWith("claimTimes should not be decreasing");
 
         });
 
@@ -630,7 +630,7 @@ describe("VestingPublicFund", function () {
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("wrong claimTimes");
+             ).to.be.revertedWith("claimTimes should not be decreasing");
 
         });
 
@@ -684,7 +684,7 @@ describe("VestingPublicFund", function () {
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("already set");
+             ).to.be.revertedWith("Already initalized");
 
         });
 
@@ -765,7 +765,7 @@ describe("VestingPublicFund", function () {
                 vestingPublicFund.connect(publicSaleVault).funding(
                     ethers.utils.parseEther("1000")
                 )
-             ).to.be.revertedWith("allowance is insufficient.");
+             ).to.be.revertedWith("insufficient allowance");
         });
 
         it("5-1. funding : when caller didn't approve, fail", async function () {
@@ -782,7 +782,7 @@ describe("VestingPublicFund", function () {
                 vestingPublicFund.connect(publicSaleVault).funding(
                     amount
                 )
-             ).to.be.revertedWith("allowance is insufficient.");
+             ).to.be.revertedWith("insufficient allowance");
         });
 
         it("5-1. funding ", async function () {
@@ -835,7 +835,7 @@ describe("VestingPublicFund", function () {
             let calculClaimAmount = await vestingPublicFund.calculClaimAmount(round);
             expect(calculClaimAmount).to.be.eq(ethers.constants.Zero);
 
-            await expect(vestingPublicFund.claim()).to.be.revertedWith("claimable amount is zero.");
+            await expect(vestingPublicFund.claim()).to.be.revertedWith("claimable amount is zero");
 
         });
 
@@ -875,7 +875,7 @@ describe("VestingPublicFund", function () {
             expect(await vestingPublicFund.isAdmin(info.dao.address)).to.be.eq(true);
             await expect(
                 vestingPublicFund.connect(info.dao).withdraw(user2.address, ethers.utils.parseEther("1"))
-                ).to.be.revertedWith("it is not stop status.");
+                ).to.be.revertedWith("Vesting is still in effect");
         });
 
         it("7-1 . setVestingPause : when caller is not owner, fail", async function () {
