@@ -79,7 +79,7 @@ contract VestingPublicFund
     function setVestingPause(bool _pause)
         external override onlyOwner
     {
-        require(vestingPause != _pause, "same _pause");
+        require(vestingPause != _pause, "Vesting is already paused");
         vestingPause = _pause;
 
         emit SetVestingPaused(_pause);
@@ -90,7 +90,7 @@ contract VestingPublicFund
     function setVestingStop()
         external override onlyOwner
     {
-        require(!vestingStop, "already stopped");
+        require(!vestingStop, "Vesting is already stopped");
         vestingStop = true;
 
         emit SetVestingStopped();
@@ -102,9 +102,9 @@ contract VestingPublicFund
         nonZeroAddress(to)
         nonZero(amount)
     {
-        require(vestingStop == true, "it is not stop status.");
+        require(vestingStop == true, "Vesting is still in effect");
 
-        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: balance is insufficient.");
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: insufficient balance");
 
         IERC20(token).transfer(to, amount);
 
@@ -123,7 +123,7 @@ contract VestingPublicFund
         nonZeroAddress(_publicSaleVault)
     {
         require(msg.sender ==  receivedAddress, "caller is not receivedAddress");
-        require(settingCheck != true, "already set");
+        require(settingCheck != true, "Already initalized");
         publicSaleVaultAddress = _publicSaleVault;
         _initialize(_claimCounts, _claimTimes, _claimAmounts);
         settingCheck = true;
@@ -140,14 +140,14 @@ contract VestingPublicFund
                 "claimCounts must be greater than zero");
 
         require(_claimCounts == _claimTimes.length && _claimCounts == _claimAmounts.length,
-                "wrong _claimTimes/_claimAmounts length");
+                "_claimTimes and _claimAmounts length do not match");
 
-        require(_claimAmounts[_claimCounts-1] == 100, "wrong the last claimAmounts");
+        require(_claimAmounts[_claimCounts-1] == 100, "Final claimAmounts is not 100%");
 
         uint256 i = 0;
         for (i = 1; i < _claimCounts; i++) {
-            require(_claimTimes[i-1] > block.timestamp && _claimTimes[i] > _claimTimes[i-1], "wrong claimTimes");
-            require(_claimAmounts[i] > _claimAmounts[i-1], "wrong claimAmounts");
+            require(_claimTimes[i-1] > block.timestamp && _claimTimes[i] > _claimTimes[i-1], "claimTimes should not be decreasing");
+            require(_claimAmounts[i] > _claimAmounts[i-1], "claimAmounts should not be decreasing");
         }
 
         totalClaimCounts = _claimCounts;
@@ -200,8 +200,8 @@ contract VestingPublicFund
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
         uint256 curRound = currentRound();
         uint256 amount = calculClaimAmount(curRound);
-        require(amount > 0, "claimable amount is zero.");
-        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: balance is insufficient.");
+        require(amount > 0, "claimable amount is zero");
+        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: insufficient balance");
 
         nowClaimRound = curRound;
         totalClaimsAmount = totalClaimsAmount + amount;
@@ -215,7 +215,7 @@ contract VestingPublicFund
     function funding(uint256 amount) external override
     {
         require(msg.sender == publicSaleVaultAddress, "caller is not publicSaleVault.");
-        require(IERC20(token).allowance(publicSaleVaultAddress, address(this)) >= amount, "allowance is insufficient.");
+        require(IERC20(token).allowance(publicSaleVaultAddress, address(this)) >= amount, "insufficient allowance");
 
         totalAllocatedAmount += amount;
         IERC20(token).transferFrom(publicSaleVaultAddress, address(this), amount);
