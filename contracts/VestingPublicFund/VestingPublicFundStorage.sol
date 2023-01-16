@@ -8,7 +8,5 @@ contract VestingPublicFundStorage {
     address public publicSaleVaultAddress;
 
     bool public settingCheck;
-    bool public vestingPause;
-    bool public vestingStop;
 
 }

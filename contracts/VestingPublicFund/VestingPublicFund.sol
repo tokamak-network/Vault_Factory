@@ -16,16 +16,6 @@ contract VestingPublicFund
 {
     // using SafeERC20 for IERC20;
 
-    modifier nonVestingPause() {
-        require(!vestingPause, "Vesting is paused");
-        _;
-    }
-
-    modifier nonVestingStop() {
-        require(!vestingStop, "Vesting is stopped");
-        _;
-    }
-
     modifier nonZeroAddress(address _addr) {
         require(_addr != address(0), "Vault: zero address");
         _;
@@ -75,42 +65,6 @@ contract VestingPublicFund
     }
 
     /// @inheritdoc IVestingPublicFundAction
-    function setVestingPause(bool _pause)
-        external override onlyOwner
-    {
-        require(vestingPause != _pause, "Vesting is already paused");
-        vestingPause = _pause;
-
-        emit SetVestingPaused(_pause);
-    }
-
-
-    /// @inheritdoc IVestingPublicFundAction
-    function setVestingStop()
-        external override onlyOwner
-    {
-        require(!vestingStop, "Vesting is already stopped");
-        vestingStop = true;
-
-        emit SetVestingStopped();
-    }
-
-    /// @inheritdoc IVestingPublicFundAction
-    function withdraw(address to, uint256 amount)
-        external override onlyOwner
-        nonZeroAddress(to)
-        nonZero(amount)
-    {
-        require(vestingStop == true, "Vesting is still in effect");
-
-        require(IERC20(token).balanceOf(address(this)) >= amount,"Vault: insufficient balance");
-
-        IERC20(token).transfer(to, amount);
-
-        emit Withdrawals(to, amount);
-    }
-
-    /// @inheritdoc IVestingPublicFundAction
     function initialize(
         address _publicSaleVault,
         uint256[] memory _claimTimes,
@@ -135,13 +89,13 @@ contract VestingPublicFund
     {
         require(_claimTimes.length != 0,
                 "claimCounts must be greater than zero");
- 
+
         require(_claimTimes.length == _claimAmounts.length,
                 "_claimTimes and _claimAmounts length do not match");
 
         uint256 _claimCounts = _claimTimes.length;
 
-        require(_claimAmounts[_claimCounts-1] == 100, "Final claimAmounts is not 100%"); 
+        require(_claimAmounts[_claimCounts-1] == 100, "Final claimAmounts is not 100%");
 
         uint256 i = 0;
         for (i = 1; i < _claimCounts; i++) {
@@ -193,7 +147,7 @@ contract VestingPublicFund
     }
 
     /// @inheritdoc IVestingPublicFundAction
-    function claim() external override nonVestingPause nonVestingStop
+    function claim() external override
     {
         require(claimTimes[0] != 0 && block.timestamp > claimTimes[0], "Vault: not started yet");
         require(totalAllocatedAmount > totalClaimsAmount,"Vault: already All get");
