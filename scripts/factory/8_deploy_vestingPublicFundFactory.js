@@ -49,11 +49,15 @@ async function main() {
   console.log("setUpgradeAdmin:", tx.hash);
 
   tx = await vestingPublicFundFactoryContract.connect(deployer).setBaseInfo(
-        [uniswapInfo.ton, uniswapInfo.vestingDao]
+        [
+          uniswapInfo.ton,
+          uniswapInfo.tos,
+          uniswapInfo.vestingDao,
+          uniswapInfo.poolfactory,
+        ]
       );
   await tx.wait();
   console.log("setBaseInfo:", tx.hash);
-
 
   tx = await vestingPublicFundFactoryContract.connect(deployer).setLogEventAddress(EventLog);
   await tx.wait();
@@ -62,7 +66,6 @@ async function main() {
   tx = await vestingPublicFundFactoryContract.connect(deployer).setLogic(VestingPublicFund);
   await tx.wait();
   console.log("setLogic:", tx.hash);
-
 
   if(chainId == 1 || chainId == 4 || chainId == 5)
     await run("verify", {
