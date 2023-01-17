@@ -8,10 +8,10 @@ interface IVestingPublicFundFactory {
 
     /// ###### only admin ######
 
-    /// @dev set unoswap address , token address and pools addresses
-    /// @param addrs [token, daoAddress]
+    /// @dev set addresses
+    /// @param addrs [ton token, tos token, daoAddress, uniswapV3Factory]
     function setBaseInfo(
-        address[2] calldata addrs
+        address[4] calldata addrs
     )   external;
 
 

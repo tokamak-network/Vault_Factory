@@ -11,21 +11,27 @@ import "./interfaces/IVestingPublicFundFactory.sol";
 /// @title A factory that creates a Vault
 contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
 
-    address public token;
+    address public token; // TON address
+    address public tosToken; // TOS address
     address public daoAddress;
+    address public uniswapV3Factory;
 
     constructor() {}
 
     /// @inheritdoc IVestingPublicFundFactory
     function setBaseInfo(
-        address[2] calldata addrs
+        address[4] calldata addrs
     )   external override
         onlyOwner
         nonZeroAddress(addrs[0])
         nonZeroAddress(addrs[1])
+        nonZeroAddress(addrs[2])
+        nonZeroAddress(addrs[3])
     {
         token = addrs[0];
-        daoAddress = addrs[1];
+        tosToken = addrs[1];
+        daoAddress = addrs[2];
+        uniswapV3Factory = addrs[3];
     }
 
     /// @inheritdoc IVestingPublicFundFactory
@@ -58,8 +64,10 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
         _proxy.setBaseInfoProxy(
             _name,
             token,
+            tosToken,
             daoAddress,
-            receivedAddress
+            receivedAddress,
+            uniswapV3Factory
         );
 
         //_proxy.removeAdmin();

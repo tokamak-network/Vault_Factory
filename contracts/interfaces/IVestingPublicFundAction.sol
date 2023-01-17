@@ -9,12 +9,17 @@ interface IVestingPublicFundAction {
 
     /// @dev change base address information
     /// @param _token the fund token address (TON)
+    /// @param _tosToken the tos token address
     /// @param _receivedAddress the sending address for claim
     /// @param _publicSaleVaultAddress  the public sale vault address
+    /// @param _fee  the TON and project token pool's fee
     function changeAddr(
         address _token,
+        address _tosToken,
         address _receivedAddress,
-        address _publicSaleVaultAddress
+        address _publicSaleVaultAddress,
+        address _projectToken,
+        uint24 _fee
     ) external ;
 
     /// @dev set function controlled by proxy owner
@@ -31,13 +36,17 @@ interface IVestingPublicFundAction {
 
     /// @dev set function controlled by proxy owner
     /// @param publicSaleAddress the publicSale contract address
+    /// @param projectToken the project tokan address
     /// @param _claimTimes start time of each round
     /// @param _claimAmounts  Cumulative claimable percentage for each round (write based on 100)
     ///                       If it is 5% (0.05), enter 5 -> Divide by 100 for calculation
+    /// @param _fee the TOS & project tokan 's pool's fee
     function initialize(
         address publicSaleAddress,
+        address projectToken,
         uint256[] calldata _claimTimes,
-        uint256[] calldata _claimAmounts
+        uint256[] calldata _claimAmounts,
+        uint24 _fee
     ) external ;
 
 
