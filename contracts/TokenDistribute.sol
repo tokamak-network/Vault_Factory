@@ -10,7 +10,7 @@ contract TokenDistribute {
     using SafeERC20 for IERC20;
 
     struct DistributeInfo {
-        address token;
+        address to;
         uint256 amount;
     }
 
@@ -26,8 +26,8 @@ contract TokenDistribute {
         uint256 sum = 0;
         for (uint256 i = 0; i < len; i++){
             DistributeInfo memory info = tokens[i];
-            require (info.token != address(0) && info.amount > 0, 'E2');
-            require(Address.isContract(info.token), "E3");
+            require (info.to != address(0) && info.amount > 0, 'E2');
+            // require(Address.isContract(info.to), "E3");
             sum += info.amount;
         }
 
@@ -35,7 +35,7 @@ contract TokenDistribute {
         IERC20(projectToken).safeTransferFrom(msg.sender, address(this), totalDistributeAmount);
         for (uint256 i = 0; i < len; i++){
             DistributeInfo memory info = tokens[i];
-            IERC20(projectToken).safeTransferFrom(address(this), info.token, info.amount);
+            IERC20(projectToken).safeTransfer(info.to, info.amount);
         }
 
         emit Distributed(projectToken, totalDistributeAmount, tokens);
