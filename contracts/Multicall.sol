@@ -3,6 +3,7 @@ pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 
+// import "hardhat/console.sol";
 contract Multicall {
 
     struct Call {
@@ -42,6 +43,7 @@ contract Multicall {
         blockNumber = block.number;
         returnData = new Result[](calls.length);
         for(uint256 i = 0; i < calls.length; i++) {
+
             (bool success, bytes memory ret) = calls[i].target.delegatecall(calls[i].callData);
 
             if (requireSuccess) {
