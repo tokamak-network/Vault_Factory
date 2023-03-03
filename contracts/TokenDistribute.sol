@@ -23,11 +23,10 @@ contract TokenDistribute {
     * 0x01ffc9a7 ===
     *   bytes4(keccak256('supportsInterface(bytes4)'))
     */
+    uint256 constant PACKET_SIZE = 52;
 
     mapping(bytes4 => bool) private _supportedInterfaces;
 
-
-    // 20+32 = 52
     struct DistributeInfo {
         address to;
         uint256 amount;
@@ -65,7 +64,7 @@ contract TokenDistribute {
         return true;
     }
 
-    function distribute(address projectToken, uint256 totalDistributeAmount, DistributeInfo[] memory tokens)
+    function distribute(address projectToken, uint256 totalDistributeAmount, DistributeInfo[] calldata tokens)
         external
     {
         require(totalDistributeAmount != 0, 'E0');
@@ -74,26 +73,23 @@ contract TokenDistribute {
         uint256 len = tokens.length;
         uint256 sum = 0;
         for (uint256 i = 0; i < len; i++){
-            DistributeInfo memory info = tokens[i];
-            require (info.to != address(0) && info.amount > 0, 'E2');
+            require (tokens[i].to != address(0) && tokens[i].amount > 0, 'E2');
             // require(Address.isContract(info.to), "E3");
-            sum += info.amount;
+            sum += tokens[i].amount;
         }
 
         require (sum == totalDistributeAmount, 'E4');
         IERC20(projectToken).safeTransferFrom(msg.sender, address(this), totalDistributeAmount);
-        for (uint256 i = 0; i < len; i++){
-            DistributeInfo memory info = tokens[i];
-            IERC20(projectToken).safeTransfer(info.to, info.amount);
-        }
 
-        emit Distributed(projectToken, totalDistributeAmount, tokens);
+        for (uint256 i = 0; i < len; i++){
+            IERC20(projectToken).safeTransfer(tokens[i].to, tokens[i].amount);
+        }
+        // emit Distributed(projectToken, totalDistributeAmount, tokens);
     }
 
     function _distribute(address sender, address projectToken, uint256 totalDistributeAmount, bytes memory tokensBytes)
         internal
     {
-        uint256 PACKET_SIZE = 52;
         uint256 len = tokensBytes.length / PACKET_SIZE;
         require(totalDistributeAmount != 0, 'E0');
         require(len != 0, 'E1');
@@ -116,7 +112,7 @@ contract TokenDistribute {
             );
         }
 
-        emit DistributedApproveAndCall(projectToken, totalDistributeAmount, tokensBytes);
+        // emit DistributedApproveAndCall(projectToken, totalDistributeAmount, tokensBytes);
     }
 
 }
