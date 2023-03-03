@@ -23,7 +23,16 @@ let uniswapInfo_goerli = {
     UniswapV3Staker: "0xe34139463bA50bD61336E0c446Bd8C0867c6fE65",
     ton: "0x68c1F9620aeC7F2913430aD6daC1bb16D8444F00",
     lockTOSaddr: "0x770e0d682277A4a9167971073f1Aa6d6403bb315",
-    tosAdminAddress: "0x5b6e72248b19F2c5b88A4511A6994AD101d0c287"
+    tosAdminAddress: "0x5b6e72248b19F2c5b88A4511A6994AD101d0c287",
+    vestingVaultFactory: "0x4829bE5F6e7fdC7B7e38c7A16e6298Cb8D6d9693",
+    initialLiquidityVaultFactory: "0x174e97B891701D207BD48087Fe9e3b3d10ed7c99",
+    publicSaleFactory: "0x561e901F100A8C5338Cc988079f985b2C10bc72B",
+    tonStakerFactory: "0xC3A41ff1AfCB1Fb5755aDdD68c5C01f77B4Efb7b",
+    tosStakerFactory: "0xCEA6e5F2d46EaD8FA5E037b98bb6Bd1C766b9eC3",
+    rewardVaultFactory: "0x02901517F8384f0c252a86D2Fff348D51748130d",
+    daoVaultFactory: "0x4d3cF0B03326E549841330C425b23416F8075bce",
+    marketiogVaultFactory: "0xe34016a9B533376465BDbAdFe93AE510507834d0",
+    poolAddressCheck: "0x50b0C48403584d4D0f6758769b24e38c69A0D9C0"
 }
 
 let networkName = "local";
