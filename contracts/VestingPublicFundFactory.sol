@@ -6,7 +6,12 @@ import "./VaultFactory.sol";
 import {VestingPublicFundProxy} from "./VestingPublicFund/VestingPublicFundProxy.sol";
 import "./interfaces/IEventLog.sol";
 import "./interfaces/IVestingPublicFundFactory.sol";
+// import "hardhat/console.sol";
 
+interface IIVault {
+    function receivedAddress() external view returns (address account) ;
+    function isAdmin(address account) external view returns (bool) ;
+}
 
 /// @title A factory that creates a Vault
 contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
@@ -15,12 +20,13 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
     address public tosToken; // TOS address
     address public daoAddress;
     address public uniswapV3Factory;
+    address public initializer;
 
     constructor() {}
 
     /// @inheritdoc IVestingPublicFundFactory
     function setBaseInfo(
-        address[4] calldata addrs
+        address[5] calldata addrs
     )   external override
         onlyOwner
         nonZeroAddress(addrs[0])
@@ -32,6 +38,7 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
         tosToken = addrs[1];
         daoAddress = addrs[2];
         uniswapV3Factory = addrs[3];
+        initializer = addrs[4];
     }
 
     /// @inheritdoc IVestingPublicFundFactory
@@ -56,8 +63,9 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
             "VestingPublicFundProxy zero"
         );
 
-        _proxy.addProxyAdmin(upgradeAdmin);
-        _proxy.addAdmin(upgradeAdmin);
+        if(!_proxy.isProxyAdmin(upgradeAdmin)) _proxy.addProxyAdmin(upgradeAdmin);
+        if(!_proxy.isAdmin(upgradeAdmin)) _proxy.addAdmin(upgradeAdmin);
+
         _proxy.setImplementation2(vaultLogic, 0, true);
         _proxy.setLogEventAddress(logEventAddress, true);
 
@@ -70,8 +78,9 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
             uniswapV3Factory
         );
 
-        //_proxy.removeAdmin();
-        _proxy.removeProxyAdmin();
+        _proxy.addAdmin(initializer);
+        _proxy.removeAdmin();
+        // _proxy.removeProxyAdmin();
 
         createdContracts[totalCreatedContracts] = ContractInfo(address(_proxy), _name);
         totalCreatedContracts++;
@@ -86,5 +95,4 @@ contract VestingPublicFundFactory is VaultFactory, IVestingPublicFundFactory {
 
         return address(_proxy);
     }
-
 }
