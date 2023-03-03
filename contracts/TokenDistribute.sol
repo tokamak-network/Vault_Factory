@@ -68,9 +68,9 @@ contract TokenDistribute {
         external
     {
         require(totalDistributeAmount != 0, 'E0');
-        require(tokens.length != 0, 'E1');
-
         uint256 len = tokens.length;
+        require(len != 0, 'E1');
+
         uint256 sum = 0;
         for (uint256 i = 0; i < len; i++){
             require (tokens[i].to != address(0) && tokens[i].amount > 0, 'E2');
@@ -90,8 +90,8 @@ contract TokenDistribute {
     function _distribute(address sender, address projectToken, uint256 totalDistributeAmount, bytes memory tokensBytes)
         internal
     {
-        uint256 len = tokensBytes.length / PACKET_SIZE;
         require(totalDistributeAmount != 0, 'E0');
+        uint256 len = tokensBytes.length / PACKET_SIZE;
         require(len != 0, 'E1');
 
         uint256 sum = 0;
