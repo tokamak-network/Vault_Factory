@@ -9,6 +9,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../interfaces/IVestingPublicFundAction.sol";
 import "../interfaces/IVestingPublicFundEvent.sol";
+// import "hardhat/console.sol";
 
 interface IIUniswapV3Pool {
     function slot0()
@@ -99,7 +100,7 @@ contract VestingPublicFund is
         nonZeroAddress(_publicSaleVault)
         nonZeroAddress(_projectToken)
     {
-        require(msg.sender ==  receivedAddress, "caller is not receivedAddress");
+        require(msg.sender == receivedAddress || isAdmin(msg.sender), "caller is not receivedAddress or admin");
         require(settingCheck != true, "Already initalized");
         publicSaleVaultAddress = _publicSaleVault;
         projectToken = _projectToken;
