@@ -18,7 +18,7 @@ describe("TokenDistribute", function () {
 
   let provider;
 
-  let tokenDistribute, projectToken, projectToken1
+  let tokenDistribute, projectToken, projectToken1, projectToken2, multicall
   let erc20Info = {
     name: 'TEST1',
     symbol: 'TST'
@@ -195,13 +195,14 @@ describe("TokenDistribute", function () {
         .approveAndCall(tokenDistribute.address, amountInTON, data);
       await tx.wait();
 
-      expect(await projectToken.balanceOf(user1.address)).to.be.eq(DistributeInfo[0].amount);
-      expect(await projectToken.balanceOf(user2.address)).to.be.eq(DistributeInfo[1].amount);
-      expect(await projectToken.balanceOf(user3.address)).to.be.eq(DistributeInfo[2].amount);
-      expect(await projectToken.balanceOf(user4.address)).to.be.eq(DistributeInfo[3].amount);
-      expect(await projectToken.balanceOf(user5.address)).to.be.eq(DistributeInfo[4].amount);
+      expect(await projectToken1.balanceOf(user1.address)).to.be.eq(DistributeInfo[0].amount);
+      expect(await projectToken1.balanceOf(user2.address)).to.be.eq(DistributeInfo[1].amount);
+      expect(await projectToken1.balanceOf(user3.address)).to.be.eq(DistributeInfo[2].amount);
+      expect(await projectToken1.balanceOf(user4.address)).to.be.eq(DistributeInfo[3].amount);
+      expect(await projectToken1.balanceOf(user5.address)).to.be.eq(DistributeInfo[4].amount);
 
     })
 
   })
+
 })
