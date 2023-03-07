@@ -21,6 +21,7 @@ async function main() {
     address: ""
   }
 
+
   const VestingPublicFundFactory = await ethers.getContractFactory("VestingPublicFundFactory");
   const vestingPublicFundFactory  = await VestingPublicFundFactory.deploy();
 
@@ -35,6 +36,7 @@ async function main() {
 
   save(networkName, deployInfo);
 
+  const Initializer = loadDeployed(networkName, "Initializer");
   const EventLog = loadDeployed(networkName, "EventLog");
   const VestingPublicFund = loadDeployed(networkName, "VestingPublicFund");
   // const vestingPublicFundFactoryAddress = loadDeployed(networkName, "VestingPublicFundFactory");
@@ -54,6 +56,7 @@ async function main() {
           uniswapInfo.tos,
           uniswapInfo.vestingDao,
           uniswapInfo.poolfactory,
+          Initializer
         ]
       );
   await tx.wait();
