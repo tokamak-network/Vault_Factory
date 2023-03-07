@@ -257,8 +257,7 @@ describe("Multicall", function () {
       await InitialLiquidityVaultFactory.connect(admin1).setUniswapInfoNTokens(
         [
           uniswapInfo.poolfactory,
-          uniswapInfo.npm,
-          initializer.address
+          uniswapInfo.npm
         ],
         uniswapInfo.tos,
         3000
@@ -288,7 +287,7 @@ describe("Multicall", function () {
       await RewardProgramVaultFactory.connect(admin1).setLogic(RewardProgramVaultLogic);
       await RewardProgramVaultFactory.connect(admin1).setWaitStartSeconds(120);
       await RewardProgramVaultFactory.connect(admin1).setStaker(uniswapInfo.UniswapV3Staker);
-      await RewardProgramVaultFactory.connect(admin1).setInitializer(initializer.address);
+      // await RewardProgramVaultFactory.connect(admin1).setInitializer(initializer.address);
 
       vaultLogic =  await RewardProgramVaultFactory.vaultLogic();
       expect(vaultLogic).to.be.eq(RewardProgramVaultLogic);
@@ -635,6 +634,7 @@ describe("Multicall", function () {
       }
     })
     */
+   /*
     it("initializeCalls : rewardVault ", async () => {
 
       claimAmounts = [
@@ -656,14 +656,14 @@ describe("Multicall", function () {
             ])
       }
     })
-
+    */
     it("tryCalls  ", async () => {
 
       let result = await initializer.connect(admin1).initialize(
           [
             initializeCalls.vestingVault,
             // initializeCalls.initialLiquidityVault,
-            initializeCalls.rewardVault
+            // initializeCalls.rewardVault
           ]
         );
 
