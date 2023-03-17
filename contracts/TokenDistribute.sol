@@ -13,7 +13,6 @@ contract TokenDistribute {
     using SafeERC20 for IERC20;
     using BytesLib for bytes;
 
-    bytes4 constant ERC20_RECEIVED = 0x4fc35859;
     bytes4 constant ERC20_ONAPPROVE = 0x4273ca16;
      // As per the EIP-165 spec, no interface should ever match 0xffffffff
     bytes4 private constant InterfaceId_Invalid = 0xffffffff;
@@ -36,7 +35,6 @@ contract TokenDistribute {
     event DistributedApproveAndCall(address projectToken_, uint256 totalDistributeAmount_, bytes tokens_);
 
     constructor(){
-        // _registerInterface(ERC20_RECEIVED);
         _registerInterface(ERC20_ONAPPROVE);
         _registerInterface(InterfaceId_ERC165);
 
