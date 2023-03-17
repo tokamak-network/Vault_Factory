@@ -56,7 +56,7 @@ contract TokenDistribute {
         bytes calldata data
     ) external returns (bool) {
 
-        require(spender == address(this), "EA");
+        // require(spender == address(this), "EA");
         _distribute(sender, msg.sender, amount, data);
         return true;
     }
