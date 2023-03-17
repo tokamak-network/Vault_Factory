@@ -31,8 +31,8 @@ contract TokenDistribute {
         uint256 amount;
     }
 
-    event Distributed(address projectToken_, uint256 totalDistributeAmount_, DistributeInfo[] tokens_);
-    event DistributedApproveAndCall(address projectToken_, uint256 totalDistributeAmount_, bytes tokens_);
+    // event Distributed(address projectToken_, uint256 totalDistributeAmount_, DistributeInfo[] tokens_);
+    // event DistributedApproveAndCall(address projectToken_, uint256 totalDistributeAmount_, bytes tokens_);
 
     constructor(){
         _registerInterface(ERC20_ONAPPROVE);
@@ -57,7 +57,6 @@ contract TokenDistribute {
     ) external returns (bool) {
 
         require(spender == address(this), "EA");
-        // _distribute(sender, msg.sender, data.toUint256(0), data.slice(32,data.length-32));
         _distribute(sender, msg.sender, amount, data);
         return true;
     }
@@ -72,7 +71,7 @@ contract TokenDistribute {
         uint256 sum = 0;
         for (uint256 i = 0; i < len; i++){
             require (tokens[i].to != address(0) && tokens[i].amount > 0, 'E2');
-            // require(Address.isContract(info.to), "E3");
+
             sum += tokens[i].amount;
         }
 
