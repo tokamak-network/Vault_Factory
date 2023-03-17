@@ -186,8 +186,8 @@ describe("TokenDistribute", function () {
       );
 
       const data = ethers.utils.solidityPack(
-        ["uint256", "bytes"],
-        [amountInTON, paramsData]
+        ["bytes"],
+        [paramsData]
       );
 
       const tx = await projectToken1

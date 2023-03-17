@@ -57,8 +57,8 @@ contract TokenDistribute {
     ) external returns (bool) {
 
         require(spender == address(this), "EA");
-        _distribute(sender, msg.sender, data.toUint256(0), data.slice(32,data.length-32));
-
+        // _distribute(sender, msg.sender, data.toUint256(0), data.slice(32,data.length-32));
+        _distribute(sender, msg.sender, amount, data);
         return true;
     }
 
