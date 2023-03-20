@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 interface IIVault {
     function isAdmin(address account) external view returns (bool) ;
+    function availableInitializer(address _addr) external view returns (bool) ;
 }
 
 /// @title A factory that creates a Vault
@@ -31,7 +32,7 @@ contract Initializer {
         returnData = new Result[](calls.length);
         for(uint256 i = 0; i < calls.length; i++) {
             bool isAdmin = IIVault(calls[i].target).isAdmin(address(this));
-            bool isSenderAdmin = IIVault(calls[i].target).isAdmin(msg.sender);
+            bool isSenderAdmin = IIVault(calls[i].target).availableInitializer(msg.sender);
 
             require(isAdmin && isSenderAdmin, 'not admin');
 
