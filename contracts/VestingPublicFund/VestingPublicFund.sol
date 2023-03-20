@@ -267,7 +267,7 @@ contract VestingPublicFund is
         return (size > 0);
     }
 
-    function availableInitializer(address _addr) public view returns (bool result) {
+    function availableInitializer(address _addr) external view returns (bool result) {
         if (!settingCheck && (_addr == receivedAddress || isAdmin(_addr))) result = true;
     }
 }
