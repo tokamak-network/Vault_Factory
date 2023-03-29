@@ -70,6 +70,16 @@ contract VestingPublicFund is
         fee = _fee;
     }
 
+    function changeReceivedAddress(
+        address _receivedAddress
+    )
+        external
+        nonZeroAddress(_receivedAddress)
+    {
+        require(msg.sender == receivedAddress || isAdmin(msg.sender), "caller is not receivedAddress or admin");
+        receivedAddress = _receivedAddress;
+    }
+
     /// @inheritdoc IVestingPublicFundAction
     function ownerSetting(
         uint256[] memory _claimTimes,
