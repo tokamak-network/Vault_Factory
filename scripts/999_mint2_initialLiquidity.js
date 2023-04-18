@@ -21,8 +21,6 @@ async function main() {
   [deployer, user2, user3 ] = await ethers.getSigners();
   console.log('deployer',deployer.address);
 
-
-  const liquidityAmountLib = await ethers.getContractAt(LiquidityAmountsAbi.abi, liquidityAmount,  deployer)
   const poolContract = await ethers.getContractAt(UniswapV3PoolAbi.abi, poolAddress,  deployer)
   const slot0 = await poolContract.slot0();
   console.log(slot0)
