@@ -68,8 +68,8 @@ async function main() {
   if(liquidity1.lt(liquidity0)) liquidity = liquidity1;
   console.log('liquidity', liquidity);
 
-  let amount =  await liquidityAmountLib.getAmountsForLiquidity(sqrtRatio, sqrtRatioAX96, sqrtRatioBX96, liquidity);
-  console.log('amount', amount);
+  let calculatedAmount =  await liquidityAmountLib.getAmountsForLiquidity(sqrtRatio, sqrtRatioAX96, sqrtRatioBX96, liquidity);
+  console.log('calculatedAmount', calculatedAmount);
 
 }
 
