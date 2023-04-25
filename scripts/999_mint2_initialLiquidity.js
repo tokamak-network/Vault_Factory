@@ -55,7 +55,7 @@ async function main() {
     tosAmount = inToken0Amount;
 
   } else {
-    let reversePrice = 1/price * 1e18;;
+    let reversePrice = 1e18 / price  ;
     let inToken1Amount = amount0Balance.mul(ethers.BigNumber.from(reversePrice+"")).div(ethers.utils.parseEther("1"));
     inToken1Amount = inToken1Amount * 0.9;
     console.log('amount0Balance', amount0Balance.toString());

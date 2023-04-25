@@ -10,20 +10,10 @@ const ERC20Abi = require("../abis/ERC20A.json");
 const LiquidityAmountsAbi = require("../abis/LiquidityAmounts.json");
 const UniswapV3PoolAbi = require("../abis/UniswapV3Pool.json");
 
+
+const vaultAddress = "0xcd6De1CeDA280ac8764763FfD14B25A75Ca6d1a1";
 const poolAddress = "0x054fa5e35b09dd348855e9eb494e53bb8619ab6d";
 const liquidityAmount ="0xb8B9C2f8f38E61A8Ef84deDd7898e9DC0E08F18f";
-
-
-// function  getLiquidityForAmount0(
-//     sqrtRatioAX96,
-//     sqrtRatioBX96,
-//     amount0)
-// {
-//   if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
-//   let intermediate = sqrtRatioAX96.mul(sqrtRatioBX96).div(FixedPoint96.Q96) FullMath.mulDiv(sqrtRatioAX96, sqrtRatioBX96, FixedPoint96.Q96);
-//   return toUint128(FullMath.mulDiv(amount0, intermediate, sqrtRatioBX96 - sqrtRatioAX96));
-// }
-
 
 async function main() {
    let deployer, user2;
@@ -44,8 +34,8 @@ async function main() {
   const token0Contract = await ethers.getContractAt(ERC20Abi.abi, token0,  deployer)
   const token1Contract = await ethers.getContractAt(ERC20Abi.abi, token1,  deployer)
 
-  const amount0 = await token0Contract.balanceOf(poolAddress)
-  const amount1 = await token1Contract.balanceOf(poolAddress)
+  const amount0 = await token0Contract.balanceOf(vaultAddress)
+  const amount1 = await token1Contract.balanceOf(vaultAddress)
 
   console.log("amount0", amount0)
   console.log("amount1", amount1)
@@ -59,7 +49,7 @@ async function main() {
   console.log('sqrtRatioBX96', sqrtRatioBX96.toString());
 
   let liquidity0 = await liquidityAmountLib.getLiquidityForAmount0(sqrtRatioAX96, sqrtRatioBX96, amount0);
-  let liquidity1 = await liquidityAmountLib.getLiquidityForAmount0(sqrtRatioAX96, sqrtRatioBX96, amount1);
+  let liquidity1 = await liquidityAmountLib.getLiquidityForAmount1(sqrtRatioAX96, sqrtRatioBX96, amount1);
 
   console.log('liquidity0', liquidity0);
   console.log('liquidity1', liquidity1);
@@ -67,6 +57,11 @@ async function main() {
   let liquidity = liquidity0;
   if(liquidity1.lt(liquidity0)) liquidity = liquidity1;
   console.log('liquidity', liquidity);
+
+  let c_amount0 = await liquidityAmountLib.getAmount0ForLiquidity(sqrtRatio, sqrtRatioBX96, liquidity);
+  let c_amount1 = await liquidityAmountLib.getAmount1ForLiquidity(sqrtRatioAX96, sqrtRatio, liquidity);
+  console.log('c_amount0', c_amount0);
+  console.log('c_amount1', c_amount1);
 
   let calculatedAmount =  await liquidityAmountLib.getAmountsForLiquidity(sqrtRatio, sqrtRatioAX96, sqrtRatioBX96, liquidity);
   console.log('calculatedAmount', calculatedAmount);
