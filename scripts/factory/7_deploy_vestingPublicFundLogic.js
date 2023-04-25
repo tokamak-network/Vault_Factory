@@ -7,8 +7,13 @@ const {getUniswapInfo} = require("../uniswap_info");
 async function main() {
   let deployer, user2;
 
-  let {chainId, networkName, uniswapInfo } = await getUniswapInfo();
+  // let {chainId, networkName, uniswapInfo } = await getUniswapInfo();
 
+  const { chainId } = await ethers.provider.getNetwork();
+  let networkName = "local";
+  if(chainId == 1) networkName = "mainnet";
+  if(chainId == 4) networkName = "rinkeby";
+  if(chainId == 5) networkName = "goerli";
 
   [deployer, user2] = await ethers.getSigners();
   // console.log('deployer',deployer.address);
