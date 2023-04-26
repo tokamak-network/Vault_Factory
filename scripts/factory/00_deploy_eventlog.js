@@ -1,14 +1,12 @@
 const { ethers, run } = require("hardhat");
 const save = require("../save_deployed");
 const loadDeployed = require("../load_deployed");
+const {getUniswapInfo} = require("../uniswap_info");
 
 async function main() {
   let deployer, user2;
 
-  const { chainId } = await ethers.provider.getNetwork();
-  let networkName = "local";
-  if(chainId == 1) networkName = "mainnet";
-  if(chainId == 4) networkName = "rinkeby";
+  let {chainId, networkName, uniswapInfo } = await getUniswapInfo();
 
   [deployer, user2] = await ethers.getSigners();
   console.log('deployer',deployer.address);

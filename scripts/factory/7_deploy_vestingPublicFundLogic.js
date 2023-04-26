@@ -2,16 +2,18 @@
 const { ethers, run } = require("hardhat");
 const save = require("../save_deployed");
 const loadDeployed = require("../load_deployed");
+// const {getUniswapInfo} = require("../uniswap_info");
 
 async function main() {
   let deployer, user2;
 
+  // let {chainId, networkName, uniswapInfo } = await getUniswapInfo();
+
   const { chainId } = await ethers.provider.getNetwork();
-
   let networkName = "local";
-
   if(chainId == 1) networkName = "mainnet";
   if(chainId == 4) networkName = "rinkeby";
+  if(chainId == 5) networkName = "goerli";
 
   [deployer, user2] = await ethers.getSigners();
   // console.log('deployer',deployer.address);
@@ -22,23 +24,23 @@ async function main() {
     address: ""
   }
 
-  const ReceivedFundVault = await ethers.getContractFactory("ReceivedFundVault");
-  const receivedFundVault  = await ReceivedFundVault.deploy();
+  const VestingPublicFund = await ethers.getContractFactory("VestingPublicFund");
+  const vestingPublicFund  = await VestingPublicFund.deploy();
 
-  let tx0 = await receivedFundVault.deployed();
-  console.log("ReceivedFundVault tx0:", tx0.deployTransaction.hash);
-  console.log("ReceivedFundVault deployed to:", receivedFundVault.address);
+  let tx0 = await vestingPublicFund.deployed();
+  console.log("VestingPublicFund tx0:", tx0.deployTransaction.hash);
+  console.log("VestingPublicFund deployed to:", vestingPublicFund.address);
 
   deployInfo = {
-      name: "ReceivedFundVault",
-      address: receivedFundVault.address
+      name: "VestingPublicFund",
+      address: vestingPublicFund.address
   }
 
   save(networkName, deployInfo);
 
-  if(chainId == 1 || chainId == 4)
+  if(chainId == 1 || chainId == 4 || chainId == 5)
     await run("verify", {
-      address: receivedFundVault.address,
+      address: vestingPublicFund.address,
       constructorArgsParams: [],
     });
 }

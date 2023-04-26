@@ -14,9 +14,9 @@ const {
 let TOSToken = require('../abis/TOS.json');
 let ERC20AToken = require('../abis/ERC20A.json');
 
-describe("ReceivedFundVault", function () {
+describe("VestingPublicFund", function () {
 
-    let tokenA, receivedFundVaultFactory, receivedFundVaultLogic,  receivedFundVault, receivedFundVaultProxy, provider;
+    let tokenA, vestingPublicFundFactory, vestingPublicFundLogic,  vestingPublicFund, vestingPublicFundProxy, provider;
     let tosToken , vaultAddress, testLogicAddress;
     let eventLogAddress;
 
@@ -78,59 +78,59 @@ describe("ReceivedFundVault", function () {
         eventLogAddress = EventLogDeployed.address;
     });
 
-    it("create ReceivedFundVault Logic", async function () {
-        const ReceivedFundVault = await ethers.getContractFactory("ReceivedFundVault");
-        let ReceivedFundVaultLogicDeployed = await ReceivedFundVault.deploy();
-        let tx = await ReceivedFundVaultLogicDeployed.deployed();
-        receivedFundVaultLogic = ReceivedFundVaultLogicDeployed.address;
+    it("create VestingPublicFund Logic", async function () {
+        const VestingPublicFund = await ethers.getContractFactory("VestingPublicFund");
+        let VestingPublicFundLogicDeployed = await VestingPublicFund.deploy();
+        let tx = await VestingPublicFundLogicDeployed.deployed();
+        vestingPublicFundLogic = VestingPublicFundLogicDeployed.address;
     });
 
-    it("create ReceivedFundVaultFactory ", async function () {
-        const ReceivedFundVaultFactory = await ethers.getContractFactory("ReceivedFundVaultFactory");
-        let ReceivedFundVaultFactoryDeployed = await ReceivedFundVaultFactory.deploy();
-        let tx = await ReceivedFundVaultFactoryDeployed.deployed();
+    it("create VestingPublicFundFactory ", async function () {
+        const VestingPublicFundFactory = await ethers.getContractFactory("VestingPublicFundFactory");
+        let VestingPublicFundFactoryDeployed = await VestingPublicFundFactory.deploy();
+        let tx = await VestingPublicFundFactoryDeployed.deployed();
 
-        receivedFundVaultFactory =  await ethers.getContractAt("ReceivedFundVaultFactory", ReceivedFundVaultFactoryDeployed.address);
-        let code = await ethers.provider.getCode(receivedFundVaultFactory.address);
+        vestingPublicFundFactory =  await ethers.getContractAt("VestingPublicFundFactory", VestingPublicFundFactoryDeployed.address);
+        let code = await ethers.provider.getCode(vestingPublicFundFactory.address);
         expect(code).to.not.eq("0x");
 
     });
 
-    describe("ReceivedFundVaultFactory   ", function () {
+    describe("VestingPublicFundFactory   ", function () {
 
         it("0-1. setLogic : when not admin, fail ", async function () {
 
             await expect(
-                receivedFundVaultFactory.connect(user2).setLogic(receivedFundVaultLogic)
+                vestingPublicFundFactory.connect(user2).setLogic(vestingPublicFundLogic)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
 
         it("0-1. setLogic ", async function () {
 
-            await receivedFundVaultFactory.connect(admin1).setLogic(receivedFundVaultLogic);
+            await vestingPublicFundFactory.connect(admin1).setLogic(vestingPublicFundLogic);
 
-            expect(await receivedFundVaultFactory.vaultLogic()).to.be.eq(receivedFundVaultLogic);
+            expect(await vestingPublicFundFactory.vaultLogic()).to.be.eq(vestingPublicFundLogic);
         });
 
         it("0-2. setUpgradeAdmin : when not admin, fail ", async function () {
 
             await expect(
-                receivedFundVaultFactory.connect(user2).setUpgradeAdmin(proxyAdmin.address)
+                vestingPublicFundFactory.connect(user2).setUpgradeAdmin(proxyAdmin.address)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
 
         it("0-2. setUpgradeAdmin ", async function () {
 
-            await receivedFundVaultFactory.connect(admin1).setUpgradeAdmin(proxyAdmin.address);
-            expect(await receivedFundVaultFactory.upgradeAdmin()).to.be.eq(proxyAdmin.address);
+            await vestingPublicFundFactory.connect(admin1).setUpgradeAdmin(proxyAdmin.address);
+            expect(await vestingPublicFundFactory.upgradeAdmin()).to.be.eq(proxyAdmin.address);
         });
 
         it("0-3. setBaseInfo : when not admin, fail ", async function () {
 
             await expect(
-                receivedFundVaultFactory.connect(user2).setBaseInfo([info.tokenAddress, info.daoAddress])
+                vestingPublicFundFactory.connect(user2).setBaseInfo([info.tokenAddress, info.daoAddress])
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
@@ -138,7 +138,7 @@ describe("ReceivedFundVault", function () {
         it("0-4. setLogEventAddress : when not admin, fail ", async function () {
 
             await expect(
-                receivedFundVaultFactory.connect(user2).setLogEventAddress(eventLogAddress)
+                vestingPublicFundFactory.connect(user2).setLogEventAddress(eventLogAddress)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
 
         });
@@ -146,9 +146,8 @@ describe("ReceivedFundVault", function () {
         it("1-1. create : fail when it's not set receivedAddress ", async function () {
 
             await expect(
-                receivedFundVaultFactory.create(
+                vestingPublicFundFactory.create(
                     vaultInfo.name,
-                    info.publicSaleVault.address,
                     ethers.constants.AddressZero
                 )
             ).to.be.revertedWith("some address is zero");
@@ -157,11 +156,10 @@ describe("ReceivedFundVault", function () {
 
         it("1-1. create : fail when did'nt set token ", async function () {
 
-            expect(await receivedFundVaultFactory.token()).to.be.eq(ethers.constants.AddressZero);
+            expect(await vestingPublicFundFactory.token()).to.be.eq(ethers.constants.AddressZero);
             await expect(
-                receivedFundVaultFactory.create(
+                vestingPublicFundFactory.create(
                     vaultInfo.name,
-                    info.publicSaleVault.address,
                     receivedAddress.address
                 )
             ).to.be.revertedWith("some address is zero");
@@ -169,28 +167,27 @@ describe("ReceivedFundVault", function () {
 
         it("0-3. setBaseInfo ", async function () {
 
-            await receivedFundVaultFactory.connect(admin1).setBaseInfo([info.tokenAddress, info.daoAddress]);
-            expect(await receivedFundVaultFactory.token()).to.be.eq(info.tokenAddress);
-            expect(await receivedFundVaultFactory.daoAddress()).to.be.eq(info.daoAddress);
+            await vestingPublicFundFactory.connect(admin1).setBaseInfo([info.tokenAddress, info.daoAddress]);
+            expect(await vestingPublicFundFactory.token()).to.be.eq(info.tokenAddress);
+            expect(await vestingPublicFundFactory.daoAddress()).to.be.eq(info.daoAddress);
         });
 
         it("0-4. setLogEventAddress   ", async function () {
-            await receivedFundVaultFactory.connect(admin1).setLogEventAddress(eventLogAddress);
-            expect(await receivedFundVaultFactory.logEventAddress()).to.be.eq(eventLogAddress);
+            await vestingPublicFundFactory.connect(admin1).setLogEventAddress(eventLogAddress);
+            expect(await vestingPublicFundFactory.logEventAddress()).to.be.eq(eventLogAddress);
         });
 
-        it("1-1 / 2-9. create : ReceivedFundVaultProxy ", async function () {
+        it("1-1 / 2-9. create : vestingPublicFundProxy ", async function () {
 
-            let tx = await receivedFundVaultFactory.create(
+            let tx = await vestingPublicFundFactory.create(
                 vaultInfo.name,
-                info.publicSaleVault.address,
                 receivedAddress.address
             );
             vaultInfo.admin = dao;
 
             const receipt = await tx.wait();
-            let _function ="CreatedReceivedFundVault(address,string)";
-            let interface = receivedFundVaultFactory.interface;
+            let _function ="CreatedVestingPublicFund(address,string)";
+            let interface = vestingPublicFundFactory.interface;
 
             for(let i=0; i< receipt.events.length; i++){
                 if(receipt.events[i].topics[0] == interface.getEventTopic(_function)){
@@ -203,14 +200,14 @@ describe("ReceivedFundVault", function () {
                 }
             }
 
-            expect(await receivedFundVaultFactory.totalCreatedContracts()).to.be.eq(1);
-            expect((await receivedFundVaultFactory.getContracts(0)).contractAddress).to.be.eq(vaultAddress);
-            expect((await receivedFundVaultFactory.lastestCreated()).contractAddress).to.be.eq(vaultAddress);
+            expect(await vestingPublicFundFactory.totalCreatedContracts()).to.be.eq(1);
+            expect((await vestingPublicFundFactory.getContracts(0)).contractAddress).to.be.eq(vaultAddress);
+            expect((await vestingPublicFundFactory.lastestCreated()).contractAddress).to.be.eq(vaultAddress);
 
-            let VaultContract = await ethers.getContractAt("ReceivedFundVaultProxy", vaultAddress);
-            receivedFundVaultProxy = VaultContract;
+            let VaultContract = await ethers.getContractAt("VestingPublicFundProxy", vaultAddress);
+            vestingPublicFundProxy = VaultContract;
 
-            receivedFundVault = await ethers.getContractAt("ReceivedFundVault", vaultAddress);
+            vestingPublicFund = await ethers.getContractAt("VestingPublicFund", vaultAddress);
 
             expect(await VaultContract.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             expect(await VaultContract.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
@@ -218,63 +215,63 @@ describe("ReceivedFundVault", function () {
             expect(await VaultContract.isAdmin(vaultInfo.admin.address)).to.be.eq(true);
             expect(await VaultContract.isAdmin(proxyAdmin.address)).to.be.eq(true);
 
-            expect(await receivedFundVaultFactory.token()).to.be.eq(await receivedFundVaultProxy.token());
-            expect(receivedAddress.address).to.be.eq(await receivedFundVaultProxy.receivedAddress());
-            expect(info.publicSaleVault.address).to.be.eq(await receivedFundVaultProxy.publicSaleVaultAddress());
+            expect(await vestingPublicFundFactory.token()).to.be.eq(await vestingPublicFundProxy.token());
+            expect(receivedAddress.address).to.be.eq(await vestingPublicFundProxy.receivedAddress());
+            // expect(info.publicSaleVault.address).to.be.eq(await vestingPublicFundProxy.publicSaleVaultAddress());
         });
     });
 
-    describe("ReceivedFundVaultProxy : Only Admin ", function () {
+    describe("VestingPublicFundProxy : Only Admin ", function () {
 
         it("2-1. addAdmin : when not proxy admin, fail", async function () {
-            expect(await receivedFundVaultProxy.isProxyAdmin(user2.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(user2.address)).to.be.eq(false);
             await expect(
-                receivedFundVaultProxy.connect(user2).addAdmin(user2.address)
+                vestingPublicFundProxy.connect(user2).addAdmin(user2.address)
                 ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("2-1. addAdmin : when user is admin, not ProxyAdmin, fail ", async function () {
-            expect(await receivedFundVaultProxy.isAdmin(vaultInfo.admin.address)).to.be.eq(true);
-            expect(await receivedFundVaultProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isAdmin(vaultInfo.admin.address)).to.be.eq(true);
+            expect(await vestingPublicFundProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
             await expect(
-                receivedFundVaultProxy.connect(vaultInfo.admin).addAdmin(user2.address))
+                vestingPublicFundProxy.connect(vaultInfo.admin).addAdmin(user2.address))
             .to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("2-1. addAdmin only ProxyAdmin ", async function () {
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
-            await receivedFundVaultProxy.connect(proxyAdmin).addAdmin(user2.address);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await vestingPublicFundProxy.connect(proxyAdmin).addAdmin(user2.address);
         });
 
         it("2-2. removeAdmin : when not self-admin, fail", async function () {
-            await expect(receivedFundVaultProxy.connect(user1).removeAdmin()).to.be.revertedWith("Accessible: Caller is not an admin");
+            await expect(vestingPublicFundProxy.connect(user1).removeAdmin()).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
         it("2-2. removeAdmin ", async function () {
-            await receivedFundVaultProxy.connect(user2).removeAdmin();
+            await vestingPublicFundProxy.connect(user2).removeAdmin();
         });
 
         it("2-3. transferAdmin : when not admin, fail ", async function () {
             await expect(
-                receivedFundVaultProxy.connect(user2).transferAdmin(user1.address)
+                vestingPublicFundProxy.connect(user2).transferAdmin(user1.address)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
         it("2-3. transferAdmin ", async function () {
-            await receivedFundVaultProxy.connect(proxyAdmin).addAdmin(user2.address);
-            expect(await receivedFundVaultProxy.isAdmin(user2.address)).to.be.eq(true);
-            await receivedFundVaultProxy.connect(user2).transferAdmin(user1.address);
+            await vestingPublicFundProxy.connect(proxyAdmin).addAdmin(user2.address);
+            expect(await vestingPublicFundProxy.isAdmin(user2.address)).to.be.eq(true);
+            await vestingPublicFundProxy.connect(user2).transferAdmin(user1.address);
         });
 
         it("2-4. setImplementation2 : when not proxy admin, fail", async function () {
-            await expect(receivedFundVaultProxy.connect(vaultInfo.admin).setImplementation2(receivedFundVaultLogic,0, true))
+            await expect(vestingPublicFundProxy.connect(vaultInfo.admin).setImplementation2(vestingPublicFundLogic,0, true))
             .to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("2-4/5. setImplementation2", async function () {
 
-            let tx = await receivedFundVaultProxy.connect(proxyAdmin).setImplementation2(
-                receivedFundVaultLogic, 0, true
+            let tx = await vestingPublicFundProxy.connect(proxyAdmin).setImplementation2(
+                vestingPublicFundLogic, 0, true
             );
 
             await tx.wait();
@@ -290,17 +287,17 @@ describe("ReceivedFundVault", function () {
             let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
             let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
 
-            expect(await receivedFundVaultProxy.isAdmin(vaultInfo.admin.address)).to.be.eq(true);
-            expect(await receivedFundVaultProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isAdmin(vaultInfo.admin.address)).to.be.eq(true);
+            expect(await vestingPublicFundProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
 
             await expect(
-                receivedFundVaultProxy.connect(vaultInfo.admin).setSelectorImplementations2(
+                vestingPublicFundProxy.connect(vaultInfo.admin).setSelectorImplementations2(
                 [_func1, _func2],
                 testLogicAddress )
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
 
             await expect(
-                receivedFundVaultProxy.connect(vaultInfo.admin).setAliveImplementation2(
+                vestingPublicFundProxy.connect(vaultInfo.admin).setAliveImplementation2(
                     testLogicAddress, false
                 )
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
@@ -316,24 +313,24 @@ describe("ReceivedFundVault", function () {
             let _func1 = Web3EthAbi.encodeFunctionSignature("sayAdd(uint256,uint256)") ;
             let _func2 = Web3EthAbi.encodeFunctionSignature("sayMul(uint256,uint256)") ;
 
-            let tx = await receivedFundVaultProxy.connect(proxyAdmin).setImplementation2(
+            let tx = await vestingPublicFundProxy.connect(proxyAdmin).setImplementation2(
                 testLogicAddress, 1, true
             );
 
             await tx.wait();
 
-            tx = await receivedFundVaultProxy.connect(proxyAdmin).setSelectorImplementations2(
+            tx = await vestingPublicFundProxy.connect(proxyAdmin).setSelectorImplementations2(
                 [_func1, _func2],
                 testLogicAddress
             );
 
             await tx.wait();
 
-            expect(await receivedFundVaultProxy.implementation2(1)).to.be.eq(testLogicAddress);
-            expect(await receivedFundVaultProxy.getSelectorImplementation2(_func1)).to.be.eq(testLogicAddress);
-            expect(await receivedFundVaultProxy.getSelectorImplementation2(_func2)).to.be.eq(testLogicAddress);
+            expect(await vestingPublicFundProxy.implementation2(1)).to.be.eq(testLogicAddress);
+            expect(await vestingPublicFundProxy.getSelectorImplementation2(_func1)).to.be.eq(testLogicAddress);
+            expect(await vestingPublicFundProxy.getSelectorImplementation2(_func2)).to.be.eq(testLogicAddress);
 
-            const TestLogicContract = await ethers.getContractAt("TestLogic", receivedFundVaultProxy.address);
+            const TestLogicContract = await ethers.getContractAt("TestLogic", vestingPublicFundProxy.address);
 
             let a = ethers.BigNumber.from("1");
             let b = ethers.BigNumber.from("2");
@@ -344,7 +341,7 @@ describe("ReceivedFundVault", function () {
             let mul = await TestLogicContract.sayMul(a, b);
             expect(mul).to.be.eq(a.mul(b));
 
-            tx = await receivedFundVaultProxy.connect(proxyAdmin).setAliveImplementation2(
+            tx = await vestingPublicFundProxy.connect(proxyAdmin).setAliveImplementation2(
                 testLogicAddress, false
             );
 
@@ -362,13 +359,12 @@ describe("ReceivedFundVault", function () {
 
         it("2-10. setBaseInfoProxy : when not proxy admin, fail", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(user2.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(user2.address)).to.be.eq(false);
             await expect(
-                receivedFundVaultProxy.connect(user2).setBaseInfoProxy(
+                vestingPublicFundProxy.connect(user2).setBaseInfoProxy(
                     vaultInfo.name,
                     info.tokenAddress,
                     info.dao.address,
-                    info.publicSaleVault.address,
                     receivedAddress.address
                 )
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
@@ -376,13 +372,12 @@ describe("ReceivedFundVault", function () {
 
         it("2-10. setBaseInfoProxy : only once executed ", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
             await expect(
-                receivedFundVaultProxy.connect(proxyAdmin).setBaseInfoProxy(
+                vestingPublicFundProxy.connect(proxyAdmin).setBaseInfoProxy(
                     vaultInfo.name,
                     info.tokenAddress,
                     info.dao.address,
-                    info.publicSaleVault.address,
                     receivedAddress.address
                 )
             ).to.be.revertedWith("already set");
@@ -390,56 +385,56 @@ describe("ReceivedFundVault", function () {
 
         it("2-11. addProxyAdmin : when not proxy admin, fail", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
             await expect(
-                receivedFundVaultProxy.connect(vaultInfo.admin).addProxyAdmin(proxyAdmin2.address)
+                vestingPublicFundProxy.connect(vaultInfo.admin).addProxyAdmin(proxyAdmin2.address)
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("2-11. addProxyAdmin : only proxy admin ", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
-            await receivedFundVaultProxy.connect(proxyAdmin).addProxyAdmin(proxyAdmin2.address);
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(true);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await vestingPublicFundProxy.connect(proxyAdmin).addProxyAdmin(proxyAdmin2.address);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(true);
 
         });
 
         it("2-12. removeProxyAdmin : when not proxy admin, fail", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
             await expect(
-                receivedFundVaultProxy.connect(vaultInfo.admin).removeProxyAdmin()
+                vestingPublicFundProxy.connect(vaultInfo.admin).removeProxyAdmin()
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("2-12. removeProxyAdmin ", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.eq(true);
-            await receivedFundVaultProxy.connect(proxyAdmin2).removeProxyAdmin();
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin2.address)).to.be.eq(true);
+            await vestingPublicFundProxy.connect(proxyAdmin2).removeProxyAdmin();
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(false);
 
         });
 
         it("2-13. transferProxyAdmin : when not proxy admin, fail", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(vaultInfo.admin.address)).to.be.eq(false);
             await expect(
-                receivedFundVaultProxy.connect(vaultInfo.admin).transferProxyAdmin(proxyAdmin2.address)
+                vestingPublicFundProxy.connect(vaultInfo.admin).transferProxyAdmin(proxyAdmin2.address)
             ).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
 
         it("2-13. transferProxyAdmin ", async function () {
 
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
-            await receivedFundVaultProxy.connect(proxyAdmin).addProxyAdmin(proxyAdmin2.address);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            await vestingPublicFundProxy.connect(proxyAdmin).addProxyAdmin(proxyAdmin2.address);
 
-            await receivedFundVaultProxy.connect(proxyAdmin).transferProxyAdmin(proxyAdmin2.address);
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.equal(false);
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(true);
+            await vestingPublicFundProxy.connect(proxyAdmin).transferProxyAdmin(proxyAdmin2.address);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin.address)).to.be.equal(false);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(true);
 
-            await receivedFundVaultProxy.connect(proxyAdmin2).transferProxyAdmin(proxyAdmin.address);
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin.address)).to.be.equal(true);
-            expect(await receivedFundVaultProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(false);
+            await vestingPublicFundProxy.connect(proxyAdmin2).transferProxyAdmin(proxyAdmin.address);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin.address)).to.be.equal(true);
+            expect(await vestingPublicFundProxy.isProxyAdmin(proxyAdmin2.address)).to.be.equal(false);
 
         });
 
@@ -447,44 +442,44 @@ describe("ReceivedFundVault", function () {
         it("2-14. setProxyPause : when not admin, fail", async function () {
 
             await expect(
-                receivedFundVaultProxy.connect(user2).setProxyPause(true)
+                vestingPublicFundProxy.connect(user2).setProxyPause(true)
             ).to.be.revertedWith("Accessible: Caller is not an admin");
         });
 
         it("2-14. setProxyPause ", async function () {
 
-            await receivedFundVaultProxy.connect(vaultInfo.admin).setProxyPause(true);
-            expect(await receivedFundVaultProxy.pauseProxy()).to.be.equal(true);
+            await vestingPublicFundProxy.connect(vaultInfo.admin).setProxyPause(true);
+            expect(await vestingPublicFundProxy.pauseProxy()).to.be.equal(true);
 
         });
 
         it("2-14. setProxyPause : can\'t exceute logic function ", async function () {
 
             await expect(
-                receivedFundVault.currentRound()
+                vestingPublicFund.currentRound()
             ).to.be.revertedWith("Proxy: impl OR proxy is false");
         });
 
         it("2-14. setProxyPause   ", async function () {
-            await receivedFundVaultProxy.connect(vaultInfo.admin).setProxyPause(false);
+            await vestingPublicFundProxy.connect(vaultInfo.admin).setProxyPause(false);
         });
     });
 
-    describe("ReceivedFundVaultProxy : Can Anybody ", function () {
+    describe("VestingPublicFundProxy : Can Anybody ", function () {
 
         it("2-14. fallback : can exceute logic function  ", async function () {
-            await receivedFundVault.currentRound();
+            await vestingPublicFund.currentRound();
         });
 
     });
 
 
-    describe("ReceivedFundVault :  only ProxyOwner ", function () {
+    describe("VestingPublicFund :  only ProxyOwner ", function () {
 
         it("3-1. changeAddr : when not proxy admin, fail", async function () {
-            expect(await receivedFundVault.isProxyAdmin(user2.address)).to.be.eq(false);
+            expect(await vestingPublicFund.isProxyAdmin(user2.address)).to.be.eq(false);
             await expect(
-                receivedFundVault.connect(user2).changeAddr(
+                vestingPublicFund.connect(user2).changeAddr(
                     info.tokenAddress,
                     receivedAddress.address,
                     info.publicSaleVault.address
@@ -494,40 +489,40 @@ describe("ReceivedFundVault", function () {
 
         it("3-1. changeAddr ", async function () {
 
-            expect(await receivedFundVault.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            expect(await vestingPublicFund.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
 
-            await receivedFundVault.connect(proxyAdmin).changeAddr(
+            await vestingPublicFund.connect(proxyAdmin).changeAddr(
                     info.tokenAddress,
                     receivedAddress.address,
                     receivedAddress.address
                 );
 
-            expect(await receivedFundVault.token()).to.be.eq(info.tokenAddress);
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
-            expect(await receivedFundVault.publicSaleVaultAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.token()).to.be.eq(info.tokenAddress);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.publicSaleVaultAddress()).to.be.eq(receivedAddress.address);
 
-            await receivedFundVault.connect(proxyAdmin).changeAddr(
+            await vestingPublicFund.connect(proxyAdmin).changeAddr(
                 info.tokenAddress,
                 receivedAddress.address,
                 info.publicSaleVault.address
             );
 
-            expect(await receivedFundVault.token()).to.be.eq(info.tokenAddress);
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
-            expect(await receivedFundVault.publicSaleVaultAddress()).to.be.eq(info.publicSaleVault.address);
+            expect(await vestingPublicFund.token()).to.be.eq(info.tokenAddress);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.publicSaleVaultAddress()).to.be.eq(info.publicSaleVault.address);
 
         });
 
     });
 
-    describe("ReceivedFundVault :  only  ReceivedAddress ", function () {
+    describe("VestingPublicFund :  only  ReceivedAddress ", function () {
 
         it("4-1. initialize : when not ReceivedAddress, fail", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.not.eq(user2.address);
+            expect(await vestingPublicFund.receivedAddress()).to.not.eq(user2.address);
             await expect(
-                receivedFundVault.connect(user2).initialize(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(user2).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -536,21 +531,32 @@ describe("ReceivedFundVault", function () {
 
         it("4-3. initialize : The total number of claims and array's length should be the same. ", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
+            let _block = await ethers.provider.getBlock();
+            let timeBN =  ethers.BigNumber.from(""+_block.timestamp);
+
+            vaultInfo.claimTimes = [
+                timeBN,
+                timeBN,
+                timeBN
+            ];
 
             await expect(
-                receivedFundVault.connect(receivedAddress).initialize(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimTimes,
-                    vaultInfo.claimAmounts
+                    [
+                        ethers.utils.parseEther("10"),
+                        ethers.utils.parseEther("10")
+                    ]
                 )
-             ).to.be.revertedWith("wrong _claimTimes/_claimAmounts length");
+             ).to.be.revertedWith("_claimTimes and _claimAmounts length do not match");
 
         });
 
         it("4-4. initialize : The last cumulative claim amount ratio should be 100.", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
 
             let _block = await ethers.provider.getBlock();
             let timeBN =  ethers.BigNumber.from(""+_block.timestamp);
@@ -568,18 +574,18 @@ describe("ReceivedFundVault", function () {
             ];
 
             await expect(
-                receivedFundVault.connect(receivedAddress).initialize(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("wrong the last claimAmounts");
+             ).to.be.revertedWith("Final claimAmounts is not 100%");
 
         });
 
         it("4-5. initialize : The claim time arrangement should be larger as the arrangement increases, and should be larger than current time. ", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
 
             let _block = await ethers.provider.getBlock();
             let timeBN =  ethers.BigNumber.from(""+_block.timestamp);
@@ -597,18 +603,18 @@ describe("ReceivedFundVault", function () {
             ];
 
             await expect(
-                receivedFundVault.connect(receivedAddress).initialize(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("wrong claimTimes");
+             ).to.be.revertedWith("claimTimes should not be decreasing");
 
         });
 
         it("4-4. initialize :The cumulative ratio arrangement should be larger as the arrangement increases. ", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
 
             let _block = await ethers.provider.getBlock();
 
@@ -619,18 +625,18 @@ describe("ReceivedFundVault", function () {
             ];
 
             await expect(
-                receivedFundVault.connect(receivedAddress).initialize(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("wrong claimTimes");
+             ).to.be.revertedWith("claimTimes should not be decreasing");
 
         });
 
         it("4-4. initialize   ", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
 
             let _block = await ethers.provider.getBlock();
 
@@ -646,13 +652,13 @@ describe("ReceivedFundVault", function () {
                 ethers.BigNumber.from("100")
             ];
 
-            await receivedFundVault.connect(receivedAddress).initialize(
-                vaultInfo.claimCounts,
+            await vestingPublicFund.connect(receivedAddress).initialize(
+                info.publicSaleVault.address,
                 vaultInfo.claimTimes,
                 vaultInfo.claimAmounts
             );
 
-            let claimInfos = await receivedFundVault.allClaimInfos();
+            let claimInfos = await vestingPublicFund.allClaimInfos();
 
             expect(claimInfos[0]).to.be.eq(vaultInfo.claimCounts);
             expect(claimInfos[1].length).to.be.eq(vaultInfo.claimTimes.length);
@@ -670,25 +676,24 @@ describe("ReceivedFundVault", function () {
 
         it("4-5. initialize : only once execute", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
 
             await expect(
-                receivedFundVault.connect(receivedAddress).initialize(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(receivedAddress).initialize(
+                    info.publicSaleVault.address,
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
-             ).to.be.revertedWith("already set");
+             ).to.be.revertedWith("Already initalized");
 
         });
 
         it("3-2. ownerSetting : only ProxyOwner : when caller is not proxy owner, fail ", async function () {
 
-            expect(await receivedFundVault.receivedAddress()).to.be.eq(receivedAddress.address);
+            expect(await vestingPublicFund.receivedAddress()).to.be.eq(receivedAddress.address);
 
             await expect(
-                receivedFundVault.connect(receivedAddress).ownerSetting(
-                    vaultInfo.claimCounts,
+                vestingPublicFund.connect(receivedAddress).ownerSetting(
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 )
@@ -698,7 +703,7 @@ describe("ReceivedFundVault", function () {
 
         it("3-2. ownerSetting : only ProxyOwner", async function () {
 
-            expect(await receivedFundVault.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
+            expect(await vestingPublicFund.isProxyAdmin(proxyAdmin.address)).to.be.eq(true);
 
             let _block = await ethers.provider.getBlock();
 
@@ -714,13 +719,12 @@ describe("ReceivedFundVault", function () {
                 ethers.BigNumber.from("100")
             ];
 
-            await receivedFundVault.connect(proxyAdmin).ownerSetting(
-                    vaultInfo.claimCounts,
+            await vestingPublicFund.connect(proxyAdmin).ownerSetting(
                     vaultInfo.claimTimes,
                     vaultInfo.claimAmounts
                 );
 
-            let claimInfos = await receivedFundVault.allClaimInfos();
+            let claimInfos = await vestingPublicFund.allClaimInfos();
 
             expect(claimInfos[0]).to.be.eq(vaultInfo.claimCounts);
             expect(claimInfos[1].length).to.be.eq(vaultInfo.claimTimes.length);
@@ -737,17 +741,17 @@ describe("ReceivedFundVault", function () {
 
     });
 
-    describe("ReceivedFundVault : Only Public Sale Vault ", function () {
+    describe("vestingPublicFund : Only Public Sale Vault ", function () {
 
         it("5-1. funding : when caller is not public sale vault, fail", async function () {
 
-            let publicAddress = await receivedFundVault.publicSaleVaultAddress();
+            let publicAddress = await vestingPublicFund.publicSaleVaultAddress();
             publicAddress = publicAddress.toLowerCase();
 
             expect(publicAddress).to.not.eq(user2.address);
 
             await expect(
-                receivedFundVault.connect(user2).funding(
+                vestingPublicFund.connect(user2).funding(
                     ethers.utils.parseEther("100")
                 )
              ).to.be.revertedWith("caller is not publicSaleVault.");
@@ -755,18 +759,18 @@ describe("ReceivedFundVault", function () {
 
         it("5-1. funding : when publicSaleVault's balance is insufficient, fail", async function () {
 
-            expect(await receivedFundVault.publicSaleVaultAddress()).to.be.eq(publicSaleVault.address);
+            expect(await vestingPublicFund.publicSaleVaultAddress()).to.be.eq(publicSaleVault.address);
 
             await expect(
-                receivedFundVault.connect(publicSaleVault).funding(
+                vestingPublicFund.connect(publicSaleVault).funding(
                     ethers.utils.parseEther("1000")
                 )
-             ).to.be.revertedWith("allowance is insufficient.");
+             ).to.be.revertedWith("insufficient allowance");
         });
 
         it("5-1. funding : when caller didn't approve, fail", async function () {
 
-            expect(await receivedFundVault.publicSaleVaultAddress()).to.be.eq(publicSaleVault.address);
+            expect(await vestingPublicFund.publicSaleVaultAddress()).to.be.eq(publicSaleVault.address);
 
             let amount = ethers.utils.parseEther("1000");
 
@@ -775,29 +779,29 @@ describe("ReceivedFundVault", function () {
             expect(await tokenA.balanceOf(publicSaleVault.address)).to.be.eq(amount);
 
             await expect(
-                receivedFundVault.connect(publicSaleVault).funding(
+                vestingPublicFund.connect(publicSaleVault).funding(
                     amount
                 )
-             ).to.be.revertedWith("allowance is insufficient.");
+             ).to.be.revertedWith("insufficient allowance");
         });
 
         it("5-1. funding ", async function () {
 
-            expect(await receivedFundVault.publicSaleVaultAddress()).to.be.eq(publicSaleVault.address);
+            expect(await vestingPublicFund.publicSaleVaultAddress()).to.be.eq(publicSaleVault.address);
 
             let amount = ethers.utils.parseEther("1000");
             expect(await tokenA.balanceOf(publicSaleVault.address)).to.be.gte(amount);
 
-            await tokenA.connect(publicSaleVault).approve(receivedFundVault.address, amount);
-            expect(await tokenA.allowance(publicSaleVault.address, receivedFundVault.address)).to.be.gte(amount);
+            await tokenA.connect(publicSaleVault).approve(vestingPublicFund.address, amount);
+            expect(await tokenA.allowance(publicSaleVault.address, vestingPublicFund.address)).to.be.gte(amount);
 
-            await receivedFundVault.connect(publicSaleVault).funding(amount);
-            expect(await receivedFundVault.totalAllocatedAmount()).to.be.eq(amount);
+            await vestingPublicFund.connect(publicSaleVault).funding(amount);
+            expect(await vestingPublicFund.totalAllocatedAmount()).to.be.eq(amount);
         });
 
     });
 
-    describe("ReceivedFundVault : Anyone can run ", function () {
+    describe("VestingPublicFund : Anyone can run ", function () {
         it("      pass blocks", async function () {
             let block = await ethers.provider.getBlock();
             let passTime = vaultInfo.claimTimes[0] - block.timestamp + 1 ;
@@ -809,29 +813,29 @@ describe("ReceivedFundVault", function () {
         it("6-1/2/3 . claim", async function () {
 
             let balanceOfPrev = await tokenA.balanceOf(receivedAddress.address);
-            let totalAllocatedAmount = await receivedFundVault.totalAllocatedAmount();
-            let totalClaimsAmount = await receivedFundVault.totalClaimsAmount();
+            let totalAllocatedAmount = await vestingPublicFund.totalAllocatedAmount();
+            let totalClaimsAmount = await vestingPublicFund.totalClaimsAmount();
 
-            let round = await receivedFundVault.currentRound();
+            let round = await vestingPublicFund.currentRound();
             expect(round.toString()).to.be.eq("1");
 
-            let calculClaimAmount = await receivedFundVault.calculClaimAmount(round);
+            let calculClaimAmount = await vestingPublicFund.calculClaimAmount(round);
             let amount = totalAllocatedAmount.mul(vaultInfo.claimAmounts[0]).div(ethers.BigNumber.from("100"));
 
             expect(calculClaimAmount).to.be.eq(amount);
 
-            await receivedFundVault.claim();
+            await vestingPublicFund.claim();
 
             expect(await tokenA.balanceOf(receivedAddress.address)).to.be.eq(balanceOfPrev.add(amount));
         });
 
         it("6-1 . claim", async function () {
 
-            let round = await receivedFundVault.currentRound();
-            let calculClaimAmount = await receivedFundVault.calculClaimAmount(round);
+            let round = await vestingPublicFund.currentRound();
+            let calculClaimAmount = await vestingPublicFund.calculClaimAmount(round);
             expect(calculClaimAmount).to.be.eq(ethers.constants.Zero);
 
-            await expect(receivedFundVault.claim()).to.be.revertedWith("claimable amount is zero.");
+            await expect(vestingPublicFund.claim()).to.be.revertedWith("claimable amount is zero");
 
         });
 
@@ -846,106 +850,22 @@ describe("ReceivedFundVault", function () {
         it("6-1/2/3 . claim", async function () {
 
             let balanceOfPrev = await tokenA.balanceOf(receivedAddress.address);
-            let totalAllocatedAmount = await receivedFundVault.totalAllocatedAmount();
-            let totalClaimsAmount = await receivedFundVault.totalClaimsAmount();
+            let totalAllocatedAmount = await vestingPublicFund.totalAllocatedAmount();
+            let totalClaimsAmount = await vestingPublicFund.totalClaimsAmount();
 
-            let round = await receivedFundVault.currentRound();
+            let round = await vestingPublicFund.currentRound();
             expect(round.toString()).to.be.eq("2");
 
-            let calculClaimAmount = await receivedFundVault.calculClaimAmount(round);
+            let calculClaimAmount = await vestingPublicFund.calculClaimAmount(round);
             let amount = totalAllocatedAmount.mul(vaultInfo.claimAmounts[1]).div(ethers.BigNumber.from("100")).sub(totalClaimsAmount);
 
             expect(calculClaimAmount).to.be.eq(amount);
 
-            await receivedFundVault.claim();
+            await vestingPublicFund.claim();
 
             expect(await tokenA.balanceOf(receivedAddress.address)).to.be.eq(balanceOfPrev.add(amount));
         });
 
-    });
-
-    describe("ReceivedFundVault : only owner (DAO) ", function () {
-
-        it("7-4 . withdraw : when it didn't VestingStop, fail", async function () {
-
-            expect(await receivedFundVault.isAdmin(info.dao.address)).to.be.eq(true);
-            await expect(
-                receivedFundVault.connect(info.dao).withdraw(user2.address, ethers.utils.parseEther("1"))
-                ).to.be.revertedWith("it is not stop status.");
-        });
-
-        it("7-1 . setVestingPause : when caller is not owner, fail", async function () {
-
-            expect(await receivedFundVault.isAdmin(user2.address)).to.be.eq(false);
-            await expect(
-                receivedFundVault.connect(user2).setVestingPause(true)
-                ).to.be.revertedWith("Accessible: Caller is not an admin");
-        });
-
-        it("7-1 . setVestingPause ", async function () {
-
-            expect(await receivedFundVault.isAdmin(info.dao.address)).to.be.eq(true);
-            await receivedFundVault.connect(info.dao).setVestingPause(true);
-        });
-
-        it("6-4 . claim : when VestingPause, fail  ", async function () {
-
-            await expect(receivedFundVault.claim()).to.be.revertedWith("Vesting is paused");
-        });
-
-        it("7-1 . setVestingPause ", async function () {
-
-            expect(await receivedFundVault.isAdmin(info.dao.address)).to.be.eq(true);
-            await receivedFundVault.connect(info.dao).setVestingPause(false);
-        });
-
-        it("7-2 . setVestingStop : when caller is not owner, fail", async function () {
-
-            expect(await receivedFundVault.isAdmin(user2.address)).to.be.eq(false);
-            await expect(
-                receivedFundVault.connect(user2).setVestingStop()
-                ).to.be.revertedWith("Accessible: Caller is not an admin");
-        });
-
-        it("7-2 . setVestingStop  ", async function () {
-
-            expect(await receivedFundVault.isAdmin(info.dao.address)).to.be.eq(true);
-            await receivedFundVault.connect(info.dao).setVestingStop();
-        });
-
-        it("7-3 . setVestingStop : already stopped ", async function () {
-
-            expect(await receivedFundVault.isAdmin(info.dao.address)).to.be.eq(true);
-            await expect(
-                receivedFundVault.connect(info.dao).setVestingStop()
-                ).to.be.revertedWith("already stopped");
-        });
-
-        it("6-4 . claim : when VestingStop, fail  ", async function () {
-
-            await expect(receivedFundVault.claim()).to.be.revertedWith("Vesting is stopped");
-        });
-
-        it("7-4 . withdraw : when caller is not owner, fail", async function () {
-
-            expect(await receivedFundVault.isAdmin(user2.address)).to.be.eq(false);
-            await expect(
-                receivedFundVault.connect(user2).withdraw(user2.address, ethers.utils.parseEther("1"))
-                ).to.be.revertedWith("Accessible: Caller is not an admin");
-        });
-
-        it("7-4 . withdraw ", async function () {
-
-            expect(await receivedFundVault.isAdmin(info.dao.address)).to.be.eq(true);
-
-            let balanceOfPrev = await tokenA.balanceOf(user2.address);
-            let amount = await tokenA.balanceOf(receivedFundVault.address);
-
-            await receivedFundVault.connect(info.dao).withdraw(user2.address, amount);
-
-            expect(await tokenA.balanceOf(user2.address)).to.be.eq(amount);
-            expect(await tokenA.balanceOf(receivedFundVault.address)).to.be.eq(ethers.constants.Zero);
-        });
     });
 
 });

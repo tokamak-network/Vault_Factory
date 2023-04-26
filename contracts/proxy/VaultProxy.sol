@@ -9,7 +9,7 @@ import "../interfaces/IProxyAction.sol";
 import "./VaultStorage.sol";
 import "../common/ProxyAccessCommon.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract VaultProxy is VaultStorage, ProxyAccessCommon, IProxyEvent, IProxyAction
 {

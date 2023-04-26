@@ -1,17 +1,17 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.4;
 
-interface IReceivedFundVaultFactory {
+interface IVestingPublicFundFactory {
 
-    event CreatedReceivedFundVault(address contractAddress, string name);
+    event CreatedVestingPublicFund(address contractAddress, string name);
 
 
     /// ###### only admin ######
 
-    /// @dev set unoswap address , token address and pools addresses
-    /// @param addrs [token, daoAddress]
+    /// @dev set addresses
+    /// @param addrs [ton token, tos token, daoAddress, uniswapV3Factory, initializer]
     function setBaseInfo(
-        address[2] calldata addrs
+        address[5] calldata addrs
     )   external;
 
 
@@ -19,11 +19,9 @@ interface IReceivedFundVaultFactory {
 
     /// @dev Create a InitialLiquidityVaultProxy
     /// @param _name name
-    /// @param publicSaleAddress publicSaleVault address
     /// @param receivedAddress the received fund address
     function create(
         string calldata _name,
-        address publicSaleAddress,
         address receivedAddress
     )  external returns (address);
 }

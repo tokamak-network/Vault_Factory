@@ -486,17 +486,21 @@ describe("InitialLiquidityVault", function () {
             expect(await initialLiquidityVaultProxy.isProxyAdmin(user2.address)).to.be.eq(false);
             await expect(initialLiquidityVaultProxy.connect(user2).addAdmin(user2.address)).to.be.revertedWith("Accessible: Caller is not an proxy admin");
         });
+        
         it("1-1. addAdmin only proxy admin ", async function () {
             expect(await initialLiquidityVaultProxy.isAdmin(poolInfo.admin.address)).to.be.eq(true);
             expect(await initialLiquidityVaultProxy.isProxyAdmin(poolInfo.admin.address)).to.be.eq(true);
             await initialLiquidityVaultProxy.connect(poolInfo.admin).addAdmin(user2.address);
         });
+        
         it("1-2. removeAdmin : when not self-admin, fail", async function () {
             await expect(initialLiquidityVaultProxy.connect(user1).removeAdmin()).to.be.revertedWith("Accessible: Caller is not an admin");
         });
+        
         it("1-2. removeAdmin ", async function () {
             await initialLiquidityVaultProxy.connect(user2).removeAdmin();
         });
+
         it("1-3. transferAdmin : when not admin, fail ", async function () {
             await expect(initialLiquidityVaultProxy.connect(user2).transferAdmin(user1.address)).to.be.revertedWith("Accessible: Caller is not an admin");
         });
@@ -515,7 +519,6 @@ describe("InitialLiquidityVault", function () {
         });
 
         it("1-4/5. setImplementation2", async function () {
-
             let tx = await initialLiquidityVaultProxy.connect(poolInfo.admin).setImplementation2(
                 initialLiquidityVaultLogic, 0, true
             );
@@ -524,7 +527,6 @@ describe("InitialLiquidityVault", function () {
         });
 
         it("1-10/11. setAliveImplementation2 : Only proxy admin ", async function () {
-
             const TestLogic = await ethers.getContractFactory("TestLogic");
             let testLogicDeployed = await TestLogic.deploy();
             await testLogicDeployed.deployed();

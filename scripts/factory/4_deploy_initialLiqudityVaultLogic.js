@@ -2,16 +2,13 @@
 const { ethers, run } = require("hardhat");
 const save = require("../save_deployed");
 const loadDeployed = require("../load_deployed");
+const {getUniswapInfo} = require("../uniswap_info");
 
 async function main() {
   let deployer, user2;
 
-  const { chainId } = await ethers.provider.getNetwork();
+  let {chainId, networkName, uniswapInfo } = await getUniswapInfo();
 
-  let networkName = "local";
-
-  if(chainId == 1) networkName = "mainnet";
-  if(chainId == 4) networkName = "rinkeby";
 
   [deployer, user2] = await ethers.getSigners();
   // console.log('deployer',deployer.address);
@@ -22,7 +19,7 @@ async function main() {
     address: ""
   }
 
-  const InitialLiquidityVault = await ethers.getContractFactory("InitialLiquidityVault");
+  const InitialLiquidityVault = await ethers.getContractFactory("InitialLiquidityVault1");
   const initialLiquidityVault  = await InitialLiquidityVault.deploy();
 
   let tx0 = await initialLiquidityVault.deployed();
@@ -30,13 +27,13 @@ async function main() {
   console.log("InitialLiquidityVault deployed to:", initialLiquidityVault.address);
 
   deployInfo = {
-      name: "InitialLiquidityVault",
+      name: "InitialLiquidityVault1",
       address: initialLiquidityVault.address
   }
 
   save(networkName, deployInfo);
 
-  if(chainId == 1 || chainId == 4)
+  if(chainId == 1 || chainId == 4 || chainId == 5)
     await run("verify", {
       address: initialLiquidityVault.address,
       constructorArgsParams: [],
