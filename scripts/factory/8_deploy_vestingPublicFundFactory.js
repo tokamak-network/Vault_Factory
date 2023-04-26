@@ -8,16 +8,12 @@ const loadDeployed = require("../load_deployed");
 async function main() {
   let deployer, user2;
 
-  // let {chainId, networkName, uniswapInfo } = await getUniswapInfo();
-
-  // let info = uniswapInfo;
-
   // mainnet
   let info = {
     vestingDao: "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1",
     vestingUpgradeAdmin: "0x15280a52E79FD4aB35F4B9Acbb376DCD72b44Fd1",
     ton: "0x2be5e8c109e2197D077D13A82dAead6a9b3433C5",
-    tos: "0x67F3bE272b1913602B191B3A68F7C238A2D81Bb9",
+    tos: "0x409c4D8cd5d2924b9bc5509230d16a61289c8153",
     poolfactory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
     npm: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
     swapRouter: "0xE592427A0AEce92De3Edee1F18E0157C05861564",

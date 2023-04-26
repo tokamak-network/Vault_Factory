@@ -2,7 +2,7 @@
 const { ethers, run } = require("hardhat");
 const save = require("../save_deployed");
 const loadDeployed = require("../load_deployed");
-const {getUniswapInfo} = require("../uniswap_info");
+// const {getUniswapInfo} = require("../uniswap_info");
 
 async function main() {
   let deployer, user2;
